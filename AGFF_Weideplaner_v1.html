@@ -1,0 +1,1422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AGFF Weideplaner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f6f0;
+    --panel:#ffffff;
+    --ink:#1c281f;
+    --muted:#5c6b5d;
+    --line:#dde2d6;
+    --accent:#2f6b40;
+    --accent-dark:#204a2c;
+    --accent-soft:#e6efe4;
+    --gold:#b9832c;
+    --gold-soft:#f6ecd8;
+    --vor:#7d9a86;
+    --fruehling:#4f9d5c;
+    --sommer:#d3a02f;
+    --herbst:#bb6a37;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+    padding:28px 16px 80px;
+    line-height:1.45;
+  }
+  .wrap{max-width:1180px;margin:0 auto;}
+
+  /* Header */
+  header.top{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:24px;
+    border-bottom:2px solid var(--accent);
+    padding-bottom:18px;
+    margin-bottom:28px;
+    flex-wrap:wrap;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:2.1rem;
+    margin:0;
+    color:var(--accent-dark);
+  }
+  header.top p{
+    max-width:420px;
+    color:var(--muted);
+    font-size:.92rem;
+    margin:0;
+  }
+  .season-strip{
+    display:flex;
+    height:6px;
+    width:100%;
+    border-radius:4px;
+    overflow:hidden;
+    margin-top:14px;
+  }
+  .season-strip span{flex:1;}
+  .season-strip .s1{background:var(--vor);}
+  .season-strip .s2{background:var(--fruehling);}
+  .season-strip .s3{background:var(--sommer);}
+  .season-strip .s4{background:var(--herbst);}
+
+  /* Panels */
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:22px;
+    box-shadow:0 1px 3px rgba(28,40,31,.04);
+  }
+  .panel h2{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:1.15rem;
+    margin:0 0 4px;
+    color:var(--accent-dark);
+  }
+  .panel .sub{
+    color:var(--muted);
+    font-size:.85rem;
+    margin:0 0 16px;
+  }
+  .step-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+
+  /* Field grid */
+  .field-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px;
+  }
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:.78rem;font-weight:600;color:var(--muted);}
+  .field select, .field input{
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:.95rem;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field select:focus, .field input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+
+  /* System toggle */
+  .toggle-row{display:flex;gap:10px;margin-bottom:4px;}
+  .toggle-btn{
+    flex:1;
+    padding:12px 14px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    font-family:'Fraunces',Georgia,serif;
+    font-size:1rem;
+    font-weight:600;
+    color:var(--muted);
+    text-align:left;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .toggle-btn .small{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-weight:400;
+    font-size:.78rem;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .toggle-btn.active{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+  }
+
+  /* Table */
+  .table-scroll{overflow-x:auto;}
+  table{
+    width:100%;
+    border-collapse:collapse;
+    font-size:.87rem;
+    min-width:680px;
+  }
+  th, td{
+    border:1px solid var(--line);
+    padding:8px 10px;
+    text-align:right;
+    vertical-align:middle;
+  }
+  thead th{
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    text-align:center;
+    font-weight:600;
+    font-size:.82rem;
+  }
+  thead th.season-fruehling{background:#eaf4ea;}
+  thead th.season-sommer{background:var(--gold-soft);}
+  thead th.season-herbst{background:#f5e6dc;}
+  td.label{
+    text-align:left;
+    font-weight:600;
+    background:#fafbf7;
+    color:var(--ink);
+    min-width:230px;
+  }
+  td.label .formula{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:400;
+    font-size:.72rem;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  td.code{
+    text-align:center;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    width:26px;
+  }
+  input.cell{
+    width:82px;
+    text-align:right;
+    padding:5px 6px;
+    border:1px solid #b9c6b8;
+    border-radius:5px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.85rem;
+  }
+  input.cell:focus{outline:none;border-color:var(--accent);}
+  input.cell.auto{background:#fdf9ef;border-color:var(--gold);}
+  input[type="date"].cell{width:132px;}
+  input.cell[readonly]{background:#f0f2ec;color:var(--muted);}
+  tr.calc-row{background:#fafbf7;}
+  tr.calc-row td:not(.label):not(.code){
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--accent-dark);
+    font-weight:600;
+  }
+  tr.section-row td{
+    background:var(--accent-dark);
+    color:#fff;
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    text-align:left;
+    font-size:.9rem;
+    padding:7px 10px;
+  }
+  .hidden{display:none !important;}
+
+  /* Reference / info box */
+  .ref-box{
+    background:var(--gold-soft);
+    border:1px solid #e4cf9e;
+    border-radius:8px;
+    padding:14px 16px;
+    font-size:.83rem;
+    color:#5a4419;
+    margin-top:14px;
+  }
+  .ref-box strong{color:#8a6314;}
+  .ref-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+    gap:8px 18px;
+    margin-top:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.8rem;
+  }
+  .ref-grid div span{display:block;color:#8a6314;font-family:'Inter',sans-serif;font-size:.72rem;}
+
+  /* RPM converter */
+  .rpm-tool{
+    display:flex;
+    gap:14px;
+    align-items:flex-end;
+    flex-wrap:wrap;
+  }
+  .rpm-tool .field{min-width:150px;}
+  .rpm-result{
+    background:var(--accent-soft);
+    border-radius:8px;
+    padding:10px 16px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:1rem;
+    font-weight:600;
+    color:var(--accent-dark);
+    min-width:160px;
+    text-align:center;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:.78rem;
+    margin-top:36px;
+  }
+
+  /* Standorterkennung (GPS) */
+  .locate-row{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px dashed var(--line);
+  }
+  .locate-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    padding:8px 14px;
+    border-radius:20px;
+    border:1.5px solid var(--accent);
+    background:#fff;
+    color:var(--accent-dark);
+    font-family:'Inter',sans-serif;
+    font-size:.85rem;
+    font-weight:600;
+    cursor:pointer;
+    transition:background .15s;
+    white-space:nowrap;
+  }
+  .locate-btn:hover{background:var(--accent-soft);}
+  .locate-btn:disabled{opacity:.55;cursor:default;}
+  .locate-status{
+    font-size:.8rem;
+    color:var(--muted);
+    flex:1;
+    min-width:200px;
+  }
+  .est-badge{
+    display:inline-block;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.62rem;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    color:#8a6314;
+    background:var(--gold-soft);
+    border:1px solid #e4cf9e;
+    border-radius:4px;
+    padding:1px 6px;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .field.is-estimated select{
+    border-color:var(--gold);
+    background:#fffdf7;
+  }
+
+  /* Weidesystem-Assistent */
+  .assist-toggle{
+    background:none;
+    border:none;
+    color:var(--accent);
+    font-size:.85rem;
+    font-weight:600;
+    cursor:pointer;
+    padding:0;
+    margin-top:10px;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+  .assist-panel{
+    margin-top:16px;
+    padding-top:16px;
+    border-top:1px dashed var(--line);
+  }
+  .assist-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:12px;
+    margin-bottom:14px;
+  }
+  .assist-result{
+    background:var(--accent-soft);
+    border:1px solid #c8ddc7;
+    border-radius:8px;
+    padding:14px 16px;
+  }
+  .assist-badge{
+    display:inline-block;
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:1rem;
+    color:#fff;
+    background:var(--accent);
+    border-radius:6px;
+    padding:5px 12px;
+    margin-bottom:8px;
+  }
+  .assist-badge.warn{background:var(--gold);}
+  .assist-list{
+    margin:6px 0 0;
+    padding-left:18px;
+    font-size:.83rem;
+    color:var(--ink);
+  }
+  .assist-list li{margin-bottom:3px;}
+  .assist-cta{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+  .assist-apply-btn{
+    padding:9px 16px;
+    border-radius:7px;
+    border:none;
+    background:var(--accent-dark);
+    color:#fff;
+    font-weight:600;
+    font-size:.85rem;
+    cursor:pointer;
+  }
+  .assist-apply-btn:hover{background:var(--accent);}
+  .assist-meta{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.72rem;
+    color:var(--muted);
+  }
+
+  /* Info-Tooltipps für zentrale Grössen */
+  .info-tip-wrap{
+    position:relative;
+    display:inline-flex;
+    vertical-align:middle;
+    margin-left:6px;
+  }
+  .info-tip{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    width:16px;
+    height:16px;
+    border-radius:999px;
+    border:1px solid var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    font-family:'Inter',sans-serif;
+    font-size:.68rem;
+    font-weight:700;
+    cursor:help;
+    line-height:1;
+    padding:0;
+  }
+  .info-tip:hover{background:var(--accent);color:#fff;}
+  #ttPortal{
+    display:none;
+    position:fixed;
+    z-index:200;
+    width:min(300px,80vw);
+    background:#fff;
+    border:1px solid var(--accent);
+    border-radius:8px;
+    box-shadow:0 10px 24px rgba(28,40,31,.18);
+    padding:10px 12px;
+    font-family:'Inter',sans-serif;
+    font-size:.8rem;
+    line-height:1.4;
+    color:var(--ink);
+    text-align:left;
+  }
+
+  /* Futterkosten-Diagramm */
+  #feedChart svg{display:block;width:100%;height:auto;}
+  .chart-legend{
+    display:flex;
+    gap:20px;
+    justify-content:center;
+    margin-top:8px;
+    font-size:.8rem;
+    color:var(--muted);
+  }
+  .chart-legend span{display:inline-flex;align-items:center;gap:6px;}
+  .chart-legend i{width:12px;height:12px;border-radius:3px;display:inline-block;}
+  .cost-highlight{
+    background:var(--accent-soft) !important;
+    border:1px solid #b7d6b5;
+  }
+  .cost-highlight strong{color:var(--accent-dark) !important;font-size:1.05rem;}
+
+  /* Standard-Tierzahl übernehmen */
+  .apply-row{display:flex;gap:6px;}
+  .apply-row input{flex:0 0 70px;}
+  .apply-btn{
+    flex:1;
+    padding:0 10px;
+    border-radius:7px;
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent-dark);
+    font-family:'Inter',sans-serif;
+    font-size:.8rem;
+    font-weight:600;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .apply-btn:hover{background:var(--accent-soft);}
+
+  @media (max-width:640px){
+    h1{font-size:1.5rem;}
+    .panel{padding:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="brand-eyebrow">AGFF · Weideplanung</p>
+      <h1>🌱 Interaktiver Weideplaner</h1>
+      <p>Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
+    </div>
+  </header>
+  <div class="season-strip"><span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span></div>
+  <br>
+
+  <!-- SCHRITT 1: Standort & Tierkategorie -->
+  <div class="panel">
+    <p class="step-label">Schritt 1</p>
+    <h2>Standort- und Betriebsangaben</h2>
+    <p class="sub">Bestimmt automatisch Start der Weidephasen und Graszuwachs (Zeile A &amp; B unten). Werte bleiben danach editierbar.</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="hoehe">Höhenlage (m ü. M.)</label>
+        <select id="hoehe" onchange="onStandortChange()">
+          <option value="unter_700">unter 700</option>
+          <option value="unter_900">unter 900</option>
+          <option value="unter_1100">unter 1100</option>
+          <option value="über_1100">über 1100</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="boden">Boden resp. Lage</label>
+        <select id="boden" onchange="onStandortChange()">
+          <option value="tiefgründig/gute_Lage">tiefgründig / gute Lage</option>
+          <option value="flachgründig/schlechte_Lage">flachgründig / schlechte Lage</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="klima">Klima</label>
+        <select id="klima" onchange="onStandortChange()">
+          <option value="trocken">trocken</option>
+          <option value="frisch">frisch</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="veg">Vegetationsbeginn</label>
+        <select id="veg" onchange="onStandortChange()">
+          <option value="früh">früh</option>
+          <option value="spät">spät</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="tier">Tierkategorie</label>
+        <select id="tier" onchange="onTierChange()">
+          <option value="Milchkühe">Milchkühe</option>
+          <option value="Mutterkühe">Mutterkühe</option>
+          <option value="Galtkühe">Galtkühe</option>
+          <option value="Ausmastkuh">Ausmastkuh</option>
+          <option value="Jungvieh über 2-jährig">Jungvieh über 2-jährig</option>
+          <option value="Jungvieh 1-2 jährig">Jungvieh 1-2 jährig</option>
+          <option value="Jungvieh 160-365 Tage">Jungvieh 160-365 Tage</option>
+          <option value="Jungvieh < 160 Tage">Jungvieh &lt; 160 Tage</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="stdTierzahl">Standard-Tierzahl</label>
+        <div class="apply-row">
+          <input type="number" id="stdTierzahl" value="40" min="0" step="1">
+          <button type="button" class="apply-btn" onclick="applyStdTierzahl()">In Zeile C übernehmen</button>
+        </div>
+      </div>
+    </div>
+    <div class="ref-box" id="tierRef"></div>
+
+    <div class="locate-row">
+      <button class="locate-btn" id="btnLocate" onclick="handleLocate()">📍 Standort erkennen</button>
+      <span class="locate-status" id="locateStatus">Optional: übernimmt die Höhenlage per GPS und schätzt grob das Klima anhand von Niederschlagsdaten. Boden/Lage bitte weiterhin selbst einschätzen.</span>
+    </div>
+  </div>
+
+  <!-- SCHRITT 2: System -->
+  <div class="panel">
+    <p class="step-label">Schritt 2</p>
+    <h2>Weidesystem</h2>
+    <div class="toggle-row">
+      <button class="toggle-btn active" id="btn-umtrieb" onclick="setSystem('umtrieb')">
+        Umtriebsweide
+        <span class="small">Koppeln mit Weideruhezeit &amp; Besatzzeit</span>
+      </button>
+      <button class="toggle-btn" id="btn-kurzrasen" onclick="setSystem('kurzrasen')">
+        Kurzrasenweide
+        <span class="small">konstante Ziel-Bestandeshöhe</span>
+      </button>
+    </div>
+
+    <button class="assist-toggle" id="assistToggleBtn" onclick="toggleAssistant()">Nicht sicher, welches System passt? → Auswahl-Assistent öffnen</button>
+
+    <div class="assist-panel hidden" id="assistPanel">
+      <p class="sub" style="margin-top:0;">6 kurze Einschätzungen gemäss AGFF-Merkblatt — daraus ergibt sich eine Empfehlung, die du bei Bedarf übernehmen kannst.</p>
+      <div class="assist-grid">
+        <div class="field">
+          <label for="aRaigras">Raigrasfähige Lage</label>
+          <select id="aRaigras" onchange="renderAssistant()"><option value="ja">Ja</option><option value="nein">Nein</option></select>
+        </div>
+        <div class="field">
+          <label for="aNiederschlag">Niederschlagsreich</label>
+          <select id="aNiederschlag" onchange="renderAssistant()"><option value="ja">Ja</option><option value="nein">Nein</option></select>
+        </div>
+        <div class="field">
+          <label for="aGelaende">Gelände gleichmässig</label>
+          <select id="aGelaende" onchange="renderAssistant()"><option value="ja">Ja</option><option value="nein">Nein</option></select>
+        </div>
+        <div class="field">
+          <label for="aTrockenheit">Trockenheitsrisiko Sommer</label>
+          <select id="aTrockenheit" onchange="renderAssistant()"><option value="niedrig">Niedrig</option><option value="mittel" selected>Mittel</option><option value="hoch">Hoch</option></select>
+        </div>
+        <div class="field">
+          <label for="aZaunbudget">Zaun-/Materialbudget knapp</label>
+          <select id="aZaunbudget" onchange="renderAssistant()"><option value="ja">Ja</option><option value="nein" selected>Nein</option></select>
+        </div>
+        <div class="field">
+          <label for="aDuenger">Hofdünger-Ausbringung einfach halten</label>
+          <select id="aDuenger" onchange="renderAssistant()"><option value="ja">Ja</option><option value="nein" selected>Nein</option></select>
+        </div>
+      </div>
+      <div class="assist-result">
+        <div class="assist-badge" id="assistBadge">Empfehlung: —</div>
+        <ul class="assist-list" id="assistReasons"></ul>
+        <div class="assist-cta">
+          <button class="assist-apply-btn" onclick="applyAssistant()">Empfehlung übernehmen</button>
+          <span class="assist-meta" id="assistMeta"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCHRITT 3: Berechnungstabelle -->
+  <div class="panel">
+    <p class="step-label">Schritt 3</p>
+    <h2>Betriebs- und Standortdaten</h2>
+    <p class="sub">Dick hervorgehobene Felder (gelb umrandet) sind Auto-Vorschläge aus Schritt 1 — betriebsspezifisch anpassbar.</p>
+    <div class="table-scroll">
+      <table id="calcTable">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th style="text-align:left;">Parameter / Rechnungsschritt</th>
+            <th>Vorweide</th>
+            <th class="season-fruehling">Frühlingsweide</th>
+            <th class="season-sommer">Sommerweide</th>
+            <th class="season-herbst">Herbstweide</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="section-row"><td colspan="6">Grundlagen</td></tr>
+          <tr>
+            <td class="code">A</td>
+            <td class="label">Start Weidephase<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Beginn der Weidephase je nach Höhenlage und Vegetationsbeginn (Merkblatt Abb. 1). Ein früher Weidebeginn wirkt dem Futterberg im Frühling entgegen und fördert eine vorteilhafte Entwicklung des Pflanzenbestands.">i</button></span></td>
+            <td><input type="date" class="cell auto" id="A0" onchange="calculate()"></td>
+            <td><input type="date" class="cell auto" id="A1" onchange="calculate()"></td>
+            <td><input type="date" class="cell auto" id="A2" onchange="calculate()"></td>
+            <td><input type="date" class="cell auto" id="A3" onchange="calculate()"></td>
+          </tr>
+          <tr>
+            <td class="code">B</td>
+            <td class="label">Graszuwachs (kg TS/ha/Tag)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Täglicher Grasertrag pro Hektar; schwankt stark über die Vegetationsperiode mit Wachstumsspitze im Frühling und Wachstumsdepression im Sommer (Merkblatt Kap. 1.1). Richtwerte nach Höhenlage, Boden und Klima gemäss Tab. 1.">i</button></span></td>
+            <td><input type="number" class="cell auto B" id="B0" oninput="calculate()"></td>
+            <td><input type="number" class="cell auto B" id="B1" oninput="calculate()"></td>
+            <td><input type="number" class="cell auto B" id="B2" oninput="calculate()"></td>
+            <td><input type="number" class="cell auto B" id="B3" oninput="calculate()"></td>
+          </tr>
+          <tr>
+            <td class="code">C</td>
+            <td class="label">Anzahl Tiere</td>
+            <td><input type="number" class="cell C" id="C0" value="40" oninput="calculate()"></td>
+            <td><input type="number" class="cell C" id="C1" value="40" oninput="calculate()"></td>
+            <td><input type="number" class="cell C" id="C2" value="40" oninput="calculate()"></td>
+            <td><input type="number" class="cell C" id="C3" value="40" oninput="calculate()"></td>
+          </tr>
+          <tr>
+            <td class="code">D</td>
+            <td class="label">Totaler Tagesverzehr pro Tier (kg TS/Tier/Tag)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Gesamter Trockensubstanz-Bedarf pro Tier und Tag. Im Vollweidesystem bei Milchkühen 14–18 kg TS, bei Mutterkühen 10–14 kg TS pro Tag (Merkblatt Kap. 3.1).">i</button></span></td>
+            <td><input type="number" class="cell D" id="D0" value="16" step="0.1" oninput="calculate()"></td>
+            <td><input type="number" class="cell D" id="D1" value="16" step="0.1" oninput="calculate()"></td>
+            <td><input type="number" class="cell D" id="D2" value="16" step="0.1" oninput="calculate()"></td>
+            <td><input type="number" class="cell D" id="D3" value="16" step="0.1" oninput="calculate()"></td>
+          </tr>
+          <tr>
+            <td class="code">E</td>
+            <td class="label">Verzehrsanteil Weide während Vegetationsperiode (%)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anteil des Tagesverzehrs, der über die Weide gedeckt wird – der Rest wird im Stall zugefüttert. Besonders in Vor- und Herbstweide oft reduziert, wenn das Graswachstum gering ist (Merkblatt Kap. 3.1/3.2).">i</button></span></td>
+            <td><input type="number" class="cell E" id="E0" value="60" oninput="calculate()"></td>
+            <td><input type="number" class="cell E" id="E1" value="100" oninput="calculate()"></td>
+            <td><input type="number" class="cell E" id="E2" value="100" oninput="calculate()"></td>
+            <td><input type="number" class="cell E" id="E3" value="75" oninput="calculate()"></td>
+          </tr>
+
+          <!-- UMTRIEB ONLY: Weideruhezeit vor F, but order kept like Excel -->
+          <tr class="row-umtrieb">
+            <td class="code">I</td>
+            <td class="label">Weideruhezeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage zwischen zwei Beweidungen derselben Koppel. Im Frühjahr 14–20 Tage, ab Ende Mai bis August 20–28 Tage, unter Trockenheit im Sommer bis zu 35 Tage (Merkblatt Kap. 3.3).">i</button></span></td>
+            <td><input type="number" class="cell I_u" id="Iu0" value="30" oninput="calculate()"></td>
+            <td><input type="number" class="cell I_u" id="Iu1" value="18" oninput="calculate()"></td>
+            <td><input type="number" class="cell I_u" id="Iu2" value="28" oninput="calculate()"></td>
+            <td><input type="number" class="cell I_u" id="Iu3" value="45" oninput="calculate()"></td>
+          </tr>
+
+          <tr class="section-row"><td colspan="6">Verzehr &amp; Besatz</td></tr>
+          <tr class="calc-row">
+            <td class="code">F</td>
+            <td class="label">Verzehr Weidefutter<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Tatsächlich über die Weide aufgenommene Trockensubstanz pro Tier und Tag = Verzehrsanteil × Tagesverzehr.">i</button></span><span class="formula">= E × D / 100</span></td>
+            <td class="F_res"></td><td class="F_res"></td><td class="F_res"></td><td class="F_res"></td>
+          </tr>
+          <tr class="calc-row">
+            <td class="code">G</td>
+            <td class="label">Besatzstärke (Tiere/ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tiere, die eine Hektare Weidefläche beim aktuellen Graszuwachs ernähren kann = Graszuwachs / Verzehr Weidefutter (Merkblatt Kap. 3.2, Rechnungsbeispiel).">i</button></span><span class="formula">= B / F</span></td>
+            <td class="G_res"></td><td class="G_res"></td><td class="G_res"></td><td class="G_res"></td>
+          </tr>
+          <tr class="calc-row row-umtrieb">
+            <td class="code">H</td>
+            <td class="label">Flächenbedarf pro Phase (ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Grobe Weidefläche für die gesamte Herde in dieser Phase = Anzahl Tiere / Besatzstärke (Merkblatt Kap. 3.2, Rechnungsbeispiel Flächenbedarf).">i</button></span><span class="formula">= C / G</span></td>
+            <td class="Hu_res"></td><td class="Hu_res"></td><td class="Hu_res"></td><td class="Hu_res"></td>
+          </tr>
+
+          <!-- KURZRASEN ONLY -->
+          <tr class="row-kurzrasen hidden">
+            <td class="code">H</td>
+            <td class="label">Ziel Bestandeshöhe (kg TS/ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Konstant zu haltende Grashöhe während der gesamten Weideperiode, 4.0–5.5 cmRPM bzw. ca. 300 kg TS/ha verfügbares Weidefutter (Merkblatt Kap. 2.2 & 3.3). Kurzrasenweiden funktionieren nur in raigrasfähigen, niederschlagsreichen Lagen.">i</button></span></td>
+            <td><input type="number" class="cell H_k" id="Hk0" value="193" oninput="calculate()"></td>
+            <td><input type="number" class="cell H_k" id="Hk1" value="193" oninput="calculate()"></td>
+            <td><input type="number" class="cell H_k" id="Hk2" value="433" oninput="calculate()"></td>
+            <td><input type="number" class="cell H_k" id="Hk3" value="433" oninput="calculate()"></td>
+          </tr>
+
+          <!-- UMTRIEB: Futterdichten -->
+          <tr class="section-row row-umtrieb"><td colspan="6">Futterdichten</td></tr>
+          <tr class="row-umtrieb">
+            <td class="code">J</td>
+            <td class="label">Ziel Abtriebshöhe (kg TS/ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Angestrebte Restgrashöhe beim Verlassen der Koppel, ca. 3.5–4 cmRPM bzw. ca. 1500 kg TS/ha stehendes Weidefutter (Merkblatt Kap. 3.3). Zu spätes Verlassen führt zu Unternutzung und sinkender Futterqualität.">i</button></span></td>
+            <td><input type="number" class="cell J_u" id="Ju0" value="73" oninput="calculate()"></td>
+            <td><input type="number" class="cell J_u" id="Ju1" value="73" oninput="calculate()"></td>
+            <td><input type="number" class="cell J_u" id="Ju2" value="193" oninput="calculate()"></td>
+            <td><input type="number" class="cell J_u" id="Ju3" value="193" oninput="calculate()"></td>
+          </tr>
+          <tr class="calc-row row-umtrieb">
+            <td class="code">K</td>
+            <td class="label">Ziel Auftriebshöhe (kg TS/ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Angestrebte Grashöhe beim Auftrieb auf die Koppel, ca. 7.5–9 cmRPM bzw. ca. 1300 kg TS/ha verfügbares Weidefutter (Merkblatt Kap. 3.3).">i</button></span><span class="formula">= (G × F × I) + J</span></td>
+            <td class="K_res"></td><td class="K_res"></td><td class="K_res"></td><td class="K_res"></td>
+          </tr>
+          <tr class="calc-row row-umtrieb">
+            <td class="code">L</td>
+            <td class="label">Nutzbare Grasmasse (kg TS/ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Differenz zwischen Auftriebs- und Abtriebshöhe – die Grasmenge, die während der Besatzzeit tatsächlich abgeweidet werden kann.">i</button></span><span class="formula">= K − J</span></td>
+            <td class="L_res"></td><td class="L_res"></td><td class="L_res"></td><td class="L_res"></td>
+          </tr>
+
+          <tr class="section-row"><td colspan="6">Weideparameter</td></tr>
+          <tr class="calc-row row-umtrieb">
+            <td class="code">M</td>
+            <td class="label">Flächenbedarf Herde/Tag (ha/Herde/Tag)<span class="formula">= 1/L × C × F</span></td>
+            <td class="M_res"></td><td class="M_res"></td><td class="M_res"></td><td class="M_res"></td>
+          </tr>
+          <tr class="calc-row row-umtrieb">
+            <td class="code">N</td>
+            <td class="label">Flächenbedarf Tier/Tag (Aren/Tier/Tag)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Fläche pro Tier und Tag; Richtwert bei mittleren Standortverhältnissen ca. 1.2 Aren pro Kuh und Tag (Merkblatt Kap. 3.3).">i</button></span><span class="formula">= M / C × 100</span></td>
+            <td class="N_res"></td><td class="N_res"></td><td class="N_res"></td><td class="N_res"></td>
+          </tr>
+          <tr class="row-umtrieb">
+            <td class="code">O</td>
+            <td class="label">Besatzzeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage, die eine Koppel pro Umtrieb beweidet wird. Bei Milchkühen max. 3 Tage empfohlen – kurze Besatzzeiten verhindern selektives Abfressen und sichern eine ausgewogene Ration (Merkblatt: Die drei Hauptweideregeln).">i</button></span></td>
+            <td><input type="number" class="cell O_u" id="Ou0" value="2" oninput="calculate()"></td>
+            <td><input type="number" class="cell O_u" id="Ou1" value="2" oninput="calculate()"></td>
+            <td><input type="number" class="cell O_u" id="Ou2" value="2" oninput="calculate()"></td>
+            <td><input type="number" class="cell O_u" id="Ou3" value="2" oninput="calculate()"></td>
+          </tr>
+          <tr class="calc-row row-umtrieb">
+            <td class="code">P</td>
+            <td class="label">Koppelgrösse (ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Fläche einer einzelnen Koppel = Flächenbedarf Herde/Tag × Besatzzeit (Merkblatt Kap. 3.2, Rechnungsbeispiel Koppelgrösse: 1.2 Aren × 3 Tage × 40 Kühe = 144 Aren).">i</button></span><span class="formula">= M × O</span></td>
+            <td class="P_res"></td><td class="P_res"></td><td class="P_res"></td><td class="P_res"></td>
+          </tr>
+          <tr class="calc-row row-umtrieb">
+            <td class="code">Q</td>
+            <td class="label">Min. benötigte Koppeln<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Mindestanzahl Koppeln, damit die Weideruhezeit eingehalten werden kann = Weideruhezeit / Besatzzeit, plus 1 Koppel in Nutzung (Merkblatt Kap. 3.2, Rechnungsbeispiel: 30 Tage/3 Tage = 10 + 1 = 11 Koppeln).">i</button></span><span class="formula">= I / O</span></td>
+            <td class="Q_res"></td><td class="Q_res"></td><td class="Q_res"></td><td class="Q_res"></td>
+          </tr>
+
+          <!-- KURZRASEN parameters -->
+          <tr class="calc-row row-kurzrasen hidden">
+            <td class="code">I</td>
+            <td class="label">Flächenbedarf Herde/Tag (ha/Herde/Tag)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Entspricht dem Richtwert der Umtriebsweide-Fläche pro Phase: Grundprinzip der Kurzrasenweide ist, dass das tägliche Graswachstum dem täglichen Verzehr der Herde entspricht (Merkblatt Kap. 3.2, Grobe Weideplanung Kurzrasenweide).">i</button></span><span class="formula">= F × C / B</span></td>
+            <td class="Ik_res"></td><td class="Ik_res"></td><td class="Ik_res"></td><td class="Ik_res"></td>
+          </tr>
+          <tr class="calc-row row-kurzrasen hidden">
+            <td class="code">J</td>
+            <td class="label">Flächenbedarf Tier/Tag (Aren/Tier/Tag)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Fläche pro Tier und Tag; Richtwerte gemäss Merkblatt: im Frühjahr ca. 25 Aren, im Sommer ca. 35 Aren pro Kuh (Merkblatt Kap. 3.3).">i</button></span><span class="formula">= I / C × 100</span></td>
+            <td class="Jk_res"></td><td class="Jk_res"></td><td class="Jk_res"></td><td class="Jk_res"></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Koppelplanung / Zusammenfassung -->
+  <div class="panel row-umtrieb" id="koppelplanungPanel">
+    <p class="step-label">Ergebnis</p>
+    <h2>Koppelplanung</h2>
+    <p class="sub">Ø Flächenbedarf der Herde pro Tag über alle vier Phasen: <strong id="avgM">–</strong> ha/Herde/Tag</p>
+    <div class="ref-box">
+      <strong>Orientierungswerte für „<span id="tierNameKoppel">Milchkühe</span>“</strong> — feste AGFF-Referenzwerte je Tierkategorie (unabhängig von den obigen Betriebsdaten), zur groben Einordnung von Koppelgrösse und -anzahl.
+      <div class="ref-grid" id="koppelRefGrid"></div>
+    </div>
+  </div>
+
+  <div class="panel row-kurzrasen hidden" id="zusammenfassungPanel">
+    <p class="step-label">Ergebnis</p>
+    <h2>Zusammenfassung</h2>
+    <div class="ref-grid">
+      <div><span>Ø Flächenbedarf Herde/Tag (ha)</span><strong id="avgI">–</strong></div>
+      <div><span>Ø Flächenbedarf Tier/Tag (Aren)</span><strong id="avgJ">–</strong></div>
+    </div>
+  </div>
+
+  <!-- Eingesparte Futterkosten -->
+  <div class="panel">
+    <p class="step-label">Ergebnis</p>
+    <h2>Eingesparte Futterkosten</h2>
+    <p class="sub">Geschätzte Verteilung von Weide- und Stallfutter über das ganze Jahr, abgeleitet aus den Start-Weidephasen (Zeile A) und dem Verzehrsanteil Weide (Zeile E). Ausserhalb der Weidesaison wird mit 100% Stallfütterung gerechnet, mit dem Tierbestand der jeweils benachbarten Phase.</p>
+
+    <div class="field-grid" style="margin-bottom:16px;">
+      <div class="field">
+        <label for="costStall">Stallfutterkosten (Rp./kg TS)</label>
+        <input type="number" id="costStall" value="42" step="1" min="0" oninput="calculate()">
+      </div>
+      <div class="field">
+        <label for="costPasture">Weidefutterkosten (Rp./kg TS)</label>
+        <input type="number" id="costPasture" value="19" step="1" min="0" oninput="calculate()">
+      </div>
+      <div class="field">
+        <label for="endeWeide">Ende Weidesaison <span class="est-badge" style="margin-left:4px;">Annahme</span></label>
+        <input type="date" id="endeWeide" onchange="calculate()">
+      </div>
+    </div>
+
+    <div id="feedChart"></div>
+    <div class="chart-legend">
+      <span><i style="background:#4f9d5c;"></i> Weidefutter</span>
+      <span><i style="background:#c7b283;"></i> Stallfutter</span>
+    </div>
+
+    <div class="ref-grid" id="costSummaryGrid" style="margin-top:16px;"></div>
+  </div>
+
+  <!-- RPM Umrechner -->
+  <div class="panel">
+    <p class="step-label">Hilfsmittel</p>
+    <h2>Futterdichten-Umrechner (Rising-Plate-Meter)</h2>
+    <p class="sub">Rechnet zwischen Bestandeshöhe (cm RPM), Klicks und Futterdichte (kg TS/ha) um.</p>
+    <div class="rpm-tool">
+      <div class="field">
+        <label for="rpmVal">Wert</label>
+        <input type="number" id="rpmVal" value="3.5" step="0.01" oninput="calcRpm()">
+      </div>
+      <div class="field">
+        <label for="rpmFrom">Von</label>
+        <select id="rpmFrom" onchange="calcRpm()">
+          <option value="cm">cm RPM</option>
+          <option value="clicks">Klicks RPM</option>
+          <option value="kg">kg TS/ha</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="rpmTo">In</label>
+        <select id="rpmTo" onchange="calcRpm()">
+          <option value="kg">kg TS/ha</option>
+          <option value="cm">cm RPM</option>
+          <option value="clicks">Klicks RPM</option>
+        </select>
+      </div>
+      <div class="rpm-result" id="rpmResult">73.00</div>
+    </div>
+  </div>
+
+  <footer>Nachbau des AGFF Weideplaners · Formellogik 1:1 aus der Original-Excel übernommen · info@agff.ch</footer>
+</div>
+<div id="ttPortal"></div>
+
+<script>
+/* ---------- Referenzdaten aus der Original-Excel (Sheet "Daten") ---------- */
+
+// Kombinationen: Höhenlage + Boden + Klima + Vegetationsbeginn -> Graszuwachs (4 Phasen) + Startdaten (4 Phasen)
+const KOMBI = {
+"unter_700tiefgründig/gute_Lagefrischfrüh":       {B:[40,90,60,30], A:["22. Februar","8. April","22. Mai","1. September"]},
+"unter_700tiefgründig/gute_Lagefrischspät":       {B:[40,90,60,30], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_700tiefgründig/gute_Lagetrockenfrüh":      {B:[30,85,35,25], A:["22. Februar","8. April","22. Mai","1. September"]},
+"unter_700tiefgründig/gute_Lagetrockenspät":      {B:[30,85,35,25], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_700flachgründig/schlechte_Lagefrischfrüh": {B:[25,75,40,20], A:["22. Februar","8. April","22. Mai","1. September"]},
+"unter_700flachgründig/schlechte_Lagefrischspät": {B:[25,75,40,20], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_700flachgründig/schlechte_Lagetrockenfrüh":{B:[25,70,15,20], A:["22. Februar","8. April","22. Mai","1. September"]},
+"unter_700flachgründig/schlechte_Lagetrockenspät":{B:[25,70,15,20], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_900tiefgründig/gute_Lagefrischfrüh":       {B:[30,80,50,25], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_900tiefgründig/gute_Lagefrischspät":       {B:[30,80,50,25], A:["25. März","21. April","3. Juni","1. September"]},
+"unter_900tiefgründig/gute_Lagetrockenfrüh":      {B:[25,75,30,20], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_900tiefgründig/gute_Lagetrockenspät":      {B:[25,75,30,20], A:["25. März","21. April","3. Juni","1. September"]},
+"unter_900flachgründig/schlechte_Lagefrischfrüh": {B:[25,65,35,20], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_900flachgründig/schlechte_Lagefrischspät": {B:[25,65,35,20], A:["25. März","21. April","3. Juni","1. September"]},
+"unter_900flachgründig/schlechte_Lagetrockenfrüh":{B:[20,60,20,15], A:["8. März","15. April","28. Mai","1. September"]},
+"unter_900flachgründig/schlechte_Lagetrockenspät":{B:[20,60,20,15], A:["25. März","21. April","3. Juni","1. September"]},
+"unter_1100tiefgründig/gute_Lagefrischfrüh":       {B:[30,70,45,20], A:["25. März","21. April","3. Juni","22. August"]},
+"unter_1100tiefgründig/gute_Lagefrischspät":       {B:[30,70,45,20], A:["8. April","27. April","9. Juni","22. August"]},
+"unter_1100tiefgründig/gute_Lagetrockenfrüh":      {B:[30,70,45,20], A:["25. März","21. April","3. Juni","22. August"]},
+"unter_1100tiefgründig/gute_Lagetrockenspät":      {B:[30,70,45,20], A:["8. April","27. April","9. Juni","22. August"]},
+"unter_1100flachgründig/schlechte_Lagefrischfrüh": {B:[25,55,30,15], A:["25. März","21. April","3. Juni","22. August"]},
+"unter_1100flachgründig/schlechte_Lagefrischspät": {B:[25,55,30,15], A:["8. April","27. April","9. Juni","22. August"]},
+"unter_1100flachgründig/schlechte_Lagetrockenfrüh":{B:[25,55,30,15], A:["25. März","21. April","3. Juni","22. August"]},
+"unter_1100flachgründig/schlechte_Lagetrockenspät":{B:[25,55,30,15], A:["8. April","27. April","9. Juni","22. August"]},
+"über_1100tiefgründig/gute_Lagefrischfrüh":        {B:[20,55,35,15], A:["8. April","27. April","9. Juni","15. August"]},
+"über_1100tiefgründig/gute_Lagefrischspät":        {B:[20,55,35,15], A:["24. April","3. Mai","15. Juni","15. August"]},
+"über_1100tiefgründig/gute_Lagetrockenfrüh":       {B:[20,55,35,15], A:["8. April","27. April","9. Juni","15. August"]},
+"über_1100tiefgründig/gute_Lagetrockenspät":       {B:[20,55,35,15], A:["24. April","3. Mai","15. Juni","15. August"]},
+"über_1100flachgründig/schlechte_Lagefrischfrüh":  {B:[15,30,25,10], A:["8. April","27. April","9. Juni","15. August"]},
+"über_1100flachgründig/schlechte_Lagefrischspät":  {B:[15,30,25,10], A:["24. April","3. Mai","15. Juni","15. August"]},
+"über_1100flachgründig/schlechte_Lagetrockenfrüh": {B:[15,30,25,10], A:["8. April","27. April","9. Juni","15. August"]},
+"über_1100flachgründig/schlechte_Lagetrockenspät": {B:[15,30,25,10], A:["24. April","3. Mai","15. Juni","15. August"]}
+};
+
+// Tierkategorie: Tagesverzehr-Richtwert + Koppel-Orientierungswerte (fixe AGFF-Referenz, sheet "Daten" Z45:AK52)
+const TIER = {
+  "Milchkühe":               {verzehr:"14-18", besatz:["12 Stunden","3 Tage"], koppel:[0.5,3],  groesse:[0.2091,1.2549], groesseMw:[0.2406,1.4435], anzahl:[47,8.667]},
+  "Mutterkühe":               {verzehr:"10-14", besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
+  "Galtkühe":                 {verzehr:"11",    besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
+  "Ausmastkuh":                {verzehr:"15",    besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
+  "Jungvieh über 2-jährig":   {verzehr:"9",     besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
+  "Jungvieh 1-2 jährig":      {verzehr:"7",     besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
+  "Jungvieh 160-365 Tage":    {verzehr:"5.5",   besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
+  "Jungvieh < 160 Tage":      {verzehr:"2",     besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]}
+};
+
+let currentSystem = "umtrieb";
+
+const MONTHS_DE = {"Januar":1,"Februar":2,"März":3,"April":4,"Mai":5,"Juni":6,"Juli":7,"August":8,"September":9,"Oktober":10,"November":11,"Dezember":12};
+function germanDateToIso(str, year){
+  const m = String(str).match(/(\d+)\.\s*([A-Za-zÄÖÜäöü]+)/);
+  if(!m) return "";
+  const month = MONTHS_DE[m[2]];
+  if(!month) return "";
+  return year + "-" + String(month).padStart(2,"0") + "-" + String(parseInt(m[1],10)).padStart(2,"0");
+}
+
+/* ---------- Standort / Tierkategorie ---------- */
+function onStandortChange(){
+  const key = document.getElementById("hoehe").value
+            + document.getElementById("boden").value
+            + document.getElementById("klima").value
+            + document.getElementById("veg").value;
+  const data = KOMBI[key];
+  if(!data) return;
+  const year = new Date().getFullYear();
+  for(let i=0;i<4;i++){
+    document.getElementById("A"+i).value = germanDateToIso(data.A[i], year);
+    document.getElementById("B"+i).value = data.B[i];
+  }
+  const a3 = new Date(document.getElementById("A3").value);
+  const endeDefault = new Date(a3); endeDefault.setDate(endeDefault.getDate()+70);
+  const cap = new Date(a3.getFullYear(), 11, 5);
+  const ende = endeDefault > cap ? cap : endeDefault;
+  document.getElementById("endeWeide").value = ende.toISOString().slice(0,10);
+  calculate();
+}
+
+function onTierChange(){
+  const name = document.getElementById("tier").value;
+  const t = TIER[name];
+  document.getElementById("tierRef").innerHTML =
+    "<strong>" + name + "</strong> — Tagesverzehr-Richtwert: " + t.verzehr + " kg TS/Tier/Tag " +
+    "(Ausgangspunkt für Zeile D, betriebsspezifisch anpassen).";
+  renderKoppelRef(name);
+  calculate();
+}
+
+function renderKoppelRef(name){
+  const t = TIER[name];
+  document.getElementById("tierNameKoppel").innerText = name;
+  const grid = document.getElementById("koppelRefGrid");
+  grid.innerHTML =
+    ref("Besatzzeit-Spanne", t.besatz[0] + " – " + t.besatz[1]) +
+    ref("Koppelgrösse min–max (ha)", t.groesse[0].toFixed(2) + " – " + t.groesse[1].toFixed(2)) +
+    ref("Koppelgrösse ganzjährig (ha)", t.groesseMw[0].toFixed(2) + " – " + t.groesseMw[1].toFixed(2)) +
+    ref("Koppelanzahl (Sommer, ≥)", t.anzahl[1].toFixed(1) + " – " + t.anzahl[0].toFixed(1));
+}
+function ref(label,val){
+  return "<div><span>"+label+"</span>"+val+"</div>";
+}
+
+function applyStdTierzahl(){
+  const n = document.getElementById("stdTierzahl").value;
+  for(let i=0;i<4;i++){
+    document.getElementById("C"+i).value = n;
+  }
+  calculate();
+}
+
+/* ---------- System-Umschaltung ---------- */
+function setSystem(sys){
+  currentSystem = sys;
+  const isUmtrieb = sys === "umtrieb";
+  document.getElementById("btn-umtrieb").classList.toggle("active", isUmtrieb);
+  document.getElementById("btn-kurzrasen").classList.toggle("active", !isUmtrieb);
+  document.querySelectorAll(".row-umtrieb").forEach(el => el.classList.toggle("hidden", !isUmtrieb));
+  document.querySelectorAll(".row-kurzrasen").forEach(el => el.classList.toggle("hidden", isUmtrieb));
+  document.getElementById("koppelplanungPanel").classList.toggle("hidden", !isUmtrieb);
+  document.getElementById("zusammenfassungPanel").classList.toggle("hidden", isUmtrieb);
+  calculate();
+}
+
+/* ---------- Hauptberechnung ---------- */
+function val(id){ return parseFloat(document.getElementById(id).value) || 0; }
+
+function calculate(){
+  const isUmtrieb = currentSystem === "umtrieb";
+  const F_res = document.querySelectorAll(".F_res");
+  const G_res = document.querySelectorAll(".G_res");
+  const Hu_res = document.querySelectorAll(".Hu_res");
+  const K_res = document.querySelectorAll(".K_res");
+  const L_res = document.querySelectorAll(".L_res");
+  const M_res = document.querySelectorAll(".M_res");
+  const N_res = document.querySelectorAll(".N_res");
+  const P_res = document.querySelectorAll(".P_res");
+  const Q_res = document.querySelectorAll(".Q_res");
+  const Ik_res = document.querySelectorAll(".Ik_res");
+  const Jk_res = document.querySelectorAll(".Jk_res");
+
+  const Ms = [];
+
+  for(let i=0;i<4;i++){
+    const B = val("B"+i);
+    const C = val("C"+i);
+    const D = val("D"+i);
+    const E = val("E"+i);
+
+    const F = (E*D)/100;
+    const G = F>0 ? B/F : 0;
+    F_res[i].innerText = F.toFixed(2);
+    G_res[i].innerText = G.toFixed(2);
+
+    if(isUmtrieb){
+      const I = val("Iu"+i);
+      const J = val("Ju"+i);
+      const O = val("Ou"+i);
+
+      const Hu = G>0 ? C/G : 0;
+      const K = (G*F*I) + J;
+      const L = K - J;
+      const M = L>0 ? (1/L)*C*F : 0;
+      const N = C>0 ? (M/C)*100 : 0;
+      const P = M*O;
+      const Q = O>0 ? I/O : 0;
+
+      Hu_res[i].innerText = Hu.toFixed(2);
+      K_res[i].innerText = K.toFixed(2);
+      L_res[i].innerText = L.toFixed(2);
+      M_res[i].innerText = M.toFixed(3);
+      N_res[i].innerText = N.toFixed(2);
+      P_res[i].innerText = P.toFixed(2);
+      Q_res[i].innerText = Q.toFixed(2);
+      Ms.push(M);
+    } else {
+      const Ik = B>0 ? (F*C)/B : 0;
+      const Jk = C>0 ? (Ik/C)*100 : 0;
+      Ik_res[i].innerText = Ik.toFixed(3);
+      Jk_res[i].innerText = Jk.toFixed(2);
+    }
+  }
+
+  if(isUmtrieb){
+    const avg = Ms.reduce((a,b)=>a+b,0)/Ms.length;
+    document.getElementById("avgM").innerText = avg.toFixed(3);
+  } else {
+    // recompute cleanly for summary
+    const Ivals=[], Jvals=[];
+    for(let i=0;i<4;i++){
+      const t = document.querySelectorAll(".Ik_res")[i].innerText;
+      const t2 = document.querySelectorAll(".Jk_res")[i].innerText;
+      Ivals.push(parseFloat(t)||0);
+      Jvals.push(parseFloat(t2)||0);
+    }
+    const avgI = Ivals.reduce((a,b)=>a+b,0)/Ivals.length;
+    const avgJ = Jvals.reduce((a,b)=>a+b,0)/Jvals.length;
+    document.getElementById("avgI").innerText = avgI.toFixed(3);
+    document.getElementById("avgJ").innerText = avgJ.toFixed(2);
+  }
+
+  updateFutterkosten();
+}
+
+/* ---------- Eingesparte Futterkosten (Jahresschätzung) ---------- */
+const MONTH_LABELS = ["Jan","Feb","Mär","Apr","Mai","Jun","Jul","Aug","Sep","Okt","Nov","Dez"];
+
+function overlapDays(segStart, segEnd, monStart, monEnd){
+  const s = Math.max(segStart.getTime(), monStart.getTime());
+  const e = Math.min(segEnd.getTime(), monEnd.getTime());
+  return Math.max(0, Math.round((e-s)/86400000));
+}
+
+function updateFutterkosten(){
+  const A = [0,1,2,3].map(i=>{
+    const v = document.getElementById("A"+i).value;
+    return v ? new Date(v) : null;
+  });
+  const endeVal = document.getElementById("endeWeide").value;
+  if(A.includes(null) || !endeVal) return;
+  const ende = new Date(endeVal);
+  const year = A[0].getFullYear();
+  const jan1 = new Date(year,0,1);
+  const nextJan1 = new Date(year+1,0,1);
+
+  const C = [0,1,2,3].map(i=>val("C"+i));
+  const D = [0,1,2,3].map(i=>val("D"+i));
+  const E = [0,1,2,3].map(i=>val("E"+i));
+
+  // Segmente: [Start, Ende), welche Phase (Tierbestand/Verzehr) gilt, Weideanteil in %
+  const segs = [
+    {start:jan1,  end:A[0],  idx:0, share:0},
+    {start:A[0],  end:A[1],  idx:0, share:E[0]},
+    {start:A[1],  end:A[2],  idx:1, share:E[1]},
+    {start:A[2],  end:A[3],  idx:2, share:E[2]},
+    {start:A[3],  end:ende,  idx:3, share:E[3]},
+    {start:ende,  end:nextJan1, idx:3, share:0}
+  ];
+
+  const monthlyWeide = new Array(12).fill(0);
+  const monthlyStall = new Array(12).fill(0);
+
+  for(let m=0;m<12;m++){
+    const monStart = new Date(year, m, 1);
+    const monEnd = new Date(year, m+1, 1);
+    segs.forEach(seg=>{
+      if(seg.end <= seg.start) return;
+      const days = overlapDays(seg.start, seg.end, monStart, monEnd);
+      if(days<=0) return;
+      const dailyTotal = C[seg.idx]*D[seg.idx];
+      const dailyWeide = dailyTotal * seg.share/100;
+      const dailyStall = dailyTotal - dailyWeide;
+      monthlyWeide[m] += dailyWeide*days/1000; // Tonnen
+      monthlyStall[m] += dailyStall*days/1000;
+    });
+  }
+
+  renderFeedChart(monthlyStall, monthlyWeide);
+
+  const annualWeide = monthlyWeide.reduce((a,b)=>a+b,0);
+  const annualStall = monthlyStall.reduce((a,b)=>a+b,0);
+  const annualTotal = annualWeide+annualStall;
+  const pctWeide = annualTotal>0 ? annualWeide/annualTotal*100 : 0;
+  const pctStall = 100-pctWeide;
+
+  const costStallRp = val("costStall");
+  const costPastureRp = val("costPasture");
+  const costAllStall = annualTotal*1000*costStallRp/100;
+  const costMixed = annualWeide*1000*costPastureRp/100 + annualStall*1000*costStallRp/100;
+  const savings = costAllStall - costMixed;
+
+  const fmtChf = n => n.toLocaleString("de-CH",{maximumFractionDigits:0});
+  document.getElementById("costSummaryGrid").innerHTML = `
+    <div><span>Jahresbedarf Futter gesamt</span><strong>${annualTotal.toFixed(1)} t TS/Jahr</strong></div>
+    <div><span>Jahresmix Weide / Stall</span><strong>${pctWeide.toFixed(0)}% / ${pctStall.toFixed(0)}%</strong></div>
+    <div><span>Jahreskosten bei 100% Stallfütterung</span><strong>${fmtChf(costAllStall)} CHF</strong></div>
+    <div><span>Jahreskosten gemischt (Weide + Stall)</span><strong>${fmtChf(costMixed)} CHF</strong></div>
+    <div class="cost-highlight"><span>Eingesparte Futterkosten pro Jahr</span><strong>${fmtChf(savings)} CHF</strong></div>
+  `;
+}
+
+function renderFeedChart(stallTons, weideTons){
+  const w=880, h=260, padL=42, padR=10, padT=14, padB=28;
+  const chartW = w-padL-padR, chartH = h-padT-padB;
+  const totals = stallTons.map((v,i)=>v+weideTons[i]);
+  const maxVal = Math.max(...totals, 1);
+  const gap = chartW/12;
+  const barW = gap*0.55;
+  let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
+  for(let g=0; g<=4; g++){
+    const gv = maxVal*g/4;
+    const gy = padT + chartH - (gv/maxVal)*chartH;
+    svg += `<line x1="${padL}" y1="${gy}" x2="${w-padR}" y2="${gy}" stroke="#dde2d6" stroke-width="1"/>`;
+    svg += `<text x="${padL-6}" y="${gy+3}" font-size="9" fill="#5c6b5d" text-anchor="end">${gv.toFixed(0)}</text>`;
+  }
+  MONTH_LABELS.forEach((label,i)=>{
+    const x = padL + gap*i + gap/2 - barW/2;
+    const sVal = stallTons[i], wVal = weideTons[i];
+    const sH = maxVal>0 ? (sVal/maxVal)*chartH : 0;
+    const wH = maxVal>0 ? (wVal/maxVal)*chartH : 0;
+    const yBase = padT+chartH;
+    svg += `<rect x="${x.toFixed(1)}" y="${(yBase-sH).toFixed(1)}" width="${barW.toFixed(1)}" height="${sH.toFixed(1)}" fill="#c7b283" rx="1.5"><title>${label}: Stall ${sVal.toFixed(2)} t TS</title></rect>`;
+    svg += `<rect x="${x.toFixed(1)}" y="${(yBase-sH-wH).toFixed(1)}" width="${barW.toFixed(1)}" height="${wH.toFixed(1)}" fill="#4f9d5c" rx="1.5"><title>${label}: Weide ${wVal.toFixed(2)} t TS</title></rect>`;
+    svg += `<text x="${(x+barW/2).toFixed(1)}" y="${h-8}" font-size="10" fill="#5c6b5d" text-anchor="middle" font-family="'IBM Plex Mono',monospace">${label}</text>`;
+  });
+  svg += `</svg>`;
+  document.getElementById("feedChart").innerHTML = svg;
+}
+
+/* ---------- RPM-Umrechner ---------- */
+function toKg(unit, v){
+  if(unit === "kg") return v;
+  if(unit === "cm") return v*240 - 767;
+  if(unit === "clicks") return v*120 - 767;
+}
+function fromKg(unit, kg){
+  if(unit === "kg") return kg;
+  if(unit === "cm") return (kg+767)/240;
+  if(unit === "clicks") return (kg+767)/120;
+}
+function calcRpm(){
+  const v = parseFloat(document.getElementById("rpmVal").value) || 0;
+  const from = document.getElementById("rpmFrom").value;
+  const to = document.getElementById("rpmTo").value;
+  const kg = toKg(from, v);
+  const result = fromKg(to, kg);
+  document.getElementById("rpmResult").innerText = result.toFixed(2) + (to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : " Klicks");
+}
+
+/* ---------- Standorterkennung (GPS) ---------- */
+function mapElevationToHoehe(elevationM){
+  const h = Number(elevationM);
+  if(!Number.isFinite(h)) return null;
+  if(h < 700) return "unter_700";
+  if(h < 900) return "unter_900";
+  if(h < 1100) return "unter_1100";
+  return "über_1100";
+}
+
+async function fetchJsonWithTimeout(url, timeoutMs=8000){
+  const ctrl = new AbortController();
+  const t = setTimeout(()=>ctrl.abort(), timeoutMs);
+  try{
+    const res = await fetch(url, {signal: ctrl.signal});
+    if(!res.ok) throw new Error("HTTP "+res.status);
+    return await res.json();
+  } finally { clearTimeout(t); }
+}
+
+function markEstimated(fieldId, on){
+  const wrap = document.getElementById(fieldId).closest(".field");
+  wrap.classList.toggle("is-estimated", on);
+  const label = wrap.querySelector("label");
+  let badge = label.querySelector(".est-badge");
+  if(on && !badge){
+    badge = document.createElement("span");
+    badge.className = "est-badge";
+    badge.innerText = "Schätzung";
+    label.appendChild(badge);
+  } else if(!on && badge){
+    badge.remove();
+  }
+}
+
+async function handleLocate(){
+  const btn = document.getElementById("btnLocate");
+  const status = document.getElementById("locateStatus");
+  if(!navigator.geolocation){
+    status.innerText = "Geolocation wird von diesem Browser nicht unterstützt.";
+    return;
+  }
+  btn.disabled = true;
+  status.innerText = "GPS wird abgefragt …";
+  try{
+    const pos = await new Promise((resolve,reject)=>{
+      navigator.geolocation.getCurrentPosition(resolve, reject, {enableHighAccuracy:true, timeout:10000, maximumAge:120000});
+    });
+    const lat = pos.coords.latitude, lon = pos.coords.longitude;
+
+    status.innerText = "Höhe wird ermittelt …";
+    const elevData = await fetchJsonWithTimeout(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
+    const elevation = Array.isArray(elevData.elevation) ? elevData.elevation[0] : null;
+    const hoehe = mapElevationToHoehe(elevation);
+    if(hoehe){
+      document.getElementById("hoehe").value = hoehe;
+      markEstimated("hoehe", true);
+    }
+
+    status.innerText = "Niederschlag wird geschätzt …";
+    let klimaLabel = "";
+    try{
+      const now = new Date();
+      const endY = now.getFullYear()-1;
+      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${endY}-01-01&end_date=${endY}-12-31&daily=precipitation_sum&timezone=auto`;
+      const precipData = await fetchJsonWithTimeout(url, 9000);
+      const vals = (precipData.daily && precipData.daily.precipitation_sum) || [];
+      const total = vals.reduce((a,b)=>a+(b||0),0);
+      if(total > 0){
+        const klima = total >= 900 ? "frisch" : "trocken";
+        document.getElementById("klima").value = klima;
+        markEstimated("klima", true);
+        klimaLabel = ` · Niederschlag ca. ${total.toFixed(0)} mm/Jahr → Klima-Schätzung „${klima}"`;
+      }
+    }catch(_e){ /* Klima-Schätzung ist optional, bei Fehler einfach weglassen */ }
+
+    onStandortChange();
+    status.innerText = `Standort erkannt: ${lat.toFixed(4)}, ${lon.toFixed(4)} · Höhe ca. ${Math.round(elevation)} m → „${hoehe}"${klimaLabel}. Boden/Lage und Vegetationsbeginn bitte selbst prüfen.`;
+  }catch(err){
+    status.innerText = "Standort konnte nicht ermittelt werden: " + err.message;
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+// Manuelle Änderung an Höhe/Klima entfernt die "Schätzung"-Markierung wieder
+document.getElementById("hoehe").addEventListener("change", ()=>markEstimated("hoehe", false));
+document.getElementById("klima").addEventListener("change", ()=>markEstimated("klima", false));
+
+/* ---------- Weidesystem-Auswahl-Assistent ---------- */
+function toggleAssistant(){
+  const panel = document.getElementById("assistPanel");
+  const isHidden = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden");
+  document.getElementById("assistToggleBtn").innerText = isHidden
+    ? "Auswahl-Assistent ausblenden"
+    : "Nicht sicher, welches System passt? → Auswahl-Assistent öffnen";
+  if(isHidden) renderAssistant();
+}
+
+function evaluateAssistant(){
+  const reasons = [];
+  let score = 0;
+  const isRaigras = document.getElementById("aRaigras").value === "ja";
+  const isWet = document.getElementById("aNiederschlag").value === "ja";
+  const isFlat = document.getElementById("aGelaende").value === "ja";
+  const dryRisk = document.getElementById("aTrockenheit").value;
+  const lowFenceBudget = document.getElementById("aZaunbudget").value === "ja";
+  const easyManure = document.getElementById("aDuenger").value === "ja";
+
+  if(isRaigras){ score += 2; reasons.push("Raigrasfähige Lage spricht für Kurzrasenweide."); }
+  else reasons.push("Ohne raigrasfähige Lage ist Kurzrasenweide gemäss Merkblatt ungeeignet.");
+
+  if(isWet){ score += 2; reasons.push("Niederschlagsreiche Bedingungen stützen Kurzrasenweide."); }
+  else reasons.push("Trockene Bedingungen erhöhen das Risiko in der Kurzrasenweide.");
+
+  if(isFlat){ score += 1; reasons.push("Gleichmässiges Gelände passt zur Kurzrasenweide."); }
+  else reasons.push("Ungleichmässiges Relief passt besser zur Umtriebsweide.");
+
+  if(dryRisk === "hoch"){ score -= 2; reasons.push("Hohes Trockenheitsrisiko: Umtriebsweide ist robuster (stehende Reserven)."); }
+  else if(dryRisk === "mittel"){ score -= 1; }
+
+  if(lowFenceBudget){ score += 1; reasons.push("Geringe Zaunkosten sprechen für Kurzrasenweide."); }
+  if(easyManure){ score -= 1; reasons.push("Wenn Düngerausbringung sehr einfach sein soll, passt Umtriebsweide besser."); }
+
+  const hardFail = !isRaigras || !isWet || !isFlat;
+  const recommended = (hardFail || score < 2) ? "umtrieb" : "kurzrasen";
+  const confidence = Math.max(0, Math.min(100, 50 + score*10));
+  return {recommended, reasons, confidence, score};
+}
+
+function renderAssistant(){
+  const r = evaluateAssistant();
+  const badge = document.getElementById("assistBadge");
+  badge.innerText = "Empfehlung: " + (r.recommended === "umtrieb" ? "Umtriebsweide" : "Kurzrasenweide");
+  badge.classList.toggle("warn", r.recommended === "umtrieb");
+  document.getElementById("assistReasons").innerHTML = r.reasons.map(x=>"<li>"+x+"</li>").join("");
+  const currentLabel = currentSystem === "umtrieb" ? "Umtriebsweide" : "Kurzrasenweide";
+  document.getElementById("assistMeta").innerText = `Merkblatt-Score: ${r.score} · Sicherheit: ${r.confidence}% · Aktuell gewählt: ${currentLabel}`;
+}
+
+function applyAssistant(){
+  const r = evaluateAssistant();
+  setSystem(r.recommended);
+  renderAssistant();
+}
+
+/* ---------- Info-Tooltipps (Klick überall, zusätzlich Hover auf PC) ---------- */
+const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+let pinnedTip = null;
+
+function showTip(trigger){
+  const portal = document.getElementById("ttPortal");
+  portal.textContent = trigger.getAttribute("data-tip");
+  portal.style.display = "block";
+  const r = trigger.getBoundingClientRect();
+  const tw = Math.min(300, window.innerWidth*0.8);
+  let left = r.left;
+  if(left + tw > window.innerWidth - 12) left = window.innerWidth - tw - 12;
+  if(left < 8) left = 8;
+  let top = r.bottom + 6;
+  portal.style.width = tw + "px";
+  portal.style.left = left + "px";
+  portal.style.top = top + "px";
+}
+function hideTip(){
+  document.getElementById("ttPortal").style.display = "none";
+}
+
+document.addEventListener("mouseover", (e)=>{
+  if(!canHover || pinnedTip) return;
+  const trig = e.target.closest ? e.target.closest(".info-tip") : null;
+  if(trig) showTip(trig);
+});
+document.addEventListener("mouseout", (e)=>{
+  if(!canHover || pinnedTip) return;
+  const trig = e.target.closest ? e.target.closest(".info-tip") : null;
+  if(trig) hideTip();
+});
+document.addEventListener("click", (e)=>{
+  const trig = e.target.closest ? e.target.closest(".info-tip") : null;
+  if(trig){
+    e.stopPropagation();
+    if(pinnedTip === trig){ pinnedTip = null; hideTip(); }
+    else { pinnedTip = trig; showTip(trig); }
+    return;
+  }
+  if(!e.target.closest || !e.target.closest("#ttPortal")){
+    pinnedTip = null;
+    hideTip();
+  }
+});
+document.addEventListener("keydown", (e)=>{
+  if(e.key === "Escape"){ pinnedTip = null; hideTip(); }
+});
+
+/* ---------- Init ---------- */
+onStandortChange();
+onTierChange();
+calcRpm();
+calculate();
+renderAssistant();
+</script>
+</body>
+</html>
