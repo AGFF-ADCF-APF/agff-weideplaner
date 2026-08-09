@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Weideplanung – Rechner-Übersicht</title>
+<style>
+  :root {
+    --bg: #f7f5f0;
+    --card-bg: #ffffff;
+    --border: #ddd6c8;
+    --text: #2f3a28;
+    --muted: #6b7160;
+    --accent: #4a7c2c;
+    --accent-dark: #35591f;
+    --badge-stable: #4a7c2c;
+    --badge-dev: #b5651d;
+    --badge-tool: #2c5f7c;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.55;
+  }
+  header {
+    background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+    color: #fff;
+    padding: 2.5rem 1.5rem 2rem;
+    text-align: center;
+  }
+  header h1 {
+    margin: 0 0 0.4rem;
+    font-size: 1.9rem;
+  }
+  header p {
+    margin: 0;
+    opacity: 0.92;
+    font-size: 1rem;
+  }
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem 3rem;
+  }
+  .card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.4rem 1.6rem;
+    margin-bottom: 1.2rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    margin-bottom: 0.5rem;
+  }
+  .card h2 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+  .card h2 a {
+    color: var(--accent-dark);
+    text-decoration: none;
+  }
+  .card h2 a:hover {
+    text-decoration: underline;
+  }
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .badge.stable { background: var(--badge-stable); }
+  .badge.dev { background: var(--badge-dev); }
+  .badge.tool { background: var(--badge-tool); }
+  .card p {
+    margin: 0.3rem 0;
+    color: var(--text);
+  }
+  .card ul {
+    margin: 0.5rem 0 0.3rem;
+    padding-left: 1.2rem;
+    color: var(--text);
+  }
+  .card .file {
+    font-family: "SFMono-Regular", Consolas, monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .open-btn {
+    display: inline-block;
+    margin-top: 0.8rem;
+    padding: 0.5rem 1.1rem;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: background 0.15s;
+  }
+  .open-btn:hover {
+    background: var(--accent-dark);
+  }
+  .note {
+    background: #fff8e6;
+    border: 1px solid #e8d9a8;
+    border-radius: 8px;
+    padding: 1rem 1.3rem;
+    margin-top: 1.5rem;
+    font-size: 0.92rem;
+  }
+  .note strong { color: var(--accent-dark); }
+  footer {
+    text-align: center;
+    color: var(--muted);
+    font-size: 0.8rem;
+    padding: 1.5rem;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌱 Weideplanung – Rechner-Sammlung</h1>
+  <p>Interaktive HTML/JS-Rechner rund um Weideplanung und -infrastruktur – kein Build-Schritt nötig, einfach im Browser öffnen.</p>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><a href="AGFF_Weideplaner_v1.html">AGFF Weideplaner v1</a></h2>
+      <span class="badge stable">Stabile Referenz</span>
+    </div>
+    <p class="file">AGFF_Weideplaner_v1.html</p>
+    <p>Nachbau des offiziellen AGFF-Weideplaners (Excel-Original) – die Formellogik wurde 1:1 übernommen.</p>
+    <ul>
+      <li>Bleibt bewusst schlank und möglichst nah am Excel-Original</li>
+      <li>Dient als verlässliche Referenzversion ohne Erweiterungen</li>
+    </ul>
+    <a class="open-btn" href="AGFF_Weideplaner_v1.html">Rechner öffnen →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><a href="AGFF_Weideplaner_v2.html">AGFF Weideplaner v2</a></h2>
+      <span class="badge dev">Aktive Weiterentwicklung</span>
+    </div>
+    <p class="file">AGFF_Weideplaner_v2.html</p>
+    <p>Basiert auf v1, ergänzt um das <strong>Dürre-Stresstest-Modul</strong>.</p>
+    <ul>
+      <li>Szenario-Umschaltung Normaljahr ↔ Dürre</li>
+      <li>Gekoppelte Reduktion von Graszuwachs &amp; Weideanteil im Dürrefall</li>
+      <li>Automatischer Vergleich beider Szenarien: Flächenbedarf, Futterkosten, Einsparungen</li>
+    </ul>
+    <a class="open-btn" href="AGFF_Weideplaner_v2.html">Rechner öffnen →</a>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <h2><a href="Weideinfrastruktur_Rechner_v3.html">Infrastruktur-Rechner v3</a></h2>
+      <span class="badge tool">Ergänzendes Tool</span>
+    </div>
+    <p class="file">Weideinfrastruktur_Rechner_v3.html</p>
+    <p>Investitionsrechner für Weideinfrastruktur-Massnahmen, ausgewiesen in Rp./kg Milch je Massnahme.</p>
+    <a class="open-btn" href="Weideinfrastruktur_Rechner_v3.html">Rechner öffnen →</a>
+  </div>
+
+  <div class="note">
+    <strong>Warum zwei AGFF-Versionen parallel?</strong><br>
+    v1 bleibt als schlanke, möglichst nah am Excel-Original gehaltene Referenz bestehen. v2 ist die aktive
+    Weiterentwicklung mit dem Dürre-Modul und zukünftigen Erweiterungen. Bei Bedarf können weitere Module
+    (z. B. eine Verknüpfung mit dem Infrastruktur-Rechner) zuerst in v2 erprobt und später – falls sinnvoll –
+    auch in v1 zurückportiert werden.
+  </div>
+
+</main>
+
+<footer>
+  Weideplanung – Rechner-Sammlung · Details siehe <a href="README.md">README.md</a>
+</footer>
+
+</body>
+</html>
