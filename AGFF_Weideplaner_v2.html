@@ -166,7 +166,7 @@
   }
 
   /* Table */
-  .table-scroll{overflow-x:auto;}
+  .table-scroll{overflow-x:auto;overflow-anchor:none;}
   table{
     width:100%;
     border-collapse:collapse;
@@ -239,6 +239,11 @@
     text-align:left;
     font-size:.9rem;
     padding:7px 10px;
+  }
+  tr.section-row .section-sticky{
+    position:sticky;
+    left:10px;
+    display:inline-block;
   }
   .hidden{display:none !important;}
 
@@ -498,6 +503,50 @@
     h1{font-size:1.5rem;}
     .panel{padding:16px;}
   }
+
+  /* Phasen-Schnellsprung (mobile) */
+  .phase-jump{display:none;}
+  .phase-jump-label{font-size:.72rem;color:var(--muted);font-weight:600;margin-right:2px;}
+  .phase-chip{
+    padding:5px 11px;
+    border-radius:14px;
+    border:1px solid var(--line);
+    background:#fff;
+    font-family:'Inter',sans-serif;
+    font-size:.75rem;
+    font-weight:600;
+    color:var(--muted);
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .phase-chip.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+
+  /* Kompakte, sticky Tabelle für kleine Displays: nur 1–2 Weidephasen
+     gleichzeitig sichtbar, Code/Label bleiben beim horizontalen Scrollen fixiert. */
+  @media (max-width:760px){
+    .phase-jump{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+    .table-scroll{scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;}
+    #calcTable{table-layout:fixed;min-width:0;font-size:.82rem;}
+    #calcTable .col-code{width:26px;}
+    #calcTable .col-label{width:126px;}
+    #calcTable .col-phase{width:118px;}
+    #calcTable th, #calcTable td{padding:6px 6px;}
+    #calcTable td.code, #calcTable th.th-code{
+      position:sticky;left:0;z-index:3;
+      padding:6px 3px;font-size:.7rem;
+    }
+    #calcTable td.label, #calcTable th.th-label{
+      position:sticky;left:26px;z-index:2;
+      min-width:0;font-size:.74rem;
+      box-shadow:4px 0 6px -4px rgba(0,0,0,.18);
+    }
+    #calcTable td.label .formula{display:none;}
+    #calcTable thead th:not(.th-code):not(.th-label){scroll-snap-align:start;}
+    #calcTable tbody tr:not(.section-row) td:not(.code):not(.label){scroll-snap-align:start;}
+    #calcTable input.cell{width:100%;font-size:.78rem;padding:5px 4px;}
+    #calcTable input[type="date"].cell{width:100%;}
+    #calcTable .info-tip-wrap{margin-left:3px;}
+  }
 </style>
 </head>
 <body>
@@ -679,12 +728,23 @@
     <p class="step-label">Schritt 4</p>
     <h2>Betriebs- und Standortdaten</h2>
     <p class="sub">Dick hervorgehobene Felder (gelb umrandet) sind Auto-Vorschläge aus Schritt 1 — betriebsspezifisch anpassbar.</p>
+    <div class="phase-jump" id="phaseJump">
+      <span class="phase-jump-label">Phase:</span>
+      <button type="button" class="phase-chip active" onclick="scrollToPhase(0,this)">Vorweide</button>
+      <button type="button" class="phase-chip" onclick="scrollToPhase(1,this)">Frühling</button>
+      <button type="button" class="phase-chip" onclick="scrollToPhase(2,this)">Sommer</button>
+      <button type="button" class="phase-chip" onclick="scrollToPhase(3,this)">Herbst</button>
+    </div>
     <div class="table-scroll">
       <table id="calcTable">
+        <colgroup>
+          <col class="col-code"><col class="col-label">
+          <col class="col-phase"><col class="col-phase"><col class="col-phase"><col class="col-phase">
+        </colgroup>
         <thead>
           <tr>
-            <th>Code</th>
-            <th style="text-align:left;">Parameter / Rechnungsschritt</th>
+            <th class="th-code">Code</th>
+            <th class="th-label" style="text-align:left;">Parameter / Rechnungsschritt</th>
             <th>Vorweide</th>
             <th class="season-fruehling">Frühlingsweide</th>
             <th class="season-sommer">Sommerweide</th>
@@ -692,7 +752,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr class="section-row"><td colspan="6">Grundlagen</td></tr>
+          <tr class="section-row"><td colspan="6"><span class="section-sticky">Grundlagen</span></td></tr>
           <tr>
             <td class="code">A</td>
             <td class="label">Start Weidephase<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Beginn der Weidephase je nach Höhenlage und Vegetationsbeginn (Merkblatt Abb. 1). Ein früher Weidebeginn wirkt dem Futterberg im Frühling entgegen und fördert eine vorteilhafte Entwicklung des Pflanzenbestands.">i</button></span></td>
@@ -744,7 +804,7 @@
             <td><input type="number" class="cell I_u" id="Iu3" value="45" oninput="calculate()"></td>
           </tr>
 
-          <tr class="section-row"><td colspan="6">Verzehr &amp; Besatz</td></tr>
+          <tr class="section-row"><td colspan="6"><span class="section-sticky">Verzehr &amp; Besatz</span></td></tr>
           <tr class="calc-row">
             <td class="code">F</td>
             <td class="label">Verzehr Weidefutter<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Tatsächlich über die Weide aufgenommene Trockensubstanz pro Tier und Tag = Verzehrsanteil × Tagesverzehr.">i</button></span><span class="formula">= E × D / 100</span></td>
@@ -772,7 +832,7 @@
           </tr>
 
           <!-- UMTRIEB: Futterdichten -->
-          <tr class="section-row row-umtrieb"><td colspan="6">Futterdichten</td></tr>
+          <tr class="section-row row-umtrieb"><td colspan="6"><span class="section-sticky">Futterdichten</span></td></tr>
           <tr class="row-umtrieb">
             <td class="code">J</td>
             <td class="label">Ziel Abtriebshöhe (kg TS/ha)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Angestrebte Restgrashöhe beim Verlassen der Koppel, ca. 3.5–4 cmRPM bzw. ca. 1500 kg TS/ha stehendes Weidefutter (Merkblatt Kap. 3.3). Zu spätes Verlassen führt zu Unternutzung und sinkender Futterqualität.">i</button></span></td>
@@ -792,7 +852,7 @@
             <td class="L_res"></td><td class="L_res"></td><td class="L_res"></td><td class="L_res"></td>
           </tr>
 
-          <tr class="section-row"><td colspan="6">Weideparameter</td></tr>
+          <tr class="section-row"><td colspan="6"><span class="section-sticky">Weideparameter</span></td></tr>
           <tr class="calc-row row-umtrieb">
             <td class="code">M</td>
             <td class="label">Flächenbedarf Herde/Tag (ha/Herde/Tag)<span class="formula">= 1/L × C × F</span></td>
@@ -1578,12 +1638,54 @@ document.addEventListener("keydown", (e)=>{
   if(e.key === "Escape"){ pinnedTip = null; hideTip(); }
 });
 
+/* ---------- Phasen-Schnellsprung (mobile Tabelle) ---------- */
+function scrollToPhase(idx, btn){
+  const table = document.getElementById("calcTable");
+  const scrollBox = table && table.closest(".table-scroll");
+  if(!scrollBox) return;
+  const headerCells = table.querySelectorAll("thead tr th");
+  const stickyCell = headerCells[1];
+  const target = headerCells[2 + idx];
+  if(!target || !stickyCell) return;
+  const stickyRight = stickyCell.getBoundingClientRect().right;
+  const targetLeft = target.getBoundingClientRect().left;
+  scrollBox.scrollTo({left: scrollBox.scrollLeft + (targetLeft - stickyRight), behavior:"smooth"});
+  document.querySelectorAll("#phaseJump .phase-chip").forEach(c=>c.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+}
+
+(function setupPhaseScrollSync(){
+  const table = document.getElementById("calcTable");
+  const scrollBox = table && table.closest(".table-scroll");
+  if(!scrollBox) return;
+  let ticking = false;
+  scrollBox.addEventListener("scroll", ()=>{
+    if(ticking || !window.matchMedia("(max-width:760px)").matches) return;
+    ticking = true;
+    requestAnimationFrame(()=>{
+      const headerCells = table.querySelectorAll("thead tr th");
+      const stickyRight = headerCells[1].getBoundingClientRect().right;
+      let bestIdx = 0, bestDist = Infinity;
+      for(let i=0;i<4;i++){
+        const dist = Math.abs(headerCells[2+i].getBoundingClientRect().left - stickyRight);
+        if(dist < bestDist){ bestDist = dist; bestIdx = i; }
+      }
+      document.querySelectorAll("#phaseJump .phase-chip").forEach((c,i)=>c.classList.toggle("active", i===bestIdx));
+      ticking = false;
+    });
+  }, {passive:true});
+})();
+
 /* ---------- Init ---------- */
 onStandortChange();
 onTierChange();
 calcRpm();
 calculate();
 renderAssistant();
+{
+  const calcScrollBox = document.getElementById("calcTable").closest(".table-scroll");
+  if(calcScrollBox) calcScrollBox.scrollLeft = 0;
+}
 </script>
 </body>
 </html>
