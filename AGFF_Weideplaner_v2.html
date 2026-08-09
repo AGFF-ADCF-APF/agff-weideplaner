@@ -990,6 +990,7 @@
       <span><i style="background:#4f9d5c;"></i> Weidefutter</span>
       <span><i style="background:#c7b283;"></i> Stallfutter</span>
     </div>
+    <p class="sub" style="margin-top:8px;margin-bottom:0;">Balken zeigen den Gesamtbedarf pro Kalendermonat in Tonnen Trockensubstanz (t TS). Kürzere Monate wie Februar (28 statt 30/31 Tage) fallen dadurch automatisch etwas kleiner aus, auch bei gleichbleibendem Tagesbedarf — kein Rechenfehler.</p>
 
     <div class="ref-grid" id="costSummaryGrid" style="margin-top:16px;"></div>
   </div>
@@ -1461,6 +1462,7 @@ function renderFeedChart(stallTons, weideTons){
   const gap = chartW/12;
   const barW = gap*0.55;
   let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
+  svg += `<text x="4" y="${padT-2}" font-size="9" fill="#5c6b5d">t TS</text>`;
   for(let g=0; g<=4; g++){
     const gv = maxVal*g/4;
     const gy = padT + chartH - (gv/maxVal)*chartH;
