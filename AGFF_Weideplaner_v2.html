@@ -247,6 +247,42 @@
   }
   .hidden{display:none !important;}
 
+  /* Koppelplanung: Koppelgrössen je Besatzzeit */
+  .koppel-table{width:100%;border-collapse:collapse;font-size:.87rem;}
+  .koppel-table th{
+    border:1px solid var(--line);
+    padding:8px 10px;
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+    text-align:center;
+    font-weight:600;
+    font-size:.82rem;
+  }
+  .koppel-table .formula-th{
+    display:block;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:400;
+    font-size:.62rem;
+    letter-spacing:0;
+    text-transform:none;
+    color:var(--muted);
+    margin-top:3px;
+  }
+  .koppel-table td{
+    border:1px solid var(--line);
+    padding:8px 10px;
+    text-align:center;
+  }
+  .koppel-table td.besatz{
+    text-align:left;
+    font-weight:600;
+    background:#fafbf7;
+  }
+  .koppel-table td strong{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--accent-dark);
+  }
+
   /* Reference / info box */
   .ref-box{
     background:var(--gold-soft);
@@ -903,9 +939,19 @@
     <p class="step-label">Ergebnis</p>
     <h2>Koppelplanung</h2>
     <p class="sub">Ø Flächenbedarf der Herde pro Tag über alle vier Phasen: <strong id="avgM">–</strong> ha/Herde/Tag</p>
-    <div class="ref-box">
-      <strong>Orientierungswerte für „<span id="tierNameKoppel">Milchkühe</span>“</strong> — feste AGFF-Referenzwerte je Tierkategorie (unabhängig von den obigen Betriebsdaten), zur groben Einordnung von Koppelgrösse und -anzahl.
-      <div class="ref-grid" id="koppelRefGrid"></div>
+    <p class="sub">Koppelgrösse und Mindestanzahl Koppeln für „<span id="tierNameKoppel">Milchkühe</span>“ — wie im Excel-Original je Besatzzeit (kürzester/längster AGFF-Richtwert) separat ausgewiesen, berechnet mit den aktuellen Betriebsdaten oben.</p>
+    <div class="table-scroll">
+      <table class="koppel-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Besatzzeit</th>
+            <th>Koppelgrösse Frühling (ha)<span class="formula-th">= Flächenbedarf Herde/Tag (Frühling) × Besatzzeit</span></th>
+            <th>Koppelgrösse ganzjährig (ha)<span class="formula-th">= Ø Flächenbedarf Herde/Tag × Besatzzeit</span></th>
+            <th>Min. Koppelanzahl<span class="formula-th">= Ø Weideruhezeit (Frühling/Sommer) / Besatzzeit + 1</span></th>
+          </tr>
+        </thead>
+        <tbody id="koppelRefBody"></tbody>
+      </table>
     </div>
   </div>
 
@@ -1037,16 +1083,17 @@ const KOMBI = {
 "über_1100flachgründig/schlechte_Lagetrockenspät": {B:[15,30,25,10], A:["24. April","3. Mai","15. Juni","15. August"]}
 };
 
-// Tierkategorie: Tagesverzehr-Richtwert + Koppel-Orientierungswerte (fixe AGFF-Referenz, sheet "Daten" Z45:AK52)
+// Tierkategorie: Tagesverzehr-Richtwert + Besatzzeit-Spanne (AGFF-Referenz, sheet "Daten" Z45:AE52).
+// koppel = Besatzzeit min/max in Tagen (0.5 = 12 Stunden), besatz = dieselben Werte als Text.
 const TIER = {
-  "Milchkühe":               {verzehr:"14-18", besatz:["12 Stunden","3 Tage"], koppel:[0.5,3],  groesse:[0.2091,1.2549], groesseMw:[0.2406,1.4435], anzahl:[47,8.667]},
-  "Mutterkühe":               {verzehr:"10-14", besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
-  "Galtkühe":                 {verzehr:"11",    besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
-  "Ausmastkuh":                {verzehr:"15",    besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
-  "Jungvieh über 2-jährig":   {verzehr:"9",     besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
-  "Jungvieh 1-2 jährig":      {verzehr:"7",     besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
-  "Jungvieh 160-365 Tage":    {verzehr:"5.5",   besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]},
-  "Jungvieh < 160 Tage":      {verzehr:"2",     besatz:["2 Tage","8 Tage"], koppel:[2,8], groesse:[0.8366,3.3464], groesseMw:[0.9623,3.8494], anzahl:[12.5,3.875]}
+  "Milchkühe":               {verzehr:"14-18", besatz:["12 Stunden","3 Tage"], koppel:[0.5,3]},
+  "Mutterkühe":               {verzehr:"10-14", besatz:["2 Tage","8 Tage"], koppel:[2,8]},
+  "Galtkühe":                 {verzehr:"11",    besatz:["2 Tage","8 Tage"], koppel:[2,8]},
+  "Ausmastkuh":                {verzehr:"15",    besatz:["2 Tage","8 Tage"], koppel:[2,8]},
+  "Jungvieh über 2-jährig":   {verzehr:"9",     besatz:["2 Tage","8 Tage"], koppel:[2,8]},
+  "Jungvieh 1-2 jährig":      {verzehr:"7",     besatz:["2 Tage","8 Tage"], koppel:[2,8]},
+  "Jungvieh 160-365 Tage":    {verzehr:"5.5",   besatz:["2 Tage","8 Tage"], koppel:[2,8]},
+  "Jungvieh < 160 Tage":      {verzehr:"2",     besatz:["2 Tage","8 Tage"], koppel:[2,8]}
 };
 
 let currentSystem = "umtrieb";
@@ -1094,22 +1141,32 @@ function onTierChange(){
   document.getElementById("tierRef").innerHTML =
     "<strong>" + name + "</strong> — Tagesverzehr-Richtwert: " + t.verzehr + " kg TS/Tier/Tag " +
     "(Ausgangspunkt für Zeile D, betriebsspezifisch anpassen).";
-  renderKoppelRef(name);
+  document.getElementById("tierNameKoppel").innerText = name;
   calculate();
 }
 
-function renderKoppelRef(name){
+// Excel "Koppelplanung": pro Besatzzeit (kürzester/längster AGFF-Richtwert der Tierkategorie)
+// Koppelgrösse Frühling (= M Frühling * Besatzzeit), Koppelgrösse ganzjährig (= Ø M * Besatzzeit)
+// und Mindestanzahl Koppeln (= Ø Weideruhezeit Frühling/Sommer / Besatzzeit + 1).
+function renderKoppelTable(Ms, avgM){
+  const name = document.getElementById("tier").value;
   const t = TIER[name];
-  document.getElementById("tierNameKoppel").innerText = name;
-  const grid = document.getElementById("koppelRefGrid");
-  grid.innerHTML =
-    ref("Besatzzeit-Spanne", t.besatz[0] + " – " + t.besatz[1]) +
-    ref("Koppelgrösse min–max (ha)", t.groesse[0].toFixed(2) + " – " + t.groesse[1].toFixed(2)) +
-    ref("Koppelgrösse ganzjährig (ha)", t.groesseMw[0].toFixed(2) + " – " + t.groesseMw[1].toFixed(2)) +
-    ref("Koppelanzahl (Sommer, ≥)", t.anzahl[1].toFixed(1) + " – " + t.anzahl[0].toFixed(1));
-}
-function ref(label,val){
-  return "<div><span>"+label+"</span>"+val+"</div>";
+  const mFruehling = Ms[1];
+  const avgWeideruhe = (val("Iu1") + val("Iu2")) / 2;
+
+  const rows = [0,1].map(k=>{
+    const besatzTage = t.koppel[k];
+    const groesseFruehling = mFruehling * besatzTage;
+    const groesseGanzjaehrig = avgM * besatzTage;
+    const koppelAnzahl = besatzTage>0 ? (avgWeideruhe/besatzTage)+1 : 0;
+    return `<tr>
+      <td class="besatz">${t.besatz[k]}</td>
+      <td><strong>${groesseFruehling.toFixed(2)}</strong></td>
+      <td><strong>${groesseGanzjaehrig.toFixed(2)}</strong></td>
+      <td><strong>${koppelAnzahl.toFixed(1)}</strong></td>
+    </tr>`;
+  });
+  document.getElementById("koppelRefBody").innerHTML = rows.join("");
 }
 
 function applyStdTierzahl(){
@@ -1226,6 +1283,7 @@ function calculate(){
   if(isUmtrieb){
     const avg = Ms.reduce((a,b)=>a+b,0)/Ms.length;
     document.getElementById("avgM").innerText = avg.toFixed(3);
+    renderKoppelTable(Ms, avg);
   } else {
     // recompute cleanly for summary
     const Ivals=[], Jvals=[];
