@@ -994,11 +994,11 @@
     <div class="ref-grid" id="costSummaryGrid" style="margin-top:16px;"></div>
   </div>
 
-  <!-- Szenario-Vergleich -->
-  <div class="panel">
+  <!-- Szenario-Vergleich (nur relevant, wenn oben das Dürre-Szenario aktiv ist) -->
+  <div class="panel hidden" id="szenarioComparePanel">
     <p class="step-label">Ergebnis</p>
     <h2>Vergleich: Normaljahr vs. Dürre-Szenario</h2>
-    <p class="sub">Wird immer für beide Fälle berechnet — unabhängig davon, welches Szenario oben in Schritt 3 gerade aktiv ist. Die Dürre-Spalte nutzt die dort eingestellten Reduktions-Prozentsätze.</p>
+    <p class="sub">Die Dürre-Spalte nutzt die in Schritt 3 eingestellten Reduktions-Prozentsätze.</p>
     <div class="table-scroll">
       <table>
         <thead>
@@ -1183,6 +1183,7 @@ function setSzenario(mode){
   document.getElementById("btn-normal").classList.toggle("active", mode==="normal");
   document.getElementById("btn-duerre").classList.toggle("active", mode==="duerre");
   document.getElementById("duerrePanel").classList.toggle("hidden", mode!=="duerre");
+  document.getElementById("szenarioComparePanel").classList.toggle("hidden", mode!=="duerre");
   if(mode==="duerre"){
     applyDuerre();
   } else {
