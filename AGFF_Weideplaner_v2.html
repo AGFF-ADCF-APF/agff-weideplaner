@@ -990,7 +990,7 @@
       <span><i style="background:#4f9d5c;"></i> Weidefutter</span>
       <span><i style="background:#c7b283;"></i> Stallfutter</span>
     </div>
-    <p class="sub" style="margin-top:8px;margin-bottom:0;">Balken zeigen den Gesamtbedarf pro Kalendermonat in Tonnen Trockensubstanz (t TS). Kürzere Monate wie Februar (28 statt 30/31 Tage) fallen dadurch automatisch etwas kleiner aus, auch bei gleichbleibendem Tagesbedarf — kein Rechenfehler.</p>
+    <p class="sub" style="margin-top:8px;margin-bottom:0;">Balken zeigen den Gesamtbedarf pro Kalendermonat in Dezitonnen Trockensubstanz (dt TS). Kürzere Monate wie Februar (28 statt 30/31 Tage) fallen dadurch automatisch etwas kleiner aus, auch bei gleichbleibendem Tagesbedarf — kein Rechenfehler.</p>
 
     <div class="ref-grid" id="costSummaryGrid" style="margin-top:16px;"></div>
   </div>
@@ -1359,8 +1359,8 @@ function computeFeedResult(Barr){
       const dailyTotal = C[seg.idx]*D[seg.idx];
       const dailyWeide = dailyTotal * seg.share/100;
       const dailyStall = dailyTotal - dailyWeide;
-      monthlyWeide[m] += dailyWeide*days/1000; // Tonnen
-      monthlyStall[m] += dailyStall*days/1000;
+      monthlyWeide[m] += dailyWeide*days/100; // dt (Dezitonnen)
+      monthlyStall[m] += dailyStall*days/100;
     });
   }
 
@@ -1372,8 +1372,8 @@ function computeFeedResult(Barr){
 
   const costStallRp = val("costStall");
   const costPastureRp = val("costPasture");
-  const costAllStall = annualTotal*1000*costStallRp/100;
-  const costMixed = annualWeide*1000*costPastureRp/100 + annualStall*1000*costStallRp/100;
+  const costAllStall = annualTotal*100*costStallRp/100;
+  const costMixed = annualWeide*100*costPastureRp/100 + annualStall*100*costStallRp/100;
   const savings = costAllStall - costMixed;
 
   return {monthlyWeide, monthlyStall, annualWeide, annualStall, annualTotal, pctWeide, pctStall, costAllStall, costMixed, savings, effE};
@@ -1418,7 +1418,7 @@ function updateFutterkosten(){
 
   const fmtChf = n => n.toLocaleString("de-CH",{maximumFractionDigits:0});
   document.getElementById("costSummaryGrid").innerHTML = `
-    <div><span>Jahresbedarf Futter gesamt</span><strong>${activeRes.annualTotal.toFixed(1)} t TS/Jahr</strong></div>
+    <div><span>Jahresbedarf Futter gesamt</span><strong>${activeRes.annualTotal.toFixed(1)} dt TS/Jahr</strong></div>
     <div><span>Jahresmix Weide / Stall</span><strong>${activeRes.pctWeide.toFixed(0)}% / ${activeRes.pctStall.toFixed(0)}%</strong></div>
     <div><span>Jahreskosten bei 100% Stallfütterung</span><strong>${fmtChf(activeRes.costAllStall)} CHF</strong></div>
     <div><span>Jahreskosten gemischt (Weide + Stall)</span><strong>${fmtChf(activeRes.costMixed)} CHF</strong></div>
@@ -1440,7 +1440,7 @@ function renderScenarioCompare(n, d, nArea, dArea){
   const fmtChf = x => x.toLocaleString("de-CH",{maximumFractionDigits:0});
   const rows = [
     ["Ø Flächenbedarf Herde/Tag (ha)", nArea.toFixed(3), dArea.toFixed(3), (dArea-nArea>=0?"+":"")+(dArea-nArea).toFixed(3)+" ha"],
-    ["Jahresbedarf Weidefutter (t TS)", n.annualWeide.toFixed(1), d.annualWeide.toFixed(1), (d.annualWeide-n.annualWeide>=0?"+":"")+(d.annualWeide-n.annualWeide).toFixed(1)+" t"],
+    ["Jahresbedarf Weidefutter (dt TS)", n.annualWeide.toFixed(1), d.annualWeide.toFixed(1), (d.annualWeide-n.annualWeide>=0?"+":"")+(d.annualWeide-n.annualWeide).toFixed(1)+" dt"],
     ["Weideanteil am Jahresbedarf (%)", n.pctWeide.toFixed(0)+"%", d.pctWeide.toFixed(0)+"%", (d.pctWeide-n.pctWeide>=0?"+":"")+(d.pctWeide-n.pctWeide).toFixed(0)+" Pp."],
     ["Jahreskosten gemischt (CHF)", fmtChf(n.costMixed), fmtChf(d.costMixed), (d.costMixed-n.costMixed>=0?"+":"")+fmtChf(d.costMixed-n.costMixed)],
     ["Eingesparte Futterkosten (CHF)", fmtChf(n.savings), fmtChf(d.savings), (d.savings-n.savings>=0?"+":"")+fmtChf(d.savings-n.savings)]
@@ -1454,15 +1454,15 @@ function renderScenarioCompare(n, d, nArea, dArea){
   }).join("");
 }
 
-function renderFeedChart(stallTons, weideTons){
+function renderFeedChart(stallDt, weideDt){
   const w=880, h=260, padL=42, padR=10, padT=14, padB=28;
   const chartW = w-padL-padR, chartH = h-padT-padB;
-  const totals = stallTons.map((v,i)=>v+weideTons[i]);
+  const totals = stallDt.map((v,i)=>v+weideDt[i]);
   const maxVal = Math.max(...totals, 1);
   const gap = chartW/12;
   const barW = gap*0.55;
   let svg = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">`;
-  svg += `<text x="4" y="${padT-2}" font-size="9" fill="#5c6b5d">t TS</text>`;
+  svg += `<text x="4" y="${padT-2}" font-size="9" fill="#5c6b5d">dt TS</text>`;
   for(let g=0; g<=4; g++){
     const gv = maxVal*g/4;
     const gy = padT + chartH - (gv/maxVal)*chartH;
@@ -1471,12 +1471,12 @@ function renderFeedChart(stallTons, weideTons){
   }
   MONTH_LABELS.forEach((label,i)=>{
     const x = padL + gap*i + gap/2 - barW/2;
-    const sVal = stallTons[i], wVal = weideTons[i];
+    const sVal = stallDt[i], wVal = weideDt[i];
     const sH = maxVal>0 ? (sVal/maxVal)*chartH : 0;
     const wH = maxVal>0 ? (wVal/maxVal)*chartH : 0;
     const yBase = padT+chartH;
-    svg += `<rect x="${x.toFixed(1)}" y="${(yBase-sH).toFixed(1)}" width="${barW.toFixed(1)}" height="${sH.toFixed(1)}" fill="#c7b283" rx="1.5"><title>${label}: Stall ${sVal.toFixed(2)} t TS</title></rect>`;
-    svg += `<rect x="${x.toFixed(1)}" y="${(yBase-sH-wH).toFixed(1)}" width="${barW.toFixed(1)}" height="${wH.toFixed(1)}" fill="#4f9d5c" rx="1.5"><title>${label}: Weide ${wVal.toFixed(2)} t TS</title></rect>`;
+    svg += `<rect x="${x.toFixed(1)}" y="${(yBase-sH).toFixed(1)}" width="${barW.toFixed(1)}" height="${sH.toFixed(1)}" fill="#c7b283" rx="1.5"><title>${label}: Stall ${sVal.toFixed(2)} dt TS</title></rect>`;
+    svg += `<rect x="${x.toFixed(1)}" y="${(yBase-sH-wH).toFixed(1)}" width="${barW.toFixed(1)}" height="${wH.toFixed(1)}" fill="#4f9d5c" rx="1.5"><title>${label}: Weide ${wVal.toFixed(2)} dt TS</title></rect>`;
     svg += `<text x="${(x+barW/2).toFixed(1)}" y="${h-8}" font-size="10" fill="#5c6b5d" text-anchor="middle" font-family="'IBM Plex Mono',monospace">${label}</text>`;
   });
   svg += `</svg>`;
