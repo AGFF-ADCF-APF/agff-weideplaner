@@ -3,306 +3,483 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Infrastruktur-Rechner v3</title>
+<title>Weideinfrastruktur-Rechner</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
-  body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 20px;
-    background-color: #f4f7f6;
-    color: #333;
+  :root{
+    --bg:#f5f6f0;
+    --panel:#ffffff;
+    --ink:#1c281f;
+    --muted:#5c6b5d;
+    --line:#dde2d6;
+    --accent:#2f6b40;
+    --accent-dark:#204a2c;
+    --accent-soft:#e6efe4;
+    --gold:#b9832c;
+    --gold-soft:#f6ecd8;
+    --good:#2f6b40;
+    --good-soft:#e6efe4;
+    --warn:#b9832c;
+    --warn-soft:#f6ecd8;
+    --bad:#a3372f;
+    --bad-soft:#f8e6e4;
+    --radius:10px;
   }
-  h2 {
-    color: #1F4E78;
-    margin-bottom: 5px;
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+    padding:28px 16px 80px;
+    line-height:1.45;
   }
-  .description {
-    margin-bottom: 20px;
-    color: #555;
+  .wrap{max-width:820px;margin:0 auto;}
+  .back-link{
+    display:inline-block;
+    margin-bottom:18px;
+    font-size:.85rem;
+    color:var(--accent-dark);
+    text-decoration:none;
+    font-weight:600;
   }
-  
-  /* Top Panel for Global Vars */
-  .top-panel {
-    background: #ffffff;
-    border: 1px solid #c8d9e6;
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    display: flex;
-    gap: 30px;
-    flex-wrap: wrap;
-    align-items: center;
+  .back-link:hover{text-decoration:underline;}
+  header.top{
+    border-bottom:2px solid var(--accent);
+    padding-bottom:18px;
+    margin-bottom:28px;
   }
-  .top-panel .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 6px;
   }
-  .top-panel label {
-    font-weight: 600;
-    color: #1F4E78;
-    font-size: 14px;
+  h1{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:2rem;
+    margin:0 0 8px;
+    color:var(--accent-dark);
   }
-  .top-panel input {
-    font-size: 16px;
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    width: 120px;
-    text-align: right;
+  header.top p{
+    max-width:640px;
+    color:var(--muted);
+    font-size:.92rem;
+    margin:0;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:22px;
+    box-shadow:0 1px 3px rgba(28,40,31,.04);
+  }
+  .panel h2{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:1.15rem;
+    margin:0 0 4px;
+    color:var(--accent-dark);
+  }
+  .panel .sub{
+    color:var(--muted);
+    font-size:.85rem;
+    margin:0 0 16px;
+  }
+  .step-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .field-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
+    gap:14px;
+  }
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:.78rem;font-weight:600;color:var(--muted);}
+  .field select, .field input{
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:.95rem;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field select:focus, .field input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .field input.auto{background:#fdf9ef;border-color:var(--gold);}
+  .field .hint{font-size:.72rem;color:var(--muted);font-weight:400;}
+  .rescale-link{
+    background:none;
+    border:none;
+    padding:0;
+    color:var(--accent);
+    font-size:.76rem;
+    font-weight:600;
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:2px;
   }
 
-  .controls {
-    margin-bottom: 15px;
-    display: flex;
-    gap: 15px;
+  /* Massnahmen-Karten */
+  .card-list{display:flex;flex-direction:column;gap:12px;}
+  .measure-card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    box-shadow:0 1px 3px rgba(28,40,31,.04);
   }
-  button {
-    background-color: #1F4E78;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 14px;
-    border-radius: 5px;
-    cursor: pointer;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    transition: background-color 0.2s;
+  .measure-head{
+    display:flex;
+    align-items:center;
+    gap:12px;
+    padding:14px 16px;
+    cursor:pointer;
+    user-select:none;
   }
-  button:hover {
-    background-color: #153a5b;
+  .measure-chevron{
+    font-size:.75rem;
+    color:var(--muted);
+    transition:transform .15s;
+    flex:0 0 auto;
   }
-  .btn-add {
-    background-color: #2F75B5;
+  .measure-card.expanded .measure-chevron{transform:rotate(90deg);}
+  .measure-name-wrap{flex:1 1 auto;min-width:0;}
+  .measure-name{
+    width:100%;
+    border:none;
+    background:transparent;
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:1rem;
+    color:var(--ink);
+    padding:2px 0;
   }
-  .btn-add:hover {
-    background-color: #1f5485;
+  .measure-name:focus{outline:none;border-bottom:1.5px solid var(--accent);}
+  .measure-inv{
+    font-size:.76rem;
+    color:var(--muted);
+    font-family:'IBM Plex Mono',monospace;
   }
+  .scale-badge{
+    display:inline-block;
+    font-family:'Inter',sans-serif;
+    font-size:.62rem;
+    letter-spacing:.02em;
+    text-transform:uppercase;
+    color:#8a6314;
+    background:var(--gold-soft);
+    border:1px solid #e4cf9e;
+    border-radius:4px;
+    padding:1px 6px;
+    margin-left:6px;
+    vertical-align:middle;
+  }
+  .measure-result{
+    flex:0 0 auto;
+    text-align:right;
+    padding:5px 12px;
+    border-radius:8px;
+    font-family:'IBM Plex Mono',monospace;
+    font-weight:600;
+    font-size:1.05rem;
+    white-space:nowrap;
+  }
+  .measure-result .unit{display:block;font-size:.62rem;font-weight:500;font-family:'Inter',sans-serif;color:inherit;opacity:.75;}
+  .measure-result.good{background:var(--good-soft);color:var(--good);}
+  .measure-result.warn{background:var(--warn-soft);color:var(--warn);}
+  .measure-result.bad{background:var(--bad-soft);color:var(--bad);}
+  .measure-result.empty{background:var(--bg);color:var(--muted);}
 
-  .table-container {
-    overflow-x: auto;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  .measure-detail{
+    display:none;
+    padding:4px 16px 18px;
+    border-top:1px dashed var(--line);
   }
-  table {
-    border-collapse: collapse;
-    width: 100%;
-    min-width: 1000px;
+  .measure-card.expanded .measure-detail{display:block;}
+  .measure-detail .field-grid{margin-top:14px;}
+  .measure-breakdown{
+    margin:14px 0 0;
+    padding:0;
+    list-style:none;
+    font-size:.82rem;
+    color:var(--muted);
   }
-  th, td {
-    border: 1px solid #e0e0e0;
-    padding: 10px;
-    text-align: right;
-    vertical-align: middle;
+  .measure-breakdown li{
+    display:flex;
+    justify-content:space-between;
+    padding:4px 0;
+    border-top:1px dashed var(--line);
   }
-  th {
-    background-color: #2F75B5;
-    color: white;
-    font-weight: 500;
-    text-align: center;
+  .measure-breakdown li:first-child{border-top:none;}
+  .measure-breakdown li strong{color:var(--ink);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .measure-breakdown li.total{margin-top:2px;border-top:1px solid var(--line);padding-top:8px;}
+  .measure-breakdown li.total strong{color:var(--accent-dark);font-size:.95rem;}
+  .remove-btn{
+    margin-top:14px;
+    padding:6px 12px;
+    border-radius:7px;
+    border:1px solid var(--bad);
+    background:#fff;
+    color:var(--bad);
+    font-family:'Inter',sans-serif;
+    font-size:.78rem;
+    font-weight:600;
+    cursor:pointer;
   }
-  th.super-header {
-    background-color: #1F4E78;
-    font-weight: bold;
-  }
-  .text-left {
-    text-align: left;
-  }
-  
-  /* Editable Inputs inside Table */
-  td input[type="text"], td input[type="number"] {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-family: inherit;
-    font-size: 14px;
-  }
-  td input[type="number"] {
-    text-align: right;
-  }
-  td input[type="text"] {
-    text-align: left;
-    min-width: 180px;
-  }
-  td input:focus {
-    outline: none;
-    border-color: #1F4E78;
-    box-shadow: 0 0 3px rgba(31, 78, 120, 0.5);
-  }
+  .remove-btn:hover{background:var(--bad-soft);}
 
-  .hidden {
-    display: none;
+  .add-btn{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-top:16px;
+    padding:10px 18px;
+    border-radius:8px;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-family:'Inter',sans-serif;
+    font-size:.88rem;
+    font-weight:600;
+    cursor:pointer;
   }
-  .result-cell {
-    font-weight: bold;
-    font-size: 1.15em;
+  .add-btn:hover{background:var(--accent-dark);}
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:.78rem;
+    margin-top:36px;
   }
-  .bg-green { background-color: #d4edda; color: #155724; }
-  .bg-yellow { background-color: #fff3cd; color: #856404; }
-  .bg-red { background-color: #f8d7da; color: #721c24; }
+  @media (max-width:640px){
+    h1{font-size:1.5rem;}
+    .panel{padding:16px;}
+    .measure-result{font-size:.92rem;padding:5px 9px;}
+  }
 </style>
 </head>
 <body>
+<div class="wrap">
 
-  <h2>Weideinfrastruktur-Rechner</h2>
-  <div class="description">Allgemeine Betriebsdaten festlegen und die Investitionen in der Tabelle vergleichen.</div>
-  
-  <!-- ZENTRALE DATEN OBERHALB -->
-  <div class="top-panel">
-    <div class="input-group">
-      <label for="globalZins">Zinssatz (%)</label>
-      <input type="number" id="globalZins" value="2.5" step="0.1" oninput="calculateAll()">
-    </div>
-    <div class="input-group">
-      <label for="globalKuehe">Herdengrösse (Kühe)</label>
-      <input type="number" id="globalKuehe" value="50" oninput="calculateAll()">
-    </div>
-    <div class="input-group">
-      <label for="globalMilch">Milch (kg/Kuh/Jahr)</label>
-      <input type="number" id="globalMilch" value="8000" oninput="calculateAll()">
+  <a class="back-link" href="index.html">← zurück zur Übersicht</a>
+
+  <header class="top">
+    <p class="brand-eyebrow">AGFF · Weideplanung</p>
+    <h1>🏗️ Weideinfrastruktur-Rechner</h1>
+    <p>Betriebsdaten einmal festlegen, dann pro Massnahme antippen für die Detaileingaben. Jede Karte zeigt direkt die Zusatzkosten in Rp./kg Milch.</p>
+  </header>
+
+  <!-- Betriebsdaten -->
+  <div class="panel">
+    <p class="step-label">Schritt 1</p>
+    <h2>Betriebsdaten</h2>
+    <p class="sub">Gelten für alle Massnahmen unten gemeinsam.</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="globalZins">Zinssatz (%)</label>
+        <input type="number" id="globalZins" value="2.5" step="0.1" oninput="calculateAll()">
+      </div>
+      <div class="field">
+        <label for="globalKuehe">Herdengrösse (Kühe)</label>
+        <input type="number" id="globalKuehe" value="50" oninput="calculateAll()">
+      </div>
+      <div class="field">
+        <label for="globalMilch">Milch (kg/Kuh/Jahr)</label>
+        <input type="number" id="globalMilch" value="8000" oninput="calculateAll()">
+      </div>
     </div>
   </div>
 
-  <div class="controls">
-    <button onclick="toggleDetails()" id="toggleBtn">Detail-Spalten einblenden (+)</button>
-    <button onclick="addRow()" class="btn-add">Neue Massnahme hinzufügen</button>
+  <!-- Massnahmen -->
+  <div class="panel">
+    <p class="step-label">Schritt 2</p>
+    <h2>Massnahmen</h2>
+    <p class="sub">Antippen für Investition, Nutzungsdauer, Unterhalt und die Kosten-Aufschlüsselung. Massnahmen mit dem Badge „skaliert" (Weideweg, Fixzaun, Wasserleitung) passen ihre Investition automatisch an die Herdengrösse an — die Fläche wächst linear mit der Herde, die Umfangslänge aber nur mit deren Wurzel, gerundet auf 1'000 CHF. Manuell überschreibbar.</p>
+    <div class="card-list" id="cardList"></div>
+    <button type="button" class="add-btn" onclick="addRow()">+ Neue Massnahme hinzufügen</button>
   </div>
 
-  <div class="table-container">
-    <table id="calcTable">
-      <thead>
-        <tr>
-          <th class="super-header" colspan="4">Eingaben pro Massnahme (klickbar)</th>
-          <th class="super-header detail-col hidden" colspan="4">Detail-Resultate (CHF / Jahr)</th>
-          <th class="super-header">Ergebnis</th>
-        </tr>
-        <tr>
-          <th>Name der Massnahme</th>
-          <th>Investition (CHF)</th>
-          <th>Nutzungsdauer (Jahre)</th>
-          <th>Unterhalt (%/Jahr)</th>
-          <th class="detail-col hidden">Abschreibung</th>
-          <th class="detail-col hidden">Zinskosten</th>
-          <th class="detail-col hidden">Unterhalt</th>
-          <th class="detail-col hidden">Total CHF</th>
-          <th>Rp. / kg Milch</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-        <!-- Rows will be generated by JS -->
-      </tbody>
-    </table>
-  </div>
+  <footer>Weideinfrastruktur-Rechner · Zusatzkosten je Massnahme in Rp./kg Milch</footer>
+</div>
 
-  <script>
-    const initialData = [
-      { name: "Viehunterführung", inv: 100000, jahre: 25, unterhalt: 1.0 },
-      { name: "Befestigter Weideweg (500m)", inv: 25000, jahre: 15, unterhalt: 2.0 },
-      { name: "Wasserleitung & Trog", inv: 5000, jahre: 15, unterhalt: 1.0 },
-      { name: "Intelligentes Selektionstor", inv: 15000, jahre: 10, unterhalt: 3.0 },
-      { name: "Eigenes Projekt", inv: 0, jahre: 10, unterhalt: 1.0 }
-    ];
+<script>
+// baseInv/baseHerd: Referenz-Investition bei Referenz-Herdengrösse für skalierbare
+// Massnahmen. autoScale=true heisst: Investition folgt automatisch der Herdengrösse
+// (Wurzel-Skalierung, siehe applyScaling), bis der Nutzer sie manuell überschreibt.
+const initialData = [
+  { name: "Viehunterführung", inv: 100000, jahre: 25, unterhalt: 1.0, expanded: false },
+  { name: "Befestigter Weideweg", inv: 25000, jahre: 15, unterhalt: 2.0, expanded: false, scalable: true, baseInv: 25000, baseHerd: 50, autoScale: true },
+  { name: "Wasserleitung & Trog", inv: 5000, jahre: 15, unterhalt: 1.0, expanded: false, scalable: true, baseInv: 5000, baseHerd: 50, autoScale: true },
+  { name: "Fixzaun Aussengrenze", inv: 10000, jahre: 15, unterhalt: 3.0, expanded: false, scalable: true, baseInv: 10000, baseHerd: 50, autoScale: true },
+  { name: "Zaunspinnen für Zwischenzäune (6 Stk.)", inv: 1500, jahre: 8, unterhalt: 5.0, expanded: false },
+  { name: "Rising-Plate-Meter + Software", inv: 2000, jahre: 8, unterhalt: 8.0, expanded: false },
+  { name: "Intelligentes Selektionstor", inv: 15000, jahre: 10, unterhalt: 3.0, expanded: false },
+  { name: "Eigenes Projekt", inv: 0, jahre: 10, unterhalt: 1.0, expanded: true }
+];
 
-    let detailsVisible = false;
+function fmtChf(n){ return Math.round(n).toLocaleString('de-CH'); }
 
-    function renderTable() {
-      const tbody = document.getElementById('tableBody');
-      tbody.innerHTML = '';
-      
-      initialData.forEach((row, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="text-left"><input type="text" value="${row.name}" oninput="updateData(${index}, 'name', this.value)"></td>
-          <td><input type="number" min="0" value="${row.inv}" oninput="updateData(${index}, 'inv', this.value)"></td>
-          <td><input type="number" min="1" value="${row.jahre}" oninput="updateData(${index}, 'jahre', this.value)"></td>
-          <td><input type="number" min="0" step="0.1" value="${row.unterhalt}" oninput="updateData(${index}, 'unterhalt', this.value)"></td>
-          <td class="detail-col hidden" id="abschreibung-${index}"></td>
-          <td class="detail-col hidden" id="zins-${index}"></td>
-          <td class="detail-col hidden" id="unterhalt-${index}"></td>
-          <td class="detail-col hidden" id="total-${index}"></td>
-          <td class="result-cell" id="rp-${index}"></td>
-        `;
-        tbody.appendChild(tr);
-      });
-      calculateAll();
-      applyDetailVisibility();
+// Grösseneffekt: Weidefläche wächst ~linear mit der Herdengrösse, die Umfangslänge
+// (Zaun, Weideweg, Wasserleitung) bei geometrisch ähnlicher Aufteilung aber nur mit
+// der Wurzel der Fläche. Deshalb Wurzel-Skalierung statt linearer Skalierung,
+// gerundet auf 1'000 CHF für eine "ungefähre" Grössenordnung.
+function scaledInv(row, herde){
+  if(herde<=0 || row.baseHerd<=0) return row.baseInv;
+  const raw = row.baseInv * Math.sqrt(herde/row.baseHerd);
+  return Math.max(1000, Math.round(raw/1000)*1000);
+}
+
+function applyScaling(herde){
+  initialData.forEach(row=>{
+    if(!row.scalable || !row.autoScale) return;
+    row.inv = scaledInv(row, herde);
+    const input = document.getElementById(`inv-${initialData.indexOf(row)}`);
+    if(input) input.value = row.inv;
+  });
+}
+
+function resetScale(index){
+  initialData[index].autoScale = true;
+  calculateAll();
+}
+
+function renderCards(){
+  const list = document.getElementById('cardList');
+  list.innerHTML = initialData.map((row, index) => `
+    <div class="measure-card${row.expanded ? ' expanded' : ''}" id="card-${index}">
+      <div class="measure-head" onclick="toggleCard(${index})">
+        <span class="measure-chevron">▶</span>
+        <div class="measure-name-wrap">
+          <input type="text" class="measure-name" value="${row.name}"
+                 onclick="event.stopPropagation()"
+                 oninput="updateData(${index}, 'name', this.value)">
+          <div class="measure-inv" id="measure-inv-${index}"></div>
+        </div>
+        <div class="measure-result" id="result-${index}"></div>
+      </div>
+      <div class="measure-detail">
+        <div class="field-grid">
+          <div class="field">
+            <label for="inv-${index}">Investition (CHF)${row.scalable ? '<span class="scale-badge">skaliert</span>' : ''}</label>
+            <input type="number" id="inv-${index}" min="0" value="${row.inv}"
+                   oninput="updateData(${index}, 'inv', this.value)">
+            ${row.scalable ? `<span class="hint" id="scale-hint-${index}"></span>` : ''}
+          </div>
+          <div class="field">
+            <label for="jahre-${index}">Nutzungsdauer (Jahre)</label>
+            <input type="number" id="jahre-${index}" min="1" value="${row.jahre}"
+                   oninput="updateData(${index}, 'jahre', this.value)">
+          </div>
+          <div class="field">
+            <label for="unterhalt-${index}">Unterhalt (%/Jahr)</label>
+            <input type="number" id="unterhalt-${index}" min="0" step="0.1" value="${row.unterhalt}"
+                   oninput="updateData(${index}, 'unterhalt', this.value)">
+          </div>
+        </div>
+        <ul class="measure-breakdown" id="breakdown-${index}"></ul>
+        <button type="button" class="remove-btn" onclick="removeRow(${index})">Massnahme entfernen</button>
+      </div>
+    </div>
+  `).join('');
+  calculateAll();
+}
+
+function toggleCard(index){
+  initialData[index].expanded = !initialData[index].expanded;
+  document.getElementById(`card-${index}`).classList.toggle('expanded', initialData[index].expanded);
+}
+
+function updateData(index, field, value){
+  if(field === 'name'){
+    initialData[index][field] = value;
+    document.getElementById(`measure-inv-${index}`).textContent = fmtChf(initialData[index].inv) + ' CHF Investition';
+  } else {
+    if(field === 'inv' && initialData[index].scalable){
+      initialData[index].autoScale = false;
     }
+    initialData[index][field] = parseFloat(value) || 0;
+    calculateAll();
+  }
+}
 
-    function updateData(index, field, value) {
-      if (field === 'name') {
-        initialData[index][field] = value;
-      } else {
-        initialData[index][field] = parseFloat(value) || 0;
-        calculateAll();
+function addRow(){
+  initialData.push({ name: "Neue Massnahme", inv: 0, jahre: 10, unterhalt: 1.0, expanded: true });
+  renderCards();
+}
+
+function removeRow(index){
+  initialData.splice(index, 1);
+  renderCards();
+}
+
+function calculateAll(){
+  const globalZins = parseFloat(document.getElementById('globalZins').value) || 0;
+  const globalKuehe = parseFloat(document.getElementById('globalKuehe').value) || 0;
+  const globalMilch = parseFloat(document.getElementById('globalMilch').value) || 0;
+  const jahresmilch = globalKuehe * globalMilch;
+
+  applyScaling(globalKuehe);
+
+  initialData.forEach((row, index) => {
+    const invEl = document.getElementById(`measure-inv-${index}`);
+    if(invEl) invEl.textContent = fmtChf(row.inv) + ' CHF Investition';
+
+    if(row.scalable){
+      const invInput = document.getElementById(`inv-${index}`);
+      if(invInput) invInput.classList.toggle('auto', row.autoScale);
+      const hintEl = document.getElementById(`scale-hint-${index}`);
+      if(hintEl){
+        hintEl.innerHTML = row.autoScale
+          ? `Automatisch skaliert mit der Herdengrösse (Referenz ${fmtChf(row.baseInv)} CHF bei ${row.baseHerd} Kühen, √-Grösseneffekt).`
+          : `Manuell überschrieben. <button type="button" class="rescale-link" onclick="resetScale(${index})">↺ wieder automatisch skalieren</button>`;
       }
     }
 
-    function addRow() {
-      initialData.push({ name: "Neue Massnahme", inv: 0, jahre: 10, unterhalt: 1.0 });
-      renderTable();
+    const resultEl = document.getElementById(`result-${index}`);
+    const breakdownEl = document.getElementById(`breakdown-${index}`);
+    if(!resultEl || !breakdownEl) return;
+
+    if(row.inv <= 0){
+      resultEl.innerHTML = '–<span class="unit">Rp./kg Milch</span>';
+      resultEl.className = 'measure-result empty';
+      breakdownEl.innerHTML = '<li><span>Investition eintragen für eine Schätzung</span></li>';
+      return;
     }
 
-    function calculateAll() {
-      const globalZins = parseFloat(document.getElementById('globalZins').value) || 0;
-      const globalKuehe = parseFloat(document.getElementById('globalKuehe').value) || 0;
-      const globalMilch = parseFloat(document.getElementById('globalMilch').value) || 0;
-      const jahresmilch = globalKuehe * globalMilch;
+    const abschreibung = row.inv / (row.jahre || 1);
+    const zinskosten = (row.inv / 2) * (globalZins / 100);
+    const unterhaltKosten = row.inv * (row.unterhalt / 100);
+    const total = abschreibung + zinskosten + unterhaltKosten;
+    const rpPerKg = jahresmilch > 0 ? (total / jahresmilch) * 100 : 0;
 
-      initialData.forEach((row, index) => {
-        if(row.inv === 0) {
-          document.getElementById(`rp-${index}`).innerText = '-';
-          document.getElementById(`rp-${index}`).className = 'result-cell';
-          
-          document.getElementById(`abschreibung-${index}`).innerText = '-';
-          document.getElementById(`zins-${index}`).innerText = '-';
-          document.getElementById(`unterhalt-${index}`).innerText = '-';
-          document.getElementById(`total-${index}`).innerText = '-';
-          return;
-        }
+    resultEl.innerHTML = rpPerKg.toFixed(2) + '<span class="unit">Rp./kg Milch</span>';
+    resultEl.className = 'measure-result ' + (rpPerKg < 1.0 ? 'good' : rpPerKg <= 3.0 ? 'warn' : 'bad');
 
-        const abschreibung = row.inv / (row.jahre || 1); // prevent div by zero
-        const zinskosten = (row.inv / 2) * (globalZins / 100);
-        const unterhaltKosten = row.inv * (row.unterhalt / 100);
-        const total = abschreibung + zinskosten + unterhaltKosten;
-        
-        let rpPerKg = 0;
-        if (jahresmilch > 0) {
-           rpPerKg = (total / jahresmilch) * 100;
-        }
+    breakdownEl.innerHTML =
+      `<li><span>Abschreibung</span><strong>${fmtChf(abschreibung)} CHF</strong></li>` +
+      `<li><span>Zinskosten</span><strong>${fmtChf(zinskosten)} CHF</strong></li>` +
+      `<li><span>Unterhalt</span><strong>${fmtChf(unterhaltKosten)} CHF</strong></li>` +
+      `<li class="total"><span>Total pro Jahr</span><strong>${fmtChf(total)} CHF</strong></li>`;
+  });
+}
 
-        document.getElementById(`abschreibung-${index}`).innerText = Math.round(abschreibung).toLocaleString('de-CH');
-        document.getElementById(`zins-${index}`).innerText = Math.round(zinskosten).toLocaleString('de-CH');
-        document.getElementById(`unterhalt-${index}`).innerText = Math.round(unterhaltKosten).toLocaleString('de-CH');
-        document.getElementById(`total-${index}`).innerText = Math.round(total).toLocaleString('de-CH');
-        
-        const rpElement = document.getElementById(`rp-${index}`);
-        rpElement.innerText = rpPerKg.toFixed(2);
-
-        rpElement.className = 'result-cell';
-        if (rpPerKg < 1.0) rpElement.classList.add('bg-green');
-        else if (rpPerKg <= 3.0) rpElement.classList.add('bg-yellow');
-        else rpElement.classList.add('bg-red');
-      });
-    }
-
-    function toggleDetails() {
-      detailsVisible = !detailsVisible;
-      const btn = document.getElementById('toggleBtn');
-      btn.innerText = detailsVisible ? "Detail-Spalten ausblenden (-)" : "Detail-Spalten einblenden (+)";
-      applyDetailVisibility();
-    }
-
-    function applyDetailVisibility() {
-      const cols = document.querySelectorAll('.detail-col');
-      cols.forEach(col => {
-        if(detailsVisible) col.classList.remove('hidden');
-        else col.classList.add('hidden');
-      });
-    }
-
-    window.onload = renderTable;
-  </script>
+renderCards();
+</script>
 </body>
 </html>
