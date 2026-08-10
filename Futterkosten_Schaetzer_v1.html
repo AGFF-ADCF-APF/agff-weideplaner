@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Futterkosten-Schätzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#f5f6f0;
+    --panel:#ffffff;
+    --ink:#1c281f;
+    --muted:#5c6b5d;
+    --line:#dde2d6;
+    --accent:#2f6b40;
+    --accent-dark:#204a2c;
+    --accent-soft:#e6efe4;
+    --gold:#b9832c;
+    --gold-soft:#f6ecd8;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Inter',-apple-system,Segoe UI,Arial,sans-serif;
+    padding:28px 16px 80px;
+    line-height:1.45;
+  }
+  .wrap{max-width:940px;margin:0 auto;}
+  header.top{
+    border-bottom:2px solid var(--accent);
+    padding-bottom:18px;
+    margin-bottom:28px;
+  }
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin:0 0 6px;
+  }
+  h1{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:2rem;
+    margin:0 0 8px;
+    color:var(--accent-dark);
+  }
+  header.top p{
+    max-width:640px;
+    color:var(--muted);
+    font-size:.92rem;
+    margin:0;
+  }
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:22px 24px;
+    margin-bottom:22px;
+    box-shadow:0 1px 3px rgba(28,40,31,.04);
+  }
+  .panel h2{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:1.15rem;
+    margin:0 0 4px;
+    color:var(--accent-dark);
+  }
+  .panel .sub{
+    color:var(--muted);
+    font-size:.85rem;
+    margin:0 0 16px;
+  }
+  .step-label{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.68rem;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    color:var(--gold);
+    font-weight:600;
+    margin:0 0 4px;
+  }
+  .field-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px;
+  }
+  .field{display:flex;flex-direction:column;gap:5px;}
+  .field label{font-size:.78rem;font-weight:600;color:var(--muted);}
+  .field .hint{font-size:.72rem;color:var(--muted);font-weight:400;}
+  .field select, .field input{
+    padding:9px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:.95rem;
+    font-family:inherit;
+    background:#fff;
+    color:var(--ink);
+  }
+  .field select:focus, .field input:focus{
+    outline:none;
+    border-color:var(--accent);
+    box-shadow:0 0 0 3px var(--accent-soft);
+  }
+  .toggle-row{display:flex;gap:10px;margin-bottom:14px;}
+  .toggle-btn{
+    flex:1;
+    padding:10px 14px;
+    border-radius:8px;
+    border:1.5px solid var(--line);
+    background:#fff;
+    cursor:pointer;
+    font-family:'Fraunces',Georgia,serif;
+    font-size:.95rem;
+    font-weight:600;
+    color:var(--muted);
+    text-align:left;
+    transition:border-color .15s, color .15s, background .15s;
+  }
+  .toggle-btn .small{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-weight:400;
+    font-size:.75rem;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .toggle-btn.active{
+    border-color:var(--accent);
+    background:var(--accent-soft);
+    color:var(--accent-dark);
+  }
+  .result-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:16px;
+  }
+  .result-card{
+    border-radius:10px;
+    padding:18px 20px;
+    border:1px solid var(--line);
+  }
+  .result-card.stall{background:var(--gold-soft);border-color:#e4cf9e;}
+  .result-card.weide{background:var(--accent-soft);border-color:#c8ddc7;}
+  .result-card h3{
+    font-family:'Fraunces',Georgia,serif;
+    font-size:1rem;
+    font-weight:600;
+    margin:0 0 6px;
+    color:var(--ink);
+  }
+  .result-card .big{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:2.1rem;
+    font-weight:600;
+    line-height:1.1;
+  }
+  .result-card.stall .big{color:#8a6314;}
+  .result-card.weide .big{color:var(--accent-dark);}
+  .result-card .big .unit{font-size:1rem;font-weight:500;margin-left:4px;color:var(--muted);}
+  .breakdown{
+    margin:12px 0 0;
+    padding:0;
+    list-style:none;
+    font-size:.82rem;
+    color:var(--muted);
+  }
+  .breakdown li{
+    display:flex;
+    justify-content:space-between;
+    padding:3px 0;
+    border-top:1px dashed var(--line);
+  }
+  .breakdown li:first-child{border-top:none;}
+  .breakdown li strong{color:var(--ink);font-family:'IBM Plex Mono',monospace;font-weight:600;}
+  .copy-btn{
+    margin-top:12px;
+    padding:7px 14px;
+    border-radius:7px;
+    border:1px solid var(--accent);
+    background:#fff;
+    color:var(--accent-dark);
+    font-family:'Inter',sans-serif;
+    font-size:.8rem;
+    font-weight:600;
+    cursor:pointer;
+  }
+  .copy-btn:hover{background:var(--accent-soft);}
+  .copy-btn.copied{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .ref-box{
+    background:var(--gold-soft);
+    border:1px solid #e4cf9e;
+    border-radius:8px;
+    padding:14px 16px;
+    font-size:.83rem;
+    color:#5a4419;
+    margin-top:4px;
+  }
+  .ref-box strong{color:#8a6314;}
+  .ref-box ul{margin:8px 0 0;padding-left:18px;}
+  .ref-box li{margin-bottom:4px;}
+  .ref-box a{color:#8a6314;}
+  .back-link{
+    display:inline-block;
+    margin-bottom:18px;
+    font-size:.85rem;
+    color:var(--accent-dark);
+    text-decoration:none;
+    font-weight:600;
+  }
+  .back-link:hover{text-decoration:underline;}
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:.78rem;
+    margin-top:36px;
+  }
+  @media (max-width:640px){
+    h1{font-size:1.5rem;}
+    .panel{padding:16px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a class="back-link" href="index.html">← zurück zur Übersicht</a>
+
+  <header class="top">
+    <p class="brand-eyebrow">AGFF · Weideplanung</p>
+    <h1>💰 Futterkosten-Schätzer</h1>
+    <p>Grober Schätzer für <strong>Rp./kg TS</strong> von Stall- und Weidefutter — als Ausgangswerte für die Felder „Stallfutterkosten" / „Weidefutterkosten" im <a href="AGFF_Weideplaner_v2.html" style="color:var(--accent-dark);">AGFF Weideplaner v2</a>. Alle Ansätze unten sind Richtwerte und betriebsspezifisch anzupassen (siehe Quellen am Ende).</p>
+  </header>
+
+  <!-- Bodendaten -->
+  <div class="panel">
+    <p class="step-label">Schritt 1</p>
+    <h2>Bodendaten</h2>
+    <p class="sub">Pachtzins bzw. kalkulatorischer Bodenzins für Eigenland gilt für beide Nutzungsarten gleich; der Ertrag unterscheidet sich, weil bei der Weide durch Verschmutzung, Tritt und selektives Fressen ein Teil des Aufwuchses nicht verwertet wird.</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="pachtzins">Pachtzins / Bodenzins (Fr./ha/Jahr)</label>
+        <input type="number" id="pachtzins" value="1200" step="50" min="0" oninput="calculate()">
+      </div>
+      <div class="field">
+        <label for="ertragWiese">Ertrag Wiese (dt TS/ha/Jahr)</label>
+        <input type="number" id="ertragWiese" value="90" step="1" min="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <label for="ertragWeide">Nutzbarer Ertrag Weide (dt TS/ha/Jahr)</label>
+        <input type="number" id="ertragWeide" value="55" step="1" min="1" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Erntemechanisierung -->
+  <div class="panel">
+    <p class="step-label">Schritt 2</p>
+    <h2>Erntemechanisierung (Stallfutter)</h2>
+    <p class="sub">Weidefutter fällt hier bewusst weg — der grösste Kostenunterschied zwischen Stall- und Weidefutter entsteht dadurch, dass beim Weiden kein maschineller Erntevorgang (Mähen, Zetten, Schwaden, Pressen/Silieren) nötig ist.</p>
+    <div class="toggle-row">
+      <button class="toggle-btn active" id="btn-eigen" onclick="setMechArt('eigen')">
+        Eigenmechanisierung
+        <span class="small">eigene Maschinen, Ansatz frei anpassbar</span>
+      </button>
+      <button class="toggle-btn" id="btn-lohn" onclick="setMechArt('lohn')">
+        Lohnunternehmer
+        <span class="small">Pauschalansatz pro Schnitt/ha</span>
+      </button>
+    </div>
+    <div class="field-grid">
+      <div class="field">
+        <label for="erntekosten">Erntekosten pro Schnitt (Fr./ha)</label>
+        <input type="number" id="erntekosten" value="420" step="10" min="0" oninput="calculate()">
+        <span class="hint">Mähen + Zetten + Schwaden + Pressen/Silieren zusammen, bei Referenz-Parzellengrösse.</span>
+      </div>
+      <div class="field">
+        <label for="anzahlSchnitte">Anzahl Nutzungen pro Jahr</label>
+        <input type="number" id="anzahlSchnitte" value="4" step="1" min="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <label for="parzelle">Parzellengrösse (ha)</label>
+        <input type="number" id="parzelle" value="1.5" step="0.1" min="0.1" oninput="calculate()">
+        <span class="hint">Agroscope rechnet mit 2 ha als Referenzgrösse — kleinere Parzellen kosten wegen Wendezeiten/kurzen Fahrwegen mehr pro ha.</span>
+      </div>
+      <div class="field">
+        <label for="lagerverlust">Lager-/Konservierungsverlust (%)</label>
+        <input type="number" id="lagerverlust" value="15" step="1" min="0" max="60" oninput="calculate()">
+        <span class="hint">Silier-/Bröckelverluste zwischen Ernte und Trog.</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weidepflege -->
+  <div class="panel">
+    <p class="step-label">Schritt 3</p>
+    <h2>Weidepflege</h2>
+    <p class="sub">Laufende Kosten für Zaununterhalt, Nachmähen/Abschleppen und Wasserversorgung — deutlich tiefer als die Erntemechanisierung, da kein Futter bewegt werden muss.</p>
+    <div class="field-grid">
+      <div class="field">
+        <label for="weidepflege">Weidepflegekosten (Fr./ha/Jahr)</label>
+        <input type="number" id="weidepflege" value="250" step="10" min="0" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <!-- Ergebnis -->
+  <div class="panel">
+    <p class="step-label">Ergebnis</p>
+    <h2>Geschätzte Futterkosten</h2>
+    <p class="sub">Zum Vergleich: Der AGFF Weideplaner v2 verwendet standardmässig 42 Rp./kg TS (Stall) und 19 Rp./kg TS (Weide) als Ausgangswerte.</p>
+    <div class="result-grid">
+      <div class="result-card stall">
+        <h3>Stallfutter</h3>
+        <div class="big" id="stallResult">–<span class="unit">Rp./kg TS</span></div>
+        <ul class="breakdown" id="stallBreakdown"></ul>
+        <button class="copy-btn" id="copyStallBtn" onclick="copyResult('stall')">In Zwischenablage kopieren</button>
+      </div>
+      <div class="result-card weide">
+        <h3>Weidefutter</h3>
+        <div class="big" id="weideResult">–<span class="unit">Rp./kg TS</span></div>
+        <ul class="breakdown" id="weideBreakdown"></ul>
+        <button class="copy-btn" id="copyWeideBtn" onclick="copyResult('weide')">In Zwischenablage kopieren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quellen -->
+  <div class="panel">
+    <p class="step-label">Methodik &amp; Quellen</p>
+    <h2>Woher kommen diese Zahlen?</h2>
+    <div class="ref-box">
+      Diese Schätzung folgt der in der Schweizer Agrarökonomie üblichen Struktur „Bodenkosten + Erntemechanisierung + Verluste" (Stallfutter) bzw. „Bodenkosten + Weidepflege" (Weide). Für eigene, aktuelle Ansätze statt der obigen Richtwerte:
+      <ul>
+        <li><strong>Agroscope Kostenkatalog / Maschinenkosten</strong> (jährlich) — Vollkosten je Arbeitsgang und Parzellengrösse, inkl. freiem Excel-Tool <strong>TractoScope</strong> (maschinenkosten.ch).</li>
+        <li><strong>Agroscope Vollkostenrechnung Grundfutter/Milchvieh</strong> — kalkulatorische Boden-, Arbeits- und Kapitalkosten aus der zentralen Buchhaltungsauswertung.</li>
+        <li><strong>Agroscope Deckungsbeitragskalkulation</strong> (Agroscope Transfer) — Referenzwerte je Betriebszweig.</li>
+        <li><strong>Swissmilk-Kostenrechner</strong> (Agridea/SMP) — Online-Tool für Milchproduktionskosten mit Agroscope-Referenzwerten.</li>
+      </ul>
+      Alle Eingabefelder oben sind bewusst frei editierbar — Pachtzinsen, Erntekosten und Erträge unterscheiden sich stark nach Region, Betriebsgrösse und Maschinenpark.
+    </div>
+  </div>
+
+  <footer>Futterkosten-Schätzer · ergänzt den AGFF Weideplaner · kein Ersatz für eine betriebsindividuelle Vollkostenrechnung</footer>
+</div>
+
+<script>
+let mechArt = "eigen";
+const ERNTEKOSTEN_DEFAULT = {eigen: 420, lohn: 380};
+
+function setMechArt(art){
+  mechArt = art;
+  document.getElementById("btn-eigen").classList.toggle("active", art==="eigen");
+  document.getElementById("btn-lohn").classList.toggle("active", art==="lohn");
+  document.getElementById("erntekosten").value = ERNTEKOSTEN_DEFAULT[art];
+  calculate();
+}
+
+function val(id){ return parseFloat(document.getElementById(id).value) || 0; }
+
+function parzellenFaktor(ha){
+  // Vereinfachte Faustregel: Agroscope-Referenzgrösse 2 ha = kein Zuschlag,
+  // sehr kleine Parzellen (~0 ha) bis zu +40% wegen Wendezeiten/kurzen Fahrwegen.
+  const raw = (2 - ha) / 2;
+  const clamped = Math.max(0, Math.min(1, raw));
+  return 1 + clamped * 0.4;
+}
+
+function row(label, value){
+  return `<li><span>${label}</span><strong>${value}</strong></li>`;
+}
+
+function calculate(){
+  const pachtzins = val("pachtzins");
+  const ertragWieseKg = val("ertragWiese") * 100;
+  const ertragWeideKg = val("ertragWeide") * 100;
+  const erntekosten = val("erntekosten");
+  const anzahlSchnitte = val("anzahlSchnitte");
+  const parzelle = val("parzelle");
+  const lagerverlust = val("lagerverlust");
+  const weidepflege = val("weidepflege");
+
+  const pFaktor = parzellenFaktor(parzelle);
+
+  // Stallfutter
+  const bodenStall = ertragWieseKg>0 ? (pachtzins/ertragWieseKg)*100 : 0;
+  const erntekostenTotal = erntekosten*anzahlSchnitte*pFaktor;
+  const ernteRp = ertragWieseKg>0 ? (erntekostenTotal/ertragWieseKg)*100 : 0;
+  const verlustFaktor = lagerverlust<100 ? 1/(1-lagerverlust/100) : 1;
+  const stallRoh = bodenStall+ernteRp;
+  const stallTotal = stallRoh*verlustFaktor;
+  const stallVerlustAnteil = stallTotal-stallRoh;
+
+  document.getElementById("stallResult").innerHTML = stallTotal.toFixed(1)+'<span class="unit">Rp./kg TS</span>';
+  document.getElementById("stallBreakdown").innerHTML =
+    row("Boden (Pacht/Ertrag)", bodenStall.toFixed(1)+" Rp.") +
+    row("Erntemechanisierung ("+pFaktor.toFixed(2)+"× Parzellenfaktor)", ernteRp.toFixed(1)+" Rp.") +
+    row("Lager-/Konservierungsverlust", "+"+stallVerlustAnteil.toFixed(1)+" Rp.");
+
+  // Weidefutter
+  const bodenWeide = ertragWeideKg>0 ? (pachtzins/ertragWeideKg)*100 : 0;
+  const pflegeRp = ertragWeideKg>0 ? (weidepflege/ertragWeideKg)*100 : 0;
+  const weideTotal = bodenWeide+pflegeRp;
+
+  document.getElementById("weideResult").innerHTML = weideTotal.toFixed(1)+'<span class="unit">Rp./kg TS</span>';
+  document.getElementById("weideBreakdown").innerHTML =
+    row("Boden (Pacht/Ertrag)", bodenWeide.toFixed(1)+" Rp.") +
+    row("Weidepflege", pflegeRp.toFixed(1)+" Rp.");
+
+  window.__lastResult = {stall: stallTotal.toFixed(1), weide: weideTotal.toFixed(1)};
+}
+
+function copyResult(kind){
+  const btn = document.getElementById(kind==="stall" ? "copyStallBtn" : "copyWeideBtn");
+  const value = window.__lastResult ? window.__lastResult[kind] : null;
+  if(!value) return;
+  const done = ()=>{
+    const original = btn.textContent;
+    btn.textContent = "Kopiert ✓";
+    btn.classList.add("copied");
+    setTimeout(()=>{ btn.textContent = original; btn.classList.remove("copied"); }, 1500);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(value).then(done).catch(done);
+  } else {
+    done();
+  }
+}
+
+calculate();
+</script>
+</body>
+</html>
