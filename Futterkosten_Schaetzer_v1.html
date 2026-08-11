@@ -140,6 +140,26 @@
     grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
     gap:16px;
   }
+  .split-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:16px;
+  }
+  .split-col{
+    padding:14px 16px;
+    border-radius:8px;
+    border:1px solid var(--line);
+  }
+  .split-col.wiese{background:var(--gold-soft);border-color:#e4cf9e;}
+  .split-col.weide{background:var(--accent-soft);border-color:#c8ddc7;}
+  .split-label{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:.92rem;
+    margin:0 0 10px;
+    color:var(--ink);
+  }
+  .split-col .field-grid{grid-template-columns:1fr;}
   .result-card{
     border-radius:10px;
     padding:18px 20px;
@@ -241,11 +261,11 @@
   <div class="panel">
     <p class="step-label">Schritt 1</p>
     <h2>Bodendaten</h2>
-    <p class="sub">Pachtzins bzw. kalkulatorischer Bodenzins für Eigenland gilt für beide Nutzungsarten gleich; der Ertrag unterscheidet sich, weil bei der Weide durch Verschmutzung, Tritt und selektives Fressen ein Teil des Aufwuchses nicht verwertet wird.</p>
+    <p class="sub">Pachtzins bzw. kalkulatorischer Bodenzins für Eigenland gilt für beide Nutzungsarten gleich; der Ertrag kann sich unterscheiden, wenn bei der Weide durch Verschmutzung, Tritt und selektives Fressen ein Teil des Aufwuchses nicht verwertet wird.</p>
     <div class="field-grid">
       <div class="field">
         <label for="pachtzins">Pachtzins / Bodenzins (Fr./ha/Jahr)</label>
-        <input type="number" id="pachtzins" value="1200" step="50" min="0" oninput="calculate()">
+        <input type="number" id="pachtzins" value="1000" step="50" min="0" oninput="calculate()">
       </div>
       <div class="field">
         <label for="ertragWiese">Ertrag Wiese (dt TS/ha/Jahr)</label>
@@ -253,7 +273,7 @@
       </div>
       <div class="field">
         <label for="ertragWeide">Nutzbarer Ertrag Weide (dt TS/ha/Jahr)</label>
-        <input type="number" id="ertragWeide" value="55" step="1" min="1" oninput="calculate()">
+        <input type="number" id="ertragWeide" value="70" step="1" min="70" oninput="calculate()">
       </div>
     </div>
   </div>
@@ -296,15 +316,41 @@
     </div>
   </div>
 
-  <!-- Weidepflege -->
+  <!-- Düngung & Pflege -->
   <div class="panel">
     <p class="step-label">Schritt 3</p>
-    <h2>Weidepflege</h2>
-    <p class="sub">Laufende Kosten für Zaununterhalt, Nachmähen/Abschleppen und Wasserversorgung — deutlich tiefer als die Erntemechanisierung, da kein Futter bewegt werden muss.</p>
-    <div class="field-grid">
-      <div class="field">
-        <label for="weidepflege">Weidepflegekosten (Fr./ha/Jahr)</label>
-        <input type="number" id="weidepflege" value="250" step="10" min="0" oninput="calculate()">
+    <h2>Düngung &amp; Pflege</h2>
+    <p class="sub">Vollkosten umfassen mehr als nur die Weide: Düngung und Pflege getrennt nach Wiese (links) und Weide (rechts), da sich die Ansätze unterscheiden. Weidedüngung ist günstiger, weil ein Teil der Nährstoffe über Kot und Urin direkt durch die Tiere verteilt wird — dafür braucht die Weide mehr Pflege (Nachmähen von Weideresten, Verteilen der Kotstellen).</p>
+    <div class="split-grid">
+      <div class="split-col wiese">
+        <p class="split-label">Wiese (Stallfutter)</p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="duengungWiese">Düngung (Fr./ha/Jahr)</label>
+            <input type="number" id="duengungWiese" value="300" step="10" min="0" oninput="calculate()">
+            <span class="hint">Mineralisch/organisch inkl. Ausbringung.</span>
+          </div>
+          <div class="field">
+            <label for="wiesenpflege">Wiesenpflege (Fr./ha/Jahr)</label>
+            <input type="number" id="wiesenpflege" value="65" step="5" min="0" oninput="calculate()">
+            <span class="hint">Mäusebekämpfung, Unkrautregulierung, Übersaat — zusätzlich zur Erntemechanisierung.</span>
+          </div>
+        </div>
+      </div>
+      <div class="split-col weide">
+        <p class="split-label">Weide</p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="duengungWeide">Düngung (Fr./ha/Jahr)</label>
+            <input type="number" id="duengungWeide" value="150" step="10" min="0" oninput="calculate()">
+            <span class="hint"> günstiger als die Wiese — ein Teil der Nährstoffe wird durch die Tiere verteilt.</span>
+          </div>
+          <div class="field">
+            <label for="weidepflege">Weidepflege (Fr./ha/Jahr)</label>
+            <input type="number" id="weidepflege" value="250" step="10" min="0" oninput="calculate()">
+            <span class="hint">Zaununterhalt, Nachmähen/Abschleppen, Wasserversorgung.</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -313,7 +359,7 @@
   <div class="panel">
     <p class="step-label">Ergebnis</p>
     <h2>Geschätzte Futterkosten</h2>
-    <p class="sub">Zum Vergleich: Der AGFF Weideplaner v2 verwendet standardmässig 42 Rp./kg TS (Stall) und 19 Rp./kg TS (Weide) als Ausgangswerte.</p>
+    <p class="sub">Die Rp./kg-TS-Ausgangswerte im AGFF Weideplaner v2 (42 / 20 Rp./kg TS) basieren auf diesen Default-Eingaben hier. Änderungen hier wirken sich nicht automatisch auf v2 aus — Ergebnis bei Bedarf mit dem Kopieren-Button dort manuell nachtragen.</p>
     <div class="result-grid">
       <div class="result-card stall">
         <h3>Stallfutter</h3>
@@ -335,7 +381,7 @@
     <p class="step-label">Methodik &amp; Quellen</p>
     <h2>Woher kommen diese Zahlen?</h2>
     <div class="ref-box">
-      Diese Schätzung folgt der in der Schweizer Agrarökonomie üblichen Struktur „Bodenkosten + Erntemechanisierung + Verluste" (Stallfutter) bzw. „Bodenkosten + Weidepflege" (Weide). Für eigene, aktuelle Ansätze statt der obigen Richtwerte:
+      Diese Schätzung folgt der in der Schweizer Agrarökonomie üblichen Struktur „Bodenkosten + Erntemechanisierung + Düngung + Wiesenpflege + Verluste" (Stallfutter) bzw. „Bodenkosten + Düngung + Weidepflege" (Weide). Für eigene, aktuelle Ansätze statt der obigen Richtwerte:
       <ul>
         <li><strong>Agroscope Kostenkatalog / Maschinenkosten</strong> (jährlich) — Vollkosten je Arbeitsgang und Parzellengrösse, inkl. freiem Excel-Tool <strong>TractoScope</strong> (maschinenkosten.ch).</li>
         <li><strong>Agroscope Vollkostenrechnung Grundfutter/Milchvieh</strong> — kalkulatorische Boden-, Arbeits- und Kapitalkosten aus der zentralen Buchhaltungsauswertung.</li>
@@ -383,6 +429,9 @@ function calculate(){
   const anzahlSchnitte = val("anzahlSchnitte");
   const parzelle = val("parzelle");
   const lagerverlust = val("lagerverlust");
+  const duengungWiese = val("duengungWiese");
+  const duengungWeide = val("duengungWeide");
+  const wiesenpflege = val("wiesenpflege");
   const weidepflege = val("weidepflege");
 
   const pFaktor = parzellenFaktor(parzelle);
@@ -391,8 +440,10 @@ function calculate(){
   const bodenStall = ertragWieseKg>0 ? (pachtzins/ertragWieseKg)*100 : 0;
   const erntekostenTotal = erntekosten*anzahlSchnitte*pFaktor;
   const ernteRp = ertragWieseKg>0 ? (erntekostenTotal/ertragWieseKg)*100 : 0;
+  const duengungStallRp = ertragWieseKg>0 ? (duengungWiese/ertragWieseKg)*100 : 0;
+  const wiesenpflegeRp = ertragWieseKg>0 ? (wiesenpflege/ertragWieseKg)*100 : 0;
   const verlustFaktor = lagerverlust<100 ? 1/(1-lagerverlust/100) : 1;
-  const stallRoh = bodenStall+ernteRp;
+  const stallRoh = bodenStall+ernteRp+duengungStallRp+wiesenpflegeRp;
   const stallTotal = stallRoh*verlustFaktor;
   const stallVerlustAnteil = stallTotal-stallRoh;
 
@@ -400,16 +451,20 @@ function calculate(){
   document.getElementById("stallBreakdown").innerHTML =
     row("Boden (Pacht/Ertrag)", bodenStall.toFixed(1)+" Rp.") +
     row("Erntemechanisierung ("+pFaktor.toFixed(2)+"× Parzellenfaktor)", ernteRp.toFixed(1)+" Rp.") +
+    row("Düngung", duengungStallRp.toFixed(1)+" Rp.") +
+    row("Wiesenpflege", wiesenpflegeRp.toFixed(1)+" Rp.") +
     row("Lager-/Konservierungsverlust", "+"+stallVerlustAnteil.toFixed(1)+" Rp.");
 
   // Weidefutter
   const bodenWeide = ertragWeideKg>0 ? (pachtzins/ertragWeideKg)*100 : 0;
+  const duengungWeideRp = ertragWeideKg>0 ? (duengungWeide/ertragWeideKg)*100 : 0;
   const pflegeRp = ertragWeideKg>0 ? (weidepflege/ertragWeideKg)*100 : 0;
-  const weideTotal = bodenWeide+pflegeRp;
+  const weideTotal = bodenWeide+duengungWeideRp+pflegeRp;
 
   document.getElementById("weideResult").innerHTML = weideTotal.toFixed(1)+'<span class="unit">Rp./kg TS</span>';
   document.getElementById("weideBreakdown").innerHTML =
     row("Boden (Pacht/Ertrag)", bodenWeide.toFixed(1)+" Rp.") +
+    row("Düngung", duengungWeideRp.toFixed(1)+" Rp.") +
     row("Weidepflege", pflegeRp.toFixed(1)+" Rp.");
 
   window.__lastResult = {stall: stallTotal.toFixed(1), weide: weideTotal.toFixed(1)};
