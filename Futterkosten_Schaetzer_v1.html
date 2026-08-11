@@ -261,7 +261,7 @@
   <div class="panel">
     <p class="step-label">Schritt 1</p>
     <h2>Bodendaten</h2>
-    <p class="sub">Pachtzins bzw. kalkulatorischer Bodenzins für Eigenland gilt für beide Nutzungsarten gleich; der Ertrag unterscheidet sich, weil bei der Weide durch Verschmutzung, Tritt und selektives Fressen ein Teil des Aufwuchses nicht verwertet wird.</p>
+    <p class="sub">Pachtzins bzw. kalkulatorischer Bodenzins für Eigenland gilt für beide Nutzungsarten gleich; der Ertrag kann sich unterscheiden, wenn bei der Weide durch Verschmutzung, Tritt und selektives Fressen ein Teil des Aufwuchses nicht verwertet wird.</p>
     <div class="field-grid">
       <div class="field">
         <label for="pachtzins">Pachtzins / Bodenzins (Fr./ha/Jahr)</label>
@@ -274,7 +274,6 @@
       <div class="field">
         <label for="ertragWeide">Nutzbarer Ertrag Weide (dt TS/ha/Jahr)</label>
         <input type="number" id="ertragWeide" value="70" step="1" min="70" oninput="calculate()">
-        <span class="hint">Bei gleichem Pachtzins wie die Wiese darf der nutzbare Weideertrag nicht zu tief angesetzt werden, sonst wird die Weide rechnerisch unrealistisch teuer.</span>
       </div>
     </div>
   </div>
@@ -334,7 +333,7 @@
           <div class="field">
             <label for="wiesenpflege">Wiesenpflege (Fr./ha/Jahr)</label>
             <input type="number" id="wiesenpflege" value="65" step="5" min="0" oninput="calculate()">
-            <span class="hint">Nachmähen, Unkrautregulierung, Übersaat — zusätzlich zur Erntemechanisierung.</span>
+            <span class="hint">Mäusebekämpfung, Unkrautregulierung, Übersaat — zusätzlich zur Erntemechanisierung.</span>
           </div>
         </div>
       </div>
@@ -344,12 +343,12 @@
           <div class="field">
             <label for="duengungWeide">Düngung (Fr./ha/Jahr)</label>
             <input type="number" id="duengungWeide" value="150" step="10" min="0" oninput="calculate()">
-            <span class="hint">~50% günstiger als die Wiese — ein Teil der Nährstoffe wird direkt durch die Tiere verteilt.</span>
+            <span class="hint"> günstiger als die Wiese — ein Teil der Nährstoffe wird durch die Tiere verteilt.</span>
           </div>
           <div class="field">
             <label for="weidepflege">Weidepflege (Fr./ha/Jahr)</label>
             <input type="number" id="weidepflege" value="250" step="10" min="0" oninput="calculate()">
-            <span class="hint">Zaununterhalt, Nachmähen/Abschleppen, Wasserversorgung — höher angesetzt, da sie die günstigere Düngung teilweise ausgleicht.</span>
+            <span class="hint">Zaununterhalt, Nachmähen/Abschleppen, Wasserversorgung.</span>
           </div>
         </div>
       </div>
