@@ -140,6 +140,26 @@
     grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
     gap:16px;
   }
+  .split-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:16px;
+  }
+  .split-col{
+    padding:14px 16px;
+    border-radius:8px;
+    border:1px solid var(--line);
+  }
+  .split-col.wiese{background:var(--gold-soft);border-color:#e4cf9e;}
+  .split-col.weide{background:var(--accent-soft);border-color:#c8ddc7;}
+  .split-label{
+    font-family:'Fraunces',Georgia,serif;
+    font-weight:600;
+    font-size:.92rem;
+    margin:0 0 10px;
+    color:var(--ink);
+  }
+  .split-col .field-grid{grid-template-columns:1fr;}
   .result-card{
     border-radius:10px;
     padding:18px 20px;
@@ -301,22 +321,37 @@
   <div class="panel">
     <p class="step-label">Schritt 3</p>
     <h2>Düngung &amp; Pflege</h2>
-    <p class="sub">Vollkosten umfassen mehr als nur die Weide: Düngung fällt für Wiese und Weide gleichermassen an und fliesst in beide Berechnungen ein. Wiesenpflege (Nachmähen, Unkrautregulierung, Übersaat) ergänzt die Erntemechanisierung von Schritt 2. Weidepflege bleibt auf Zaununterhalt und Wasserversorgung beschränkt, da die Düngung jetzt separat erfasst ist.</p>
-    <div class="field-grid">
-      <div class="field">
-        <label for="duengung">Düngung (Fr./ha/Jahr)</label>
-        <input type="number" id="duengung" value="300" step="10" min="0" oninput="calculate()">
-        <span class="hint">Mineralisch/organisch inkl. Ausbringung, für Wiese und Weide gleich angesetzt.</span>
+    <p class="sub">Vollkosten umfassen mehr als nur die Weide: Düngung und Pflege getrennt nach Wiese (links) und Weide (rechts), da sich die Ansätze unterscheiden. Weidedüngung ist günstiger, weil ein Teil der Nährstoffe über Kot und Urin direkt durch die Tiere verteilt wird — dafür braucht die Weide mehr Pflege (Nachmähen von Weideresten, Verteilen der Kotstellen).</p>
+    <div class="split-grid">
+      <div class="split-col wiese">
+        <p class="split-label">Wiese (Stallfutter)</p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="duengungWiese">Düngung (Fr./ha/Jahr)</label>
+            <input type="number" id="duengungWiese" value="300" step="10" min="0" oninput="calculate()">
+            <span class="hint">Mineralisch/organisch inkl. Ausbringung.</span>
+          </div>
+          <div class="field">
+            <label for="wiesenpflege">Wiesenpflege (Fr./ha/Jahr)</label>
+            <input type="number" id="wiesenpflege" value="65" step="5" min="0" oninput="calculate()">
+            <span class="hint">Nachmähen, Unkrautregulierung, Übersaat — zusätzlich zur Erntemechanisierung.</span>
+          </div>
+        </div>
       </div>
-      <div class="field">
-        <label for="wiesenpflege">Wiesenpflege (Fr./ha/Jahr)</label>
-        <input type="number" id="wiesenpflege" value="65" step="5" min="0" oninput="calculate()">
-        <span class="hint">Nachmähen, Unkrautregulierung, Übersaat — zusätzlich zur Erntemechanisierung.</span>
-      </div>
-      <div class="field">
-        <label for="weidepflege">Weidepflege (Fr./ha/Jahr)</label>
-        <input type="number" id="weidepflege" value="100" step="10" min="0" oninput="calculate()">
-        <span class="hint">Zaununterhalt, Nachmähen/Abschleppen, Wasserversorgung.</span>
+      <div class="split-col weide">
+        <p class="split-label">Weide</p>
+        <div class="field-grid">
+          <div class="field">
+            <label for="duengungWeide">Düngung (Fr./ha/Jahr)</label>
+            <input type="number" id="duengungWeide" value="150" step="10" min="0" oninput="calculate()">
+            <span class="hint">~50% günstiger als die Wiese — ein Teil der Nährstoffe wird direkt durch die Tiere verteilt.</span>
+          </div>
+          <div class="field">
+            <label for="weidepflege">Weidepflege (Fr./ha/Jahr)</label>
+            <input type="number" id="weidepflege" value="250" step="10" min="0" oninput="calculate()">
+            <span class="hint">Zaununterhalt, Nachmähen/Abschleppen, Wasserversorgung — höher angesetzt, da sie die günstigere Düngung teilweise ausgleicht.</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -395,7 +430,8 @@ function calculate(){
   const anzahlSchnitte = val("anzahlSchnitte");
   const parzelle = val("parzelle");
   const lagerverlust = val("lagerverlust");
-  const duengung = val("duengung");
+  const duengungWiese = val("duengungWiese");
+  const duengungWeide = val("duengungWeide");
   const wiesenpflege = val("wiesenpflege");
   const weidepflege = val("weidepflege");
 
@@ -405,7 +441,7 @@ function calculate(){
   const bodenStall = ertragWieseKg>0 ? (pachtzins/ertragWieseKg)*100 : 0;
   const erntekostenTotal = erntekosten*anzahlSchnitte*pFaktor;
   const ernteRp = ertragWieseKg>0 ? (erntekostenTotal/ertragWieseKg)*100 : 0;
-  const duengungStallRp = ertragWieseKg>0 ? (duengung/ertragWieseKg)*100 : 0;
+  const duengungStallRp = ertragWieseKg>0 ? (duengungWiese/ertragWieseKg)*100 : 0;
   const wiesenpflegeRp = ertragWieseKg>0 ? (wiesenpflege/ertragWieseKg)*100 : 0;
   const verlustFaktor = lagerverlust<100 ? 1/(1-lagerverlust/100) : 1;
   const stallRoh = bodenStall+ernteRp+duengungStallRp+wiesenpflegeRp;
@@ -422,7 +458,7 @@ function calculate(){
 
   // Weidefutter
   const bodenWeide = ertragWeideKg>0 ? (pachtzins/ertragWeideKg)*100 : 0;
-  const duengungWeideRp = ertragWeideKg>0 ? (duengung/ertragWeideKg)*100 : 0;
+  const duengungWeideRp = ertragWeideKg>0 ? (duengungWeide/ertragWeideKg)*100 : 0;
   const pflegeRp = ertragWeideKg>0 ? (weidepflege/ertragWeideKg)*100 : 0;
   const weideTotal = bodenWeide+duengungWeideRp+pflegeRp;
 
