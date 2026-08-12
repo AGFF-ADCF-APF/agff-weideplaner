@@ -374,6 +374,27 @@
     flex:1;
     min-width:200px;
   }
+
+  /* Konfiguration als Link teilen */
+  .share-row{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:12px;
+  }
+  .share-input{
+    flex:1;
+    min-width:240px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.82rem;
+    color:var(--ink);
+    background:#fafbf7;
+  }
+  .share-input:focus{outline:none;border-color:var(--accent);}
   .est-badge{
     display:inline-block;
     font-family:'IBM Plex Mono',monospace;
@@ -608,6 +629,18 @@
   </header>
   <div class="season-strip"><span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span></div>
   <br>
+
+  <!-- Konfiguration als Link teilen -->
+  <div class="panel">
+    <p class="step-label">Link</p>
+    <h2>Konfiguration als Link teilen</h2>
+    <p class="sub">Erzeugt einen Link mit Standort, Tierkategorie, Tierzahl, System und Szenario als URL-Parameter. Wer den Link öffnet, sieht dieselbe Ausgangskonfiguration schon vorausgewählt — praktisch zum Weiterleiten oder als Lesezeichen.</p>
+    <button type="button" class="locate-btn" onclick="generateShareLink()">🔗 Link erzeugen</button>
+    <div class="share-row hidden" id="shareRow">
+      <input type="text" class="share-input" id="shareInput" readonly onclick="this.select()">
+      <button type="button" class="locate-btn" id="shareCopyBtn" onclick="copyShareLink()">Kopieren</button>
+    </div>
+  </div>
 
   <!-- SCHRITT 1: Standort & Tierkategorie -->
   <div class="panel">
@@ -1120,6 +1153,119 @@ function germanDateToIso(str, year){
   const month = MONTHS_DE[m[2]];
   if(!month) return "";
   return year + "-" + String(month).padStart(2,"0") + "-" + String(parseInt(m[1],10)).padStart(2,"0");
+}
+
+/* ---------- URL-Parameter (Konfiguration als Link teilen) ---------- */
+// Kurze, URL-taugliche Codes <-> interne Werte der jeweiligen <select>/Modus.
+const URL_MAPS = {
+  height: {u700:"unter_700", u900:"unter_900", u1100:"unter_1100", o1100:"über_1100"},
+  soil: {good:"tiefgründig/gute_Lage", poor:"flachgründig/schlechte_Lage"},
+  climate: {dry:"trocken", fresh:"frisch"},
+  veg: {early:"früh", late:"spät"},
+  animal: {
+    dairy:"Milchkühe", suckler:"Mutterkühe", galt:"Galtkühe", fatten:"Ausmastkuh",
+    yv2:"Jungvieh über 2-jährig", yv1:"Jungvieh 1-2 jährig",
+    yv160:"Jungvieh 160-365 Tage", yv0:"Jungvieh < 160 Tage"
+  },
+  system: {rotation:"umtrieb", continuous:"kurzrasen"},
+  scenario: {normal:"normal", drought:"duerre"}
+};
+
+function urlMapReverse(mapName){
+  const map = URL_MAPS[mapName];
+  const rev = {};
+  for(const short in map){ rev[map[short]] = short; }
+  return rev;
+}
+
+function applyUrlParams(){
+  const params = new URLSearchParams(window.location.search);
+  if(![...params.keys()].length) return;
+
+  if(params.has("height") && URL_MAPS.height[params.get("height")]) document.getElementById("hoehe").value = URL_MAPS.height[params.get("height")];
+  if(params.has("soil") && URL_MAPS.soil[params.get("soil")]) document.getElementById("boden").value = URL_MAPS.soil[params.get("soil")];
+  if(params.has("climate") && URL_MAPS.climate[params.get("climate")]) document.getElementById("klima").value = URL_MAPS.climate[params.get("climate")];
+  if(params.has("veg") && URL_MAPS.veg[params.get("veg")]) document.getElementById("veg").value = URL_MAPS.veg[params.get("veg")];
+  onStandortChange();
+
+  if(params.has("animal") && URL_MAPS.animal[params.get("animal")]){
+    document.getElementById("tier").value = URL_MAPS.animal[params.get("animal")];
+  }
+  onTierChange();
+
+  if(params.has("cows")){
+    const n = parseInt(params.get("cows"), 10);
+    if(!isNaN(n) && n>=0){
+      document.getElementById("stdTierzahl").value = n;
+      applyStdTierzahl();
+    }
+  }
+
+  if(params.has("system") && URL_MAPS.system[params.get("system")]){
+    setSystem(URL_MAPS.system[params.get("system")]);
+  }
+
+  if(params.has("scenario") && URL_MAPS.scenario[params.get("scenario")]){
+    const mode = URL_MAPS.scenario[params.get("scenario")];
+    if(mode === "duerre"){
+      if(params.has("rpre")) document.getElementById("redVor").value = parseFloat(params.get("rpre"))||0;
+      if(params.has("rspring")) document.getElementById("redFruehling").value = parseFloat(params.get("rspring"))||0;
+      if(params.has("rsummer")) document.getElementById("redSommer").value = parseFloat(params.get("rsummer"))||0;
+      if(params.has("rautumn")) document.getElementById("redHerbst").value = parseFloat(params.get("rautumn"))||0;
+    }
+    setSzenario(mode);
+  }
+}
+
+function generateShareLink(){
+  const revHeight = urlMapReverse("height");
+  const revSoil = urlMapReverse("soil");
+  const revClimate = urlMapReverse("climate");
+  const revVeg = urlMapReverse("veg");
+  const revAnimal = urlMapReverse("animal");
+  const revSystem = urlMapReverse("system");
+  const revScenario = urlMapReverse("scenario");
+
+  const params = new URLSearchParams();
+  params.set("height", revHeight[document.getElementById("hoehe").value] || "");
+  params.set("soil", revSoil[document.getElementById("boden").value] || "");
+  params.set("climate", revClimate[document.getElementById("klima").value] || "");
+  params.set("veg", revVeg[document.getElementById("veg").value] || "");
+  params.set("animal", revAnimal[document.getElementById("tier").value] || "");
+  params.set("cows", document.getElementById("stdTierzahl").value || "0");
+  params.set("system", revSystem[currentSystem] || "");
+  params.set("scenario", revScenario[szenario] || "");
+  if(szenario === "duerre"){
+    params.set("rpre", val("redVor"));
+    params.set("rspring", val("redFruehling"));
+    params.set("rsummer", val("redSommer"));
+    params.set("rautumn", val("redHerbst"));
+  }
+
+  const base = window.location.href.split("?")[0].split("#")[0];
+  const url = base + "?" + params.toString();
+
+  const shareInput = document.getElementById("shareInput");
+  shareInput.value = url;
+  document.getElementById("shareRow").classList.remove("hidden");
+  shareInput.select();
+}
+
+function copyShareLink(){
+  const shareInput = document.getElementById("shareInput");
+  const btn = document.getElementById("shareCopyBtn");
+  const done = ()=>{
+    const original = btn.textContent;
+    btn.textContent = "Kopiert ✓";
+    setTimeout(()=>{ btn.textContent = original; }, 1500);
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(shareInput.value).then(done).catch(done);
+  } else {
+    shareInput.select();
+    document.execCommand("copy");
+    done();
+  }
 }
 
 /* ---------- Standort / Tierkategorie ---------- */
@@ -1755,6 +1901,7 @@ onTierChange();
 calcRpm();
 calculate();
 renderAssistant();
+applyUrlParams();
 {
   const calcScrollBox = document.getElementById("calcTable").closest(".table-scroll");
   if(calcScrollBox) calcScrollBox.scrollLeft = 0;
