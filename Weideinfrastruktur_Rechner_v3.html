@@ -310,7 +310,7 @@
   <div class="panel">
     <p class="step-label">Schritt 2</p>
     <h2>Massnahmen</h2>
-    <p class="sub">Antippen für Investition, Nutzungsdauer, Unterhalt und die Kosten-Aufschlüsselung. Massnahmen mit dem Badge „skaliert" (Weideweg, Fixzaun, Wasserleitung) passen ihre Investition automatisch an die Herdengrösse an — die Fläche wächst linear mit der Herde, die Umfangslänge aber nur mit deren Wurzel, gerundet auf 1'000 CHF. Manuell überschreibbar.</p>
+    <p class="sub">Antippen für Investition, Nutzungsdauer, Unterhalt und die Kosten-Aufschlüsselung. Massnahmen mit dem Badge „skaliert" passen ihre Investition automatisch an die Herdengrösse an: bei Weideweg, Fixzaun und Wasserleitung wächst die Umfangslänge nur mit der Wurzel der Fläche (√-Grösseneffekt); bei den virtuellen Zäunen (ein Halsband pro Kuh) linear. Jeweils gerundet auf 1'000 CHF, manuell überschreibbar.</p>
     <div class="card-list" id="cardList"></div>
     <button type="button" class="add-btn" onclick="addRow()">+ Neue Massnahme hinzufügen</button>
   </div>
@@ -321,13 +321,17 @@
 <script>
 // baseInv/baseHerd: Referenz-Investition bei Referenz-Herdengrösse für skalierbare
 // Massnahmen. autoScale=true heisst: Investition folgt automatisch der Herdengrösse
-// (Wurzel-Skalierung, siehe applyScaling), bis der Nutzer sie manuell überschreibt.
+// (siehe scaledInv/applyScaling - Modus "sqrt" per Default, "linear" via scaleMode),
+// bis der Nutzer sie manuell überschreibt.
 const initialData = [
   { name: "Viehunterführung", inv: 100000, jahre: 25, unterhalt: 1.0, expanded: false },
-  { name: "Befestigter Weideweg", inv: 25000, jahre: 15, unterhalt: 2.0, expanded: false, scalable: true, baseInv: 25000, baseHerd: 50, autoScale: true },
+  { name: "Befestigter Weideweg 500m", inv: 40000, jahre: 15, unterhalt: 2.0, expanded: false, scalable: true, baseInv: 40000, baseHerd: 50, autoScale: true },
   { name: "Wasserleitung & Trog", inv: 5000, jahre: 15, unterhalt: 1.0, expanded: false, scalable: true, baseInv: 5000, baseHerd: 50, autoScale: true },
-  { name: "Fixzaun Aussengrenze", inv: 10000, jahre: 15, unterhalt: 3.0, expanded: false, scalable: true, baseInv: 10000, baseHerd: 50, autoScale: true },
-  { name: "Zaunspinnen für Zwischenzäune (6 Stk.)", inv: 1500, jahre: 8, unterhalt: 5.0, expanded: false },
+  { name: "Fixzaun (Aussenzaun) 2000m", inv: 17000, jahre: 15, unterhalt: 3.0, expanded: false, scalable: true, baseInv: 17000, baseHerd: 50, autoScale: true },
+  { name: "Zaunspinne (10 Stück)", inv: 1500, jahre: 8, unterhalt: 5.0, expanded: false },
+  { name: "Weiderost", inv: 25000, jahre: 20, unterhalt: 1.0, expanded: false },
+  { name: "Schattenbäume 120 Stk.", inv: 18000, jahre: 20, unterhalt: 2.0, expanded: false },
+  { name: "Virtuelle Zäune", inv: 12000, jahre: 6, unterhalt: 20.0, expanded: false, scalable: true, scaleMode: "linear", baseInv: 12000, baseHerd: 30, autoScale: true },
   { name: "Rising-Plate-Meter + Software", inv: 2000, jahre: 8, unterhalt: 8.0, expanded: false },
   { name: "Intelligentes Selektionstor", inv: 15000, jahre: 10, unterhalt: 3.0, expanded: false },
   { name: "Eigenes Projekt", inv: 0, jahre: 10, unterhalt: 1.0, expanded: true }
@@ -335,13 +339,18 @@ const initialData = [
 
 function fmtChf(n){ return Math.round(n).toLocaleString('de-CH'); }
 
-// Grösseneffekt: Weidefläche wächst ~linear mit der Herdengrösse, die Umfangslänge
-// (Zaun, Weideweg, Wasserleitung) bei geometrisch ähnlicher Aufteilung aber nur mit
-// der Wurzel der Fläche. Deshalb Wurzel-Skalierung statt linearer Skalierung,
-// gerundet auf 1'000 CHF für eine "ungefähre" Grössenordnung.
+// Grösseneffekt, zwei Modi:
+// - "sqrt" (Default): Weidefläche wächst ~linear mit der Herdengrösse, die
+//   Umfangslänge (Zaun, Weideweg, Wasserleitung) bei geometrisch ähnlicher
+//   Aufteilung aber nur mit der Wurzel der Fläche.
+// - "linear": für Massnahmen mit einem festen Stückpreis pro Tier (z.B. ein
+//   Halsband pro Kuh bei virtuellen Zäunen) - Investition wächst 1:1 mit der Herde.
+// Jeweils gerundet auf 1'000 CHF für eine "ungefähre" Grössenordnung.
 function scaledInv(row, herde){
   if(herde<=0 || row.baseHerd<=0) return row.baseInv;
-  const raw = row.baseInv * Math.sqrt(herde/row.baseHerd);
+  const ratio = herde/row.baseHerd;
+  const factor = row.scaleMode === "linear" ? ratio : Math.sqrt(ratio);
+  const raw = row.baseInv * factor;
   return Math.max(1000, Math.round(raw/1000)*1000);
 }
 
@@ -445,8 +454,9 @@ function calculateAll(){
       if(invInput) invInput.classList.toggle('auto', row.autoScale);
       const hintEl = document.getElementById(`scale-hint-${index}`);
       if(hintEl){
+        const scaleDesc = row.scaleMode === "linear" ? "linear, z.B. 1 Halsband/Kuh" : "√-Grösseneffekt";
         hintEl.innerHTML = row.autoScale
-          ? `Automatisch skaliert mit der Herdengrösse (Referenz ${fmtChf(row.baseInv)} CHF bei ${row.baseHerd} Kühen, √-Grösseneffekt).`
+          ? `Automatisch skaliert mit der Herdengrösse (Referenz ${fmtChf(row.baseInv)} CHF bei ${row.baseHerd} Kühen, ${scaleDesc}).`
           : `Manuell überschrieben. <button type="button" class="rescale-link" onclick="resetScale(${index})">↺ wieder automatisch skalieren</button>`;
       }
     }
