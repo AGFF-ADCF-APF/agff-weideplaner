@@ -297,7 +297,7 @@
       </div>
       <div class="field">
         <label for="globalKuehe">Herdengrösse (Kühe)</label>
-        <input type="number" id="globalKuehe" value="50" oninput="calculateAll()">
+        <input type="number" id="globalKuehe" value="30" oninput="calculateAll()">
       </div>
       <div class="field">
         <label for="globalMilch">Milch (kg/Kuh/Jahr)</label>
@@ -325,9 +325,9 @@
 // bis der Nutzer sie manuell überschreibt.
 const initialData = [
   { name: "Viehunterführung", inv: 100000, jahre: 25, unterhalt: 1.0, expanded: false },
-  { name: "Befestigter Weideweg 500m", inv: 40000, jahre: 15, unterhalt: 2.0, expanded: false, scalable: true, baseInv: 40000, baseHerd: 50, autoScale: true },
-  { name: "Wasserleitung & Trog", inv: 5000, jahre: 15, unterhalt: 1.0, expanded: false, scalable: true, baseInv: 5000, baseHerd: 50, autoScale: true },
-  { name: "Fixzaun (Aussenzaun) 2000m", inv: 17000, jahre: 15, unterhalt: 3.0, expanded: false, scalable: true, baseInv: 17000, baseHerd: 50, autoScale: true },
+  { name: "Befestigter Weideweg 500m", inv: 40000, jahre: 15, unterhalt: 2.0, expanded: false, scalable: true, baseInv: 40000, baseHerd: 30, autoScale: true },
+  { name: "Wasserleitung & Trog", inv: 5000, jahre: 15, unterhalt: 1.0, expanded: false, scalable: true, baseInv: 5000, baseHerd: 30, autoScale: true },
+  { name: "Fixzaun (Aussenzaun) 2000m", inv: 17000, jahre: 15, unterhalt: 3.0, expanded: false, scalable: true, baseInv: 17000, baseHerd: 30, autoScale: true },
   { name: "Zaunspinne (10 Stück)", inv: 1500, jahre: 8, unterhalt: 5.0, expanded: false },
   { name: "Weiderost", inv: 25000, jahre: 20, unterhalt: 1.0, expanded: false },
   { name: "Schattenbäume 120 Stk.", inv: 18000, jahre: 20, unterhalt: 2.0, expanded: false },
