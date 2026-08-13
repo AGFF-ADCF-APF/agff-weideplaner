@@ -61,6 +61,24 @@
     gap: 0.6rem;
     margin-bottom: 0.5rem;
   }
+  .card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-width: 0;
+  }
+  .card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 8px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 1.2rem;
+  }
   .card h2 {
     margin: 0;
     font-size: 1.25rem;
@@ -143,7 +161,10 @@
 
   <div class="card">
     <div class="card-header">
-      <h2><a href="AGFF_Weideplaner_v1.html">AGFF Weideplaner v1</a></h2>
+      <div class="card-title">
+        <span class="card-icon">🌱</span>
+        <h2><a href="AGFF_Weideplaner_v1.html">AGFF Weideplaner v1</a></h2>
+      </div>
       <span class="badge stable">Stabile Referenz</span>
     </div>
     <p class="file">AGFF_Weideplaner_v1.html</p>
@@ -157,7 +178,10 @@
 
   <div class="card">
     <div class="card-header">
-      <h2><a href="AGFF_Weideplaner_v2.html">AGFF Weideplaner v2</a></h2>
+      <div class="card-title">
+        <span class="card-icon">🌱</span>
+        <h2><a href="AGFF_Weideplaner_v2.html">AGFF Weideplaner v2</a></h2>
+      </div>
       <span class="badge dev">Aktive Weiterentwicklung</span>
     </div>
     <p class="file">AGFF_Weideplaner_v2.html</p>
@@ -172,7 +196,10 @@
 
   <div class="card">
     <div class="card-header">
-      <h2><a href="Weideinfrastruktur_Rechner.html">Infrastruktur-Rechner</a></h2>
+      <div class="card-title">
+        <span class="card-icon">🏗️</span>
+        <h2><a href="Weideinfrastruktur_Rechner.html">Infrastruktur-Rechner</a></h2>
+      </div>
       <span class="badge tool">Ergänzendes Tool</span>
     </div>
     <p class="file">Weideinfrastruktur_Rechner.html</p>
@@ -182,7 +209,10 @@
 
   <div class="card">
     <div class="card-header">
-      <h2><a href="Futterkosten_Schaetzer.html">Futterkosten-Schätzer</a></h2>
+      <div class="card-title">
+        <span class="card-icon">💰</span>
+        <h2><a href="Futterkosten_Schaetzer.html">Futterkosten-Schätzer</a></h2>
+      </div>
       <span class="badge tool">Ergänzendes Tool</span>
     </div>
     <p class="file">Futterkosten_Schaetzer.html</p>
