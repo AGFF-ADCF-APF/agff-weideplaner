@@ -10,7 +10,12 @@ nötig) – einfach im Browser öffnen.
 |---|---|
 | `AGFF_Weideplaner_v1.html` | Nachbau des AGFF-Weideplaners (Excel-Original), Formellogik 1:1 übernommen. Stabile Basisversion ohne Erweiterungen. |
 | `AGFF_Weideplaner_v2.html` | Wie v1, zusätzlich mit **Dürre-Stresstest-Modul**: Szenario-Umschaltung Normaljahr/Dürre, gekoppelte Reduktion von Graszuwachs & Weideanteil, automatischer Vergleich beider Szenarien (Flächenbedarf, Futterkosten, Einsparungen). |
-| `Weideinfrastruktur_Rechner_v3.html` | Investitionsrechner für Weideinfrastruktur (Rp./kg Milch je Massnahme). |
+| `Weideinfrastruktur_Rechner.html` | Investitionsrechner für Weideinfrastruktur (Rp./kg Milch je Massnahme). |
+| `Futterkosten_Schaetzer.html` | Schätzt Rp./kg TS für Stall- und Weidefutter als Ausgangswerte für v2. |
+
+Dateinamen sind bewusst ohne Versionsnummer, ausser bei den zwei parallel
+aktiven AGFF-Weideplaner-Versionen (v1/v2). Generation und letztes
+Änderungsdatum stehen stattdessen in der Fusszeile jeder Seite.
 
 ## Warum zwei AGFF-Versionen parallel?
 
