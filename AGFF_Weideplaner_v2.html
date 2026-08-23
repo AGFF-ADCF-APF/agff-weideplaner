@@ -209,6 +209,16 @@
     color:var(--ink);
     min-width:230px;
   }
+  .rpm-formula{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.82rem;
+    color:var(--ink);
+    background:#fafbf7;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 10px;
+    margin:6px 0;
+  }
   td.label .formula{
     display:block;
     font-family:'IBM Plex Mono',monospace;
@@ -1144,6 +1154,15 @@
       </div>
       <div class="rpm-result" id="rpmResult">73.00</div>
     </div>
+
+    <button type="button" class="assist-toggle" id="rpmFormulaToggleBtn" onclick="toggleRpmFormulas()">Umrechnungsformeln anzeigen</button>
+    <div class="assist-panel hidden" id="rpmFormulaPanel">
+      <p class="sub" style="margin-top:0;">Basis ist stets kg TS/ha; alle anderen Einheiten werden darüber ineinander umgerechnet.</p>
+      <div class="rpm-formula">kg TS/ha = cm RPM × 240 − 767</div>
+      <div class="rpm-formula">kg TS/ha = Klicks RPM × 120 − 767</div>
+      <div class="rpm-formula">kg TS/ha = (cm Doppelmeter × 1.21) × 120 − 767</div>
+      <p class="sub" style="margin-top:8px;margin-bottom:0;">Doppelmeter-Faktor 1.21 gemäss AGFF-Merkblatt W11 (Plate Pasture Meter Höhe : 1.21 = Doppelmeterhöhe).</p>
+    </div>
   </div>
 
   <!-- Konfiguration als Link teilen -->
@@ -1895,6 +1914,14 @@ function calcRpm(){
   const unitLabel = to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : to==="doppelmeter" ? " cm Doppelmeter" : " Klicks";
   document.getElementById("rpmResult").innerText = result.toFixed(2) + unitLabel;
   saveInputState();
+}
+
+function toggleRpmFormulas(){
+  const panel = document.getElementById("rpmFormulaPanel");
+  const btn = document.getElementById("rpmFormulaToggleBtn");
+  const isHidden = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden");
+  btn.innerText = isHidden ? "Umrechnungsformeln ausblenden" : "Umrechnungsformeln anzeigen";
 }
 
 /* ---------- Standorterkennung (GPS) ---------- */
