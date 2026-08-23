@@ -334,18 +334,43 @@
     color:var(--accent-dark);
   }
 
-  /* Reference / info box */
-  .e-auto-toggle{
-    display:flex;
+  /* Weidefläche + Verzehrsanteil-Schieberegler */
+  .weidflaeche-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .weidflaeche-row input[type="number"]{flex:1 1 80px;min-width:70px;}
+  .switch-row{
+    display:inline-flex;
     align-items:center;
-    gap:8px;
-    margin-top:14px;
-    font-size:.85rem;
-    font-weight:600;
-    color:var(--ink);
+    gap:6px;
     cursor:pointer;
+    flex:0 0 auto;
   }
-  .e-auto-toggle input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
+  .switch-row input{position:absolute;opacity:0;width:0;height:0;}
+  .switch-track{
+    position:relative;
+    width:34px;
+    height:19px;
+    background:var(--line);
+    border-radius:10px;
+    flex:0 0 auto;
+    transition:background .15s;
+  }
+  .switch-thumb{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:15px;
+    height:15px;
+    background:#fff;
+    border-radius:50%;
+    box-shadow:0 1px 2px rgba(0,0,0,.3);
+    transition:left .15s;
+  }
+  .switch-row input:checked + .switch-track{background:var(--accent);}
+  .switch-row input:checked + .switch-track .switch-thumb{left:17px;}
+  .switch-row input:focus-visible + .switch-track{box-shadow:0 0 0 3px var(--accent-soft);}
+  .switch-text{font-size:.78rem;font-weight:600;color:var(--muted);white-space:nowrap;}
+
+  /* Reference / info box */
   .ref-box{
     background:var(--gold-soft);
     border:1px solid #e4cf9e;
@@ -767,18 +792,21 @@
           <button type="button" class="apply-btn" onclick="applyStdTierzahl()">In Zeile C übernehmen</button>
         </div>
       </div>
-      <div class="field">
-        <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
-        <input type="number" id="maxWeidflaeche" value="20" min="0" step="0.1" oninput="calculate()">
-      </div>
     </div>
     <div class="ref-box" id="tierRef"></div>
 
-    <label class="e-auto-toggle">
-      <input type="checkbox" id="eAutoToggle" onchange="onEAutoToggle()">
-      Verzehrsanteil Weide (Zeile E) automatisch anpassen
-    </label>
-    <p class="sub" id="eAutoHint" style="margin-top:4px;">Wenn aktiv, wird Zeile E je Phase automatisch so hoch gesetzt, wie es die maximal nutzbare Weidefläche und der Graszuwachs (Zeile B) dieser Phase zulassen — die Felder in der Tabelle sind dann gesperrt.</p>
+    <div class="field" style="margin-top:14px;max-width:320px;">
+      <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
+      <div class="weidflaeche-row">
+        <input type="number" id="maxWeidflaeche" value="20" min="0" step="0.1" oninput="calculate()">
+        <label class="switch-row" for="eAutoToggle">
+          <input type="checkbox" id="eAutoToggle" onchange="onEAutoToggle()" aria-describedby="eAutoHint">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-text">E automatisch</span>
+        </label>
+      </div>
+    </div>
+    <p class="sub" id="eAutoHint" style="margin-top:4px;">Verzehrsanteil Weide (Zeile E) automatisch anpassen: wenn aktiv, wird Zeile E je Phase automatisch so hoch gesetzt, wie es die maximal nutzbare Weidefläche und der Graszuwachs (Zeile B) dieser Phase zulassen — die Felder in der Tabelle sind dann gesperrt.</p>
 
     <div class="locate-panel hidden" id="locatePanel">
       <p class="locate-status" id="locateStatus">Optional: übernimmt die Höhenlage per GPS und schätzt grob das Klima anhand von Niederschlagsdaten. Boden/Lage bitte weiterhin selbst einschätzen.</p>
