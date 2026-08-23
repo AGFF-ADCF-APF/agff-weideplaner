@@ -536,6 +536,16 @@
   @media (max-width:640px){
     h1{font-size:1.5rem;}
     .panel{padding:16px;}
+    #calcTable{table-layout:fixed;}
+    #calcTable .col-code{width:26px;}
+    #calcTable .col-label{width:126px;}
+    #calcTable td.code, #calcTable th.th-code{
+      padding:6px 3px;
+      font-size:.72rem;
+    }
+    #calcTable td.label, #calcTable th.th-label{
+      font-size:.78rem;
+    }
   }
 </style>
 </head>
@@ -686,10 +696,14 @@
     <p class="sub">Dick hervorgehobene Felder (gelb umrandet) sind Auto-Vorschläge aus Schritt 1 — betriebsspezifisch anpassbar.</p>
     <div class="table-scroll">
       <table id="calcTable">
+        <colgroup>
+          <col class="col-code"><col class="col-label">
+          <col><col><col><col>
+        </colgroup>
         <thead>
           <tr>
-            <th>Code</th>
-            <th style="text-align:left;">Parameter / Rechnungsschritt</th>
+            <th class="th-code"></th>
+            <th class="th-label" style="text-align:left;">Parameter / Rechnungsschritt</th>
             <th>Vorweide</th>
             <th class="season-fruehling">Frühlingsweide</th>
             <th class="season-sommer">Sommerweide</th>
