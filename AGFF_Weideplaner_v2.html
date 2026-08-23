@@ -1076,7 +1076,7 @@
     <p class="step-label">Ergebnis</p>
     <h2>Koppelplanung</h2>
     <p class="sub">Ø Flächenbedarf der Herde pro Tag über alle vier Phasen: <strong id="avgM">–</strong> ha/Herde/Tag</p>
-    <p class="sub">Koppelgrösse und Mindestanzahl Koppeln für „<span id="tierNameKoppel">Milchkühe</span>“ — wie im Excel-Original je Besatzzeit (kürzester/längster AGFF-Richtwert) separat ausgewiesen, berechnet mit den aktuellen Betriebsdaten oben.</p>
+    <p class="sub">Koppelgrösse und Mindestanzahl Koppeln für „<span id="tierNameKoppel">Milchkühe</span>“ — je Besatzzeit separat ausgewiesen: kürzester/längster AGFF-Richtwert (wie im Excel-Original) sowie 24 Stunden und 2 Tage als zusätzliche Referenzwerte, berechnet mit den aktuellen Betriebsdaten oben.</p>
     <div class="table-scroll">
       <table class="koppel-table">
         <thead>
@@ -1485,7 +1485,8 @@ function onTierChange(){
   calculate();
 }
 
-// Excel "Koppelplanung": pro Besatzzeit (kürzester/längster AGFF-Richtwert der Tierkategorie)
+// Excel "Koppelplanung": pro Besatzzeit (kürzester/längster AGFF-Richtwert der Tierkategorie,
+// ergänzt um 24 Stunden und 2 Tage als feste Referenzwerte, doppelte Zeiten werden zusammengelegt)
 // Koppelgrösse Frühling (= M Frühling * Besatzzeit), Koppelgrösse ganzjährig (= Ø M * Besatzzeit)
 // und Mindestanzahl Koppeln (= Ø Weideruhezeit Frühling/Sommer / Besatzzeit + 1).
 function renderKoppelTable(Ms, avgM){
@@ -1494,13 +1495,27 @@ function renderKoppelTable(Ms, avgM){
   const mFruehling = Ms[1];
   const avgWeideruhe = (val("Iu1") + val("Iu2")) / 2;
 
-  const rows = [0,1].map(k=>{
-    const besatzTage = t.koppel[k];
-    const groesseFruehling = mFruehling * besatzTage;
-    const groesseGanzjaehrig = avgM * besatzTage;
-    const koppelAnzahl = besatzTage>0 ? (avgWeideruhe/besatzTage)+1 : 0;
+  const candidates = [
+    {tage: t.koppel[0], label: t.besatz[0]},
+    {tage: t.koppel[1], label: t.besatz[1]},
+    {tage: 1, label: "24 Stunden"},
+    {tage: 2, label: "2 Tage"}
+  ];
+  const seenTage = new Set();
+  const besatzEntries = candidates
+    .filter(c=>{
+      if(seenTage.has(c.tage)) return false;
+      seenTage.add(c.tage);
+      return true;
+    })
+    .sort((a,b)=>a.tage-b.tage);
+
+  const rows = besatzEntries.map(({tage, label})=>{
+    const groesseFruehling = mFruehling * tage;
+    const groesseGanzjaehrig = avgM * tage;
+    const koppelAnzahl = tage>0 ? (avgWeideruhe/tage)+1 : 0;
     return `<tr>
-      <td class="besatz">${t.besatz[k]}</td>
+      <td class="besatz">${label}</td>
       <td><strong>${groesseFruehling.toFixed(2)}</strong></td>
       <td><strong>${groesseGanzjaehrig.toFixed(2)}</strong></td>
       <td><strong>${koppelAnzahl.toFixed(1)}</strong></td>
