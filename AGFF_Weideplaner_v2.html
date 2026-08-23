@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AGFF Weideplaner</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -255,6 +259,34 @@
     display:inline-block;
   }
   .hidden{display:none !important;}
+  body.hide-desc .sub{display:none;}
+  .info-toggle-btn{
+    position:fixed;
+    left:18px;
+    bottom:18px;
+    width:44px;
+    height:44px;
+    border-radius:50%;
+    border:none;
+    background:var(--accent);
+    color:#fff;
+    font-family:'Fraunces',Georgia,serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:1.15rem;
+    line-height:1;
+    cursor:pointer;
+    box-shadow:0 2px 8px rgba(0,0,0,.18);
+    z-index:500;
+    animation:infoPulse 9s ease-in-out infinite;
+  }
+  .info-toggle-btn:hover{background:var(--accent-dark);}
+  .info-toggle-btn.no-pulse{animation:none;}
+  .info-toggle-btn[aria-pressed="false"]{background:var(--muted);}
+  @keyframes infoPulse{
+    0%, 8%, 100%{transform:scale(1); box-shadow:0 2px 8px rgba(0,0,0,.18), 0 0 0 0 rgba(47,107,64,.4);}
+    4%{transform:scale(1.14); box-shadow:0 2px 8px rgba(0,0,0,.18), 0 0 0 8px rgba(47,107,64,0);}
+  }
 
   /* Koppelplanung: Koppelgrössen je Besatzzeit */
   .koppel-table{width:100%;border-collapse:collapse;font-size:.87rem;}
@@ -618,29 +650,19 @@
 <body>
 <div class="wrap">
 
+  <button type="button" id="descToggleBtn" class="info-toggle-btn" onclick="toggleDesc()" aria-label="Beschreibungstexte ein-/ausblenden" aria-pressed="true" title="Beschreibungstexte ein-/ausblenden">i</button>
+
   <a class="back-link" href="index.html">← zurück zur Übersicht</a>
 
   <header class="top">
     <div>
       <p class="brand-eyebrow">AGFF · Weideplanung</p>
-      <h1>🌱 Interaktiver Weideplaner</h1>
+      <h1><img src="favicon.svg" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.2em;margin-right:0.15em;">Interaktiver Weideplaner</h1>
       <p>Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
     </div>
   </header>
   <div class="season-strip"><span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span></div>
   <br>
-
-  <!-- Konfiguration als Link teilen -->
-  <div class="panel">
-    <p class="step-label">Link</p>
-    <h2>Konfiguration als Link teilen</h2>
-    <p class="sub">Erzeugt einen Link mit Standort, Tierkategorie, Tierzahl, System und Szenario als URL-Parameter. Wer den Link öffnet, sieht dieselbe Ausgangskonfiguration schon vorausgewählt — praktisch zum Weiterleiten oder als Lesezeichen.</p>
-    <button type="button" class="locate-btn" onclick="generateShareLink()">🔗 Link erzeugen</button>
-    <div class="share-row hidden" id="shareRow">
-      <input type="text" class="share-input" id="shareInput" readonly onclick="this.select()">
-      <button type="button" class="locate-btn" id="shareCopyBtn" onclick="copyShareLink()">Kopieren</button>
-    </div>
-  </div>
 
   <!-- SCHRITT 1: Standort & Tierkategorie -->
   <div class="panel">
@@ -1086,6 +1108,18 @@
     </div>
   </div>
 
+  <!-- Konfiguration als Link teilen -->
+  <div class="panel">
+    <p class="step-label">Link</p>
+    <h2>Konfiguration als Link teilen</h2>
+    <p class="sub">Erzeugt einen Link mit Standort, Tierkategorie, Tierzahl, System und Szenario als URL-Parameter. Wer den Link öffnet, sieht dieselbe Ausgangskonfiguration schon vorausgewählt — praktisch zum Weiterleiten oder als Lesezeichen.</p>
+    <button type="button" class="locate-btn" onclick="generateShareLink()">🔗 Link erzeugen</button>
+    <div class="share-row hidden" id="shareRow">
+      <input type="text" class="share-input" id="shareInput" readonly onclick="this.select()">
+      <button type="button" class="locate-btn" id="shareCopyBtn" onclick="copyShareLink()">Kopieren</button>
+    </div>
+  </div>
+
   <footer>Nachbau des AGFF Weideplaners · Formellogik 1:1 aus der Original-Excel übernommen · info@agff.ch · Generation v2 · Stand: 13.08.2026</footer>
 </div>
 <div id="ttPortal"></div>
@@ -1145,6 +1179,71 @@ const TIER = {
 let currentSystem = "umtrieb";
 let szenario = "normal";
 let B_baseline = [0,0,0,0];
+
+/* ---------- Eingaben speichern (localStorage) ---------- */
+const INPUT_STORAGE_KEY = "weideplanerV2_inputs";
+// Beim Skriptstart einmalig lesen: die Init-Sequenz unten ruft bereits vor dem
+// Wiederherstellen calculate() auf, was sonst den gespeicherten Stand mit den
+// Standardwerten überschreiben würde, bevor er wiederhergestellt werden kann.
+let savedInputSnapshot = null;
+try{ savedInputSnapshot = JSON.parse(localStorage.getItem(INPUT_STORAGE_KEY)); }catch(e){}
+
+function saveInputState(){
+  const data = {};
+  document.querySelectorAll(".wrap input[id]:not([readonly]), .wrap select[id]").forEach(el=>{
+    data[el.id] = el.value;
+  });
+  data._system = currentSystem;
+  data._szenario = szenario;
+  try{ localStorage.setItem(INPUT_STORAGE_KEY, JSON.stringify(data)); }catch(e){}
+}
+
+function restoreInputState(){
+  const data = savedInputSnapshot;
+  if(!data) return;
+  if(data._system) setSystem(data._system);
+  if(data._szenario) setSzenario(data._szenario);
+  document.querySelectorAll(".wrap input[id]:not([readonly]), .wrap select[id]").forEach(el=>{
+    if(Object.prototype.hasOwnProperty.call(data, el.id)) el.value = data[el.id];
+  });
+  onTierChange();
+  calcRpm();
+  calculate();
+}
+
+document.addEventListener("input", e=>{
+  if(e.target.matches(".wrap input[id]:not([readonly]), .wrap select[id]")) saveInputState();
+});
+document.addEventListener("change", e=>{
+  if(e.target.matches(".wrap input[id]:not([readonly]), .wrap select[id]")) saveInputState();
+});
+
+/* ---------- Beschreibungstexte ein-/ausblenden ---------- */
+const DESC_STORAGE_KEY = "weideplanerV2_showDesc";
+const DESC_PULSE_KEY = "weideplanerV2_infoBtnUsed";
+
+function initDescToggle(){
+  const saved = localStorage.getItem(DESC_STORAGE_KEY);
+  const visible = saved === null ? true : saved === "1";
+  applyDescVisibility(visible);
+  if(localStorage.getItem(DESC_PULSE_KEY) === "1"){
+    document.getElementById("descToggleBtn").classList.add("no-pulse");
+  }
+}
+
+function applyDescVisibility(visible){
+  document.body.classList.toggle("hide-desc", !visible);
+  const btn = document.getElementById("descToggleBtn");
+  btn.setAttribute("aria-pressed", String(visible));
+}
+
+function toggleDesc(){
+  const visible = document.body.classList.contains("hide-desc");
+  applyDescVisibility(visible);
+  try{ localStorage.setItem(DESC_STORAGE_KEY, visible ? "1" : "0"); }catch(e){}
+  try{ localStorage.setItem(DESC_PULSE_KEY, "1"); }catch(e){}
+  document.getElementById("descToggleBtn").classList.add("no-pulse");
+}
 
 const MONTHS_DE = {"Januar":1,"Februar":2,"März":3,"April":4,"Mai":5,"Juni":6,"Juli":7,"August":8,"September":9,"Oktober":10,"November":11,"Dezember":12};
 function germanDateToIso(str, year){
@@ -1460,6 +1559,7 @@ function calculate(){
   }
 
   updateFutterkosten();
+  saveInputState();
 }
 
 /* ---------- Eingesparte Futterkosten (Jahresschätzung) ---------- */
@@ -1659,6 +1759,7 @@ function calcRpm(){
   const kg = toKg(from, v);
   const result = fromKg(to, kg);
   document.getElementById("rpmResult").innerText = result.toFixed(2) + (to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : " Klicks");
+  saveInputState();
 }
 
 /* ---------- Standorterkennung (GPS) ---------- */
@@ -1901,7 +2002,12 @@ onTierChange();
 calcRpm();
 calculate();
 renderAssistant();
-applyUrlParams();
+if(window.location.search){
+  applyUrlParams();
+} else {
+  restoreInputState();
+}
+initDescToggle();
 {
   const calcScrollBox = document.getElementById("calcTable").closest(".table-scroll");
   if(calcScrollBox) calcScrollBox.scrollLeft = 0;
