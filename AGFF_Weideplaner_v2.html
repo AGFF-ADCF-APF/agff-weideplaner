@@ -843,7 +843,17 @@
     </div>
 
     <div class="assist-panel hidden" id="duerrePanel" style="margin-top:14px;">
-      <div class="field-grid">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+        <p class="sub" style="margin:0;max-width:480px;">Geglättete Kurven durch die vier Phasenwerte von Zeile B: Normaljahr (grün, aus Schritt 1) und Dürre-Szenario (braun, reduziert). Punkte lassen sich per Drag &amp; Drop verschieben — die Normaljahr-Punkte passen den Standortwert an, die Dürre-Punkte die Reduktion (%) unten. Tabelle und Auswertungen aktualisieren sich live.</p>
+        <button type="button" class="locate-btn" onclick="loadStandardCurve()">Standardkurve laden</button>
+      </div>
+      <div class="chart-legend" style="justify-content:flex-start;">
+        <span><i style="background:#4f9d5c;"></i> Normaljahr</span>
+        <span><i style="background:#bb6a37;"></i> Dürre-Szenario</span>
+      </div>
+      <div id="growthCurveChart"></div>
+
+      <div class="field-grid" style="margin-top:16px;">
         <div class="field">
           <label for="redVor">Reduktion Vorweide (%)</label>
           <input type="number" id="redVor" value="10" min="0" max="100" oninput="applyDuerre()">
@@ -862,12 +872,6 @@
         </div>
       </div>
       <p class="sub" style="margin-top:10px;margin-bottom:0;">Annahme: Sinkt der Graszuwachs um X%, sinkt auch der über die Weide deckbare Verzehrsanteil (Zeile E) anteilig — weniger Gras bedeutet mehr nötige Zufütterung. Diese Kopplung wirkt nur in der Futterkosten- und Vergleichs-Auswertung unten, nicht auf die manuell gesetzten E-Werte in der Tabelle selbst.</p>
-    </div>
-
-    <button type="button" class="assist-toggle" id="curveToggleBtn" onclick="toggleGrowthCurve()">Graswachstumskurve anzeigen</button>
-    <div class="assist-panel hidden" id="growthCurvePanel">
-      <p class="sub" style="margin-top:0;">Geglättete Kurve durch die vier Phasenwerte von Zeile B (Graszuwachs, aktuelles Szenario). Punkte lassen sich per Drag &amp; Drop verschieben, um die Werte direkt anzupassen — die Tabelle und alle Auswertungen aktualisieren sich live.</p>
-      <div id="growthCurveChart"></div>
     </div>
   </div>
 
@@ -1524,15 +1528,7 @@ function onBInput(el){
   calculate();
 }
 
-/* ---------- Graswachstumskurve (Zeile B), per Drag & Drop anpassbar ---------- */
-function toggleGrowthCurve(){
-  const panel = document.getElementById("growthCurvePanel");
-  const btn = document.getElementById("curveToggleBtn");
-  const isHidden = panel.classList.contains("hidden");
-  panel.classList.toggle("hidden");
-  btn.innerText = isHidden ? "Graswachstumskurve ausblenden" : "Graswachstumskurve anzeigen";
-  if(isHidden) renderGrowthCurve();
-}
+/* ---------- Graswachstumskurven (Zeile B): Normaljahr vs. Dürre, per Drag & Drop anpassbar ---------- */
 
 // Catmull-Rom durch 4 Punkte, als kubische Bezier-Segmente (gleichmässige Glättung).
 function catmullRomPath(pts){
@@ -1547,36 +1543,61 @@ function catmullRomPath(pts){
   return d;
 }
 
+function catmullRomAreaPath(pts, baseY){
+  return catmullRomPath(pts) + `L${pts[pts.length-1].x.toFixed(1)},${baseY} L${pts[0].x.toFixed(1)},${baseY} Z`;
+}
+
 // Feste Skala (statt Autoscale) damit die Punkte beim Ziehen exakt dem Cursor folgen.
-const growthCurveScale = {w:600, h:190, padL:34, padR:16, padT:16, padB:26, maxVal:150};
-let growthCurveDrag = null;
+const growthCurveScale = {w:600, h:210, padL:34, padR:16, padT:16, padB:26, maxVal:150};
+let growthCurveDrag = null; // {curve:"normal"|"duerre", phase:0..3}
+
+function growthCurveY(v){
+  const {padT, padB, h, maxVal} = growthCurveScale;
+  const chartH = h - padT - padB;
+  return padT + chartH - (Math.min(Math.max(v,0),maxVal)/maxVal)*chartH;
+}
 
 function renderGrowthCurve(){
   const container = document.getElementById("growthCurveChart");
   if(!container) return;
   const {w,h,padL,padR,padT,padB,maxVal} = growthCurveScale;
   const chartW = w-padL-padR, chartH = h-padT-padB;
+  const baseY = padT + chartH;
   const labels = ["Vorweide","Frühling","Sommer","Herbst"];
-  const values = [0,1,2,3].map(i=>val("B"+i));
-  const xs = [0,1,2,3].map(i=> padL + chartW*(i+0.5)/4);
-  const ys = values.map(v => padT + chartH - (Math.min(Math.max(v,0),maxVal)/maxVal)*chartH);
-  const pathD = catmullRomPath(xs.map((x,i)=>({x, y:ys[i]})));
+  const normalVals = [0,1,2,3].map(i => B_baseline[i]);
+  const duerreVals = [0,1,2,3].map(i => val("B"+i));
+  const xs = [0,1,2,3].map(i => padL + chartW*(i+0.5)/4);
+  const normalPts = xs.map((x,i)=>({x, y:growthCurveY(normalVals[i])}));
+  const duerrePts = xs.map((x,i)=>({x, y:growthCurveY(duerreVals[i])}));
 
   let svg = `<svg viewBox="0 0 ${w} ${h}" id="growthCurveSvg" style="touch-action:none;width:100%;height:auto;display:block;">`;
   [0,50,100,150].forEach(gv=>{
-    const gy = padT + chartH - (gv/maxVal)*chartH;
+    const gy = growthCurveY(gv);
     svg += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${w-padR}" y2="${gy.toFixed(1)}" stroke="#dde2d6" stroke-width="1"/>`;
     svg += `<text x="${padL-6}" y="${(gy+3).toFixed(1)}" font-size="9" fill="#5c6b5d" text-anchor="end">${gv}</text>`;
   });
-  svg += `<path d="${pathD}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
+
+  svg += `<path d="${catmullRomAreaPath(normalPts, baseY)}" fill="#dbead0" stroke="none"/>`;
+  svg += `<path d="${catmullRomAreaPath(duerrePts, baseY)}" fill="#f3e2d0" stroke="none"/>`;
+  svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
+  svg += `<path d="${catmullRomPath(duerrePts)}" fill="none" stroke="#bb6a37" stroke-width="2.5" stroke-linecap="round"/>`;
+
   labels.forEach((label,i)=>{
     svg += `<text x="${xs[i].toFixed(1)}" y="${h-8}" font-size="10" fill="#5c6b5d" text-anchor="middle">${label}</text>`;
-    svg += `<text x="${xs[i].toFixed(1)}" y="${(ys[i]-12).toFixed(1)}" font-size="10" fill="#204a2c" text-anchor="middle" font-weight="600">${values[i].toFixed(0)}</text>`;
-    svg += `<circle class="curve-point" data-phase="${i}" cx="${xs[i].toFixed(1)}" cy="${ys[i].toFixed(1)}" r="7" fill="#2f6b40" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
+  });
+  normalPts.forEach((p,i)=>{
+    svg += `<text x="${p.x.toFixed(1)}" y="${(p.y-11).toFixed(1)}" font-size="10" fill="#204a2c" text-anchor="middle" font-weight="600">${normalVals[i].toFixed(0)}</text>`;
+    svg += `<circle class="curve-point" data-curve="normal" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#2f6b40" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
+  });
+  duerrePts.forEach((p,i)=>{
+    svg += `<text x="${p.x.toFixed(1)}" y="${(p.y+20).toFixed(1)}" font-size="10" fill="#8a4a22" text-anchor="middle" font-weight="600">${duerreVals[i].toFixed(0)}</text>`;
+    svg += `<circle class="curve-point" data-curve="duerre" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#bb6a37" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
   });
   svg += `</svg>`;
   container.innerHTML = svg;
 }
+
+const RED_INPUT_IDS = ["redVor","redFruehling","redSommer","redHerbst"];
 
 function setupGrowthCurveDrag(){
   const container = document.getElementById("growthCurveChart");
@@ -1584,7 +1605,7 @@ function setupGrowthCurveDrag(){
   container.addEventListener("pointerdown", (e)=>{
     const ptEl = e.target.closest(".curve-point");
     if(!ptEl) return;
-    growthCurveDrag = parseInt(ptEl.dataset.phase, 10);
+    growthCurveDrag = {curve: ptEl.dataset.curve, phase: parseInt(ptEl.dataset.phase, 10)};
     try{ container.setPointerCapture(e.pointerId); }catch(_e){ /* z.B. synthetische Events ohne aktiven Pointer */ }
     e.preventDefault();
   });
@@ -1601,9 +1622,15 @@ function setupGrowthCurveDrag(){
     const chartH = h - padT - padB;
     let value = maxVal * (1 - (p.y - padT)/chartH);
     value = Math.max(0, Math.round(value));
-    const input = document.getElementById("B"+growthCurveDrag);
-    input.value = value;
-    onBInput(input);
+    const {curve, phase} = growthCurveDrag;
+    if(curve === "normal"){
+      B_baseline[phase] = value;
+    } else {
+      const base = B_baseline[phase];
+      const reduction = base > 0 ? Math.round((1 - value/base) * 100) : 0;
+      document.getElementById(RED_INPUT_IDS[phase]).value = Math.min(100, Math.max(0, reduction));
+    }
+    applyDuerre();
   });
   function endGrowthCurveDrag(e){
     if(growthCurveDrag !== null){
@@ -1613,6 +1640,22 @@ function setupGrowthCurveDrag(){
   }
   container.addEventListener("pointerup", endGrowthCurveDrag);
   container.addEventListener("pointercancel", endGrowthCurveDrag);
+}
+
+function loadStandardCurve(){
+  const key = document.getElementById("hoehe").value
+            + document.getElementById("boden").value
+            + document.getElementById("klima").value
+            + document.getElementById("veg").value;
+  const data = KOMBI[key];
+  if(data){
+    for(let i=0;i<4;i++){ B_baseline[i] = data.B[i]; }
+  }
+  document.getElementById("redVor").value = 10;
+  document.getElementById("redFruehling").value = 15;
+  document.getElementById("redSommer").value = 45;
+  document.getElementById("redHerbst").value = 20;
+  applyDuerre();
 }
 
 /* ---------- System-Umschaltung ---------- */
