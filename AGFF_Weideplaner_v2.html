@@ -335,6 +335,17 @@
   }
 
   /* Reference / info box */
+  .e-auto-toggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:14px;
+    font-size:.85rem;
+    font-weight:600;
+    color:var(--ink);
+    cursor:pointer;
+  }
+  .e-auto-toggle input{width:16px;height:16px;accent-color:var(--accent);cursor:pointer;}
   .ref-box{
     background:var(--gold-soft);
     border:1px solid #e4cf9e;
@@ -756,8 +767,18 @@
           <button type="button" class="apply-btn" onclick="applyStdTierzahl()">In Zeile C übernehmen</button>
         </div>
       </div>
+      <div class="field">
+        <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
+        <input type="number" id="maxWeidflaeche" value="20" min="0" step="0.1" oninput="calculate()">
+      </div>
     </div>
     <div class="ref-box" id="tierRef"></div>
+
+    <label class="e-auto-toggle">
+      <input type="checkbox" id="eAutoToggle" onchange="onEAutoToggle()">
+      Verzehrsanteil Weide (Zeile E) automatisch anpassen
+    </label>
+    <p class="sub" id="eAutoHint" style="margin-top:4px;">Wenn aktiv, wird Zeile E je Phase automatisch so hoch gesetzt, wie es die maximal nutzbare Weidefläche und der Graszuwachs (Zeile B) dieser Phase zulassen — die Felder in der Tabelle sind dann gesperrt.</p>
 
     <div class="locate-panel hidden" id="locatePanel">
       <p class="locate-status" id="locateStatus">Optional: übernimmt die Höhenlage per GPS und schätzt grob das Klima anhand von Niederschlagsdaten. Boden/Lage bitte weiterhin selbst einschätzen.</p>
@@ -842,18 +863,18 @@
       </button>
     </div>
 
-    <div class="assist-panel hidden" id="duerrePanel" style="margin-top:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
-        <p class="sub" style="margin:0;max-width:480px;">Geglättete Kurven durch die vier Phasenwerte von Zeile B: Normaljahr (grün, aus Schritt 1) und Dürre-Szenario (braun, reduziert). Punkte lassen sich per Drag &amp; Drop verschieben — die Normaljahr-Punkte passen den Standortwert an, die Dürre-Punkte die Reduktion (%) unten. Tabelle und Auswertungen aktualisieren sich live.</p>
-        <button type="button" class="locate-btn" onclick="loadStandardCurve()">Standardkurve laden</button>
-      </div>
-      <div class="chart-legend" style="justify-content:flex-start;">
-        <span><i style="background:#4f9d5c;"></i> Normaljahr</span>
-        <span><i style="background:#bb6a37;"></i> Dürre-Szenario</span>
-      </div>
-      <div id="growthCurveChart"></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-top:14px;">
+      <p class="sub" style="margin:0;max-width:480px;">Geglättete Kurve(n) durch die vier Phasenwerte von Zeile B: Normaljahr (grün, aus Schritt 1) und — im Dürre-Szenario zusätzlich — die reduzierte Kurve (braun). Punkte lassen sich per Drag &amp; Drop verschieben — Normaljahr-Punkte passen den Standortwert an, Dürre-Punkte die Reduktion (%) unten. Tabelle und Auswertungen aktualisieren sich live.</p>
+      <button type="button" class="locate-btn" onclick="loadStandardCurve()">Standardkurve laden</button>
+    </div>
+    <div class="chart-legend" style="justify-content:flex-start;">
+      <span><i style="background:#4f9d5c;"></i> Normaljahr</span>
+      <span id="duerreLegendItem" class="hidden"><i style="background:#bb6a37;"></i> Dürre-Szenario</span>
+    </div>
+    <div id="growthCurveChart"></div>
 
-      <div class="field-grid" style="margin-top:16px;">
+    <div class="assist-panel hidden" id="duerrePanel" style="margin-top:14px;">
+      <div class="field-grid">
         <div class="field">
           <label for="redVor">Reduktion Vorweide (%)</label>
           <input type="number" id="redVor" value="10" min="0" max="100" oninput="applyDuerre()">
@@ -1496,6 +1517,34 @@ function applyStdTierzahl(){
   calculate();
 }
 
+/* ---------- E (Verzehrsanteil Weide) automatisch maximieren ---------- */
+function onEAutoToggle(){
+  const active = document.getElementById("eAutoToggle").checked;
+  for(let i=0;i<4;i++){
+    const cell = document.getElementById("E"+i);
+    cell.disabled = active;
+    cell.classList.toggle("auto", active);
+  }
+  calculate();
+}
+
+// E_max (%) = maximal nutzbare Fläche * 100 * Graszuwachs (B) / (Tierzahl (C) * Tagesverzehr (D)).
+// Entspricht der Tabellenformel Flächenbedarf = C*D*E/(100*B), nach E aufgelöst und auf [0,100] begrenzt.
+function applyEAuto(){
+  const toggle = document.getElementById("eAutoToggle");
+  if(!toggle || !toggle.checked) return;
+  const maxArea = parseFloat(document.getElementById("maxWeidflaeche").value) || 0;
+  for(let i=0;i<4;i++){
+    const B = val("B"+i), C = val("C"+i), D = val("D"+i);
+    let e = 100;
+    if(B>0 && C>0 && D>0){
+      e = (maxArea*100*B)/(C*D);
+    }
+    // Abrunden statt runden: die maximal nutzbare Fläche darf nie überschritten werden.
+    document.getElementById("E"+i).value = Math.max(0, Math.min(100, Math.floor(e)));
+  }
+}
+
 /* ---------- Szenario: Normaljahr / Dürre ---------- */
 function setSzenario(mode){
   szenario = mode;
@@ -1560,15 +1609,17 @@ function growthCurveY(v){
 function renderGrowthCurve(){
   const container = document.getElementById("growthCurveChart");
   if(!container) return;
+  const showDuerre = szenario === "duerre";
+  const legendItem = document.getElementById("duerreLegendItem");
+  if(legendItem) legendItem.classList.toggle("hidden", !showDuerre);
+
   const {w,h,padL,padR,padT,padB,maxVal} = growthCurveScale;
   const chartW = w-padL-padR, chartH = h-padT-padB;
   const baseY = padT + chartH;
   const labels = ["Vorweide","Frühling","Sommer","Herbst"];
   const normalVals = [0,1,2,3].map(i => B_baseline[i]);
-  const duerreVals = [0,1,2,3].map(i => val("B"+i));
   const xs = [0,1,2,3].map(i => padL + chartW*(i+0.5)/4);
   const normalPts = xs.map((x,i)=>({x, y:growthCurveY(normalVals[i])}));
-  const duerrePts = xs.map((x,i)=>({x, y:growthCurveY(duerreVals[i])}));
 
   let svg = `<svg viewBox="0 0 ${w} ${h}" id="growthCurveSvg" style="touch-action:none;width:100%;height:auto;display:block;">`;
   [0,50,100,150].forEach(gv=>{
@@ -1578,9 +1629,19 @@ function renderGrowthCurve(){
   });
 
   svg += `<path d="${catmullRomAreaPath(normalPts, baseY)}" fill="#dbead0" stroke="none"/>`;
-  svg += `<path d="${catmullRomAreaPath(duerrePts, baseY)}" fill="#f3e2d0" stroke="none"/>`;
-  svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
-  svg += `<path d="${catmullRomPath(duerrePts)}" fill="none" stroke="#bb6a37" stroke-width="2.5" stroke-linecap="round"/>`;
+  if(showDuerre){
+    const duerreVals = [0,1,2,3].map(i => val("B"+i));
+    const duerrePts = xs.map((x,i)=>({x, y:growthCurveY(duerreVals[i])}));
+    svg += `<path d="${catmullRomAreaPath(duerrePts, baseY)}" fill="#f3e2d0" stroke="none"/>`;
+    svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
+    svg += `<path d="${catmullRomPath(duerrePts)}" fill="none" stroke="#bb6a37" stroke-width="2.5" stroke-linecap="round"/>`;
+    duerrePts.forEach((p,i)=>{
+      svg += `<text x="${p.x.toFixed(1)}" y="${(p.y+20).toFixed(1)}" font-size="10" fill="#8a4a22" text-anchor="middle" font-weight="600">${duerreVals[i].toFixed(0)}</text>`;
+      svg += `<circle class="curve-point" data-curve="duerre" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#bb6a37" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
+    });
+  } else {
+    svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
+  }
 
   labels.forEach((label,i)=>{
     svg += `<text x="${xs[i].toFixed(1)}" y="${h-8}" font-size="10" fill="#5c6b5d" text-anchor="middle">${label}</text>`;
@@ -1588,10 +1649,6 @@ function renderGrowthCurve(){
   normalPts.forEach((p,i)=>{
     svg += `<text x="${p.x.toFixed(1)}" y="${(p.y-11).toFixed(1)}" font-size="10" fill="#204a2c" text-anchor="middle" font-weight="600">${normalVals[i].toFixed(0)}</text>`;
     svg += `<circle class="curve-point" data-curve="normal" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#2f6b40" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
-  });
-  duerrePts.forEach((p,i)=>{
-    svg += `<text x="${p.x.toFixed(1)}" y="${(p.y+20).toFixed(1)}" font-size="10" fill="#8a4a22" text-anchor="middle" font-weight="600">${duerreVals[i].toFixed(0)}</text>`;
-    svg += `<circle class="curve-point" data-curve="duerre" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#bb6a37" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
   });
   svg += `</svg>`;
   container.innerHTML = svg;
@@ -1625,12 +1682,18 @@ function setupGrowthCurveDrag(){
     const {curve, phase} = growthCurveDrag;
     if(curve === "normal"){
       B_baseline[phase] = value;
+      if(szenario === "duerre"){
+        applyDuerre();
+      } else {
+        document.getElementById("B"+phase).value = value;
+        calculate();
+      }
     } else {
       const base = B_baseline[phase];
       const reduction = base > 0 ? Math.round((1 - value/base) * 100) : 0;
       document.getElementById(RED_INPUT_IDS[phase]).value = Math.min(100, Math.max(0, reduction));
+      applyDuerre();
     }
-    applyDuerre();
   });
   function endGrowthCurveDrag(e){
     if(growthCurveDrag !== null){
@@ -1675,6 +1738,7 @@ function setSystem(sys){
 function val(id){ return parseFloat(document.getElementById(id).value) || 0; }
 
 function calculate(){
+  applyEAuto();
   const isUmtrieb = currentSystem === "umtrieb";
   const F_res = document.querySelectorAll(".F_res");
   const G_res = document.querySelectorAll(".G_res");
