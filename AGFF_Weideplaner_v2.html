@@ -853,6 +853,12 @@
       </div>
       <p class="sub" style="margin-top:10px;margin-bottom:0;">Annahme: Sinkt der Graszuwachs um X%, sinkt auch der über die Weide deckbare Verzehrsanteil (Zeile E) anteilig — weniger Gras bedeutet mehr nötige Zufütterung. Diese Kopplung wirkt nur in der Futterkosten- und Vergleichs-Auswertung unten, nicht auf die manuell gesetzten E-Werte in der Tabelle selbst.</p>
     </div>
+
+    <button type="button" class="assist-toggle" id="curveToggleBtn" onclick="toggleGrowthCurve()">Graswachstumskurve anzeigen</button>
+    <div class="assist-panel hidden" id="growthCurvePanel">
+      <p class="sub" style="margin-top:0;">Geglättete Kurve durch die vier Phasenwerte von Zeile B (Graszuwachs, aktuelles Szenario). Punkte lassen sich per Drag &amp; Drop verschieben, um die Werte direkt anzupassen — die Tabelle und alle Auswertungen aktualisieren sich live.</p>
+      <div id="growthCurveChart"></div>
+    </div>
   </div>
 
   <!-- SCHRITT 4: Berechnungstabelle -->
@@ -1499,6 +1505,97 @@ function onBInput(el){
   calculate();
 }
 
+/* ---------- Graswachstumskurve (Zeile B), per Drag & Drop anpassbar ---------- */
+function toggleGrowthCurve(){
+  const panel = document.getElementById("growthCurvePanel");
+  const btn = document.getElementById("curveToggleBtn");
+  const isHidden = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden");
+  btn.innerText = isHidden ? "Graswachstumskurve ausblenden" : "Graswachstumskurve anzeigen";
+  if(isHidden) renderGrowthCurve();
+}
+
+// Catmull-Rom durch 4 Punkte, als kubische Bezier-Segmente (gleichmässige Glättung).
+function catmullRomPath(pts){
+  const p = [pts[0], ...pts, pts[pts.length-1]];
+  let d = `M${p[1].x.toFixed(1)},${p[1].y.toFixed(1)} `;
+  for(let i=1;i<p.length-2;i++){
+    const p0=p[i-1], p1=p[i], p2=p[i+1], p3=p[i+2];
+    const c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+    const c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+    d += `C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)} `;
+  }
+  return d;
+}
+
+// Feste Skala (statt Autoscale) damit die Punkte beim Ziehen exakt dem Cursor folgen.
+const growthCurveScale = {w:600, h:190, padL:34, padR:16, padT:16, padB:26, maxVal:150};
+let growthCurveDrag = null;
+
+function renderGrowthCurve(){
+  const container = document.getElementById("growthCurveChart");
+  if(!container) return;
+  const {w,h,padL,padR,padT,padB,maxVal} = growthCurveScale;
+  const chartW = w-padL-padR, chartH = h-padT-padB;
+  const labels = ["Vorweide","Frühling","Sommer","Herbst"];
+  const values = [0,1,2,3].map(i=>val("B"+i));
+  const xs = [0,1,2,3].map(i=> padL + chartW*(i+0.5)/4);
+  const ys = values.map(v => padT + chartH - (Math.min(Math.max(v,0),maxVal)/maxVal)*chartH);
+  const pathD = catmullRomPath(xs.map((x,i)=>({x, y:ys[i]})));
+
+  let svg = `<svg viewBox="0 0 ${w} ${h}" id="growthCurveSvg" style="touch-action:none;width:100%;height:auto;display:block;">`;
+  [0,50,100,150].forEach(gv=>{
+    const gy = padT + chartH - (gv/maxVal)*chartH;
+    svg += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${w-padR}" y2="${gy.toFixed(1)}" stroke="#dde2d6" stroke-width="1"/>`;
+    svg += `<text x="${padL-6}" y="${(gy+3).toFixed(1)}" font-size="9" fill="#5c6b5d" text-anchor="end">${gv}</text>`;
+  });
+  svg += `<path d="${pathD}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
+  labels.forEach((label,i)=>{
+    svg += `<text x="${xs[i].toFixed(1)}" y="${h-8}" font-size="10" fill="#5c6b5d" text-anchor="middle">${label}</text>`;
+    svg += `<text x="${xs[i].toFixed(1)}" y="${(ys[i]-12).toFixed(1)}" font-size="10" fill="#204a2c" text-anchor="middle" font-weight="600">${values[i].toFixed(0)}</text>`;
+    svg += `<circle class="curve-point" data-phase="${i}" cx="${xs[i].toFixed(1)}" cy="${ys[i].toFixed(1)}" r="7" fill="#2f6b40" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
+  });
+  svg += `</svg>`;
+  container.innerHTML = svg;
+}
+
+function setupGrowthCurveDrag(){
+  const container = document.getElementById("growthCurveChart");
+  if(!container) return;
+  container.addEventListener("pointerdown", (e)=>{
+    const ptEl = e.target.closest(".curve-point");
+    if(!ptEl) return;
+    growthCurveDrag = parseInt(ptEl.dataset.phase, 10);
+    try{ container.setPointerCapture(e.pointerId); }catch(_e){ /* z.B. synthetische Events ohne aktiven Pointer */ }
+    e.preventDefault();
+  });
+  container.addEventListener("pointermove", (e)=>{
+    if(growthCurveDrag === null) return;
+    const svg = document.getElementById("growthCurveSvg");
+    if(!svg) return;
+    const ctm = svg.getScreenCTM();
+    if(!ctm) return;
+    const svgPt = svg.createSVGPoint();
+    svgPt.x = e.clientX; svgPt.y = e.clientY;
+    const p = svgPt.matrixTransform(ctm.inverse());
+    const {padT, padB, h, maxVal} = growthCurveScale;
+    const chartH = h - padT - padB;
+    let value = maxVal * (1 - (p.y - padT)/chartH);
+    value = Math.max(0, Math.round(value));
+    const input = document.getElementById("B"+growthCurveDrag);
+    input.value = value;
+    onBInput(input);
+  });
+  function endGrowthCurveDrag(e){
+    if(growthCurveDrag !== null){
+      try{ container.releasePointerCapture(e.pointerId); }catch(_e){}
+    }
+    growthCurveDrag = null;
+  }
+  container.addEventListener("pointerup", endGrowthCurveDrag);
+  container.addEventListener("pointercancel", endGrowthCurveDrag);
+}
+
 /* ---------- System-Umschaltung ---------- */
 function setSystem(sys){
   currentSystem = sys;
@@ -1591,6 +1688,7 @@ function calculate(){
   }
 
   updateFutterkosten();
+  renderGrowthCurve();
   saveInputState();
 }
 
@@ -2078,6 +2176,7 @@ onTierChange();
 calcRpm();
 calculate();
 renderAssistant();
+setupGrowthCurveDrag();
 if(window.location.search){
   applyUrlParams();
 } else {
