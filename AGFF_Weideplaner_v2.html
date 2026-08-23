@@ -209,6 +209,16 @@
     color:var(--ink);
     min-width:230px;
   }
+  .rpm-formula{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.82rem;
+    color:var(--ink);
+    background:#fafbf7;
+    border:1px solid var(--line);
+    border-radius:6px;
+    padding:6px 10px;
+    margin:6px 0;
+  }
   td.label .formula{
     display:block;
     font-family:'IBM Plex Mono',monospace;
@@ -323,6 +333,42 @@
     font-family:'IBM Plex Mono',monospace;
     color:var(--accent-dark);
   }
+
+  /* Weidefläche + Verzehrsanteil-Schieberegler */
+  .weidflaeche-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .weidflaeche-row input[type="number"]{flex:1 1 80px;min-width:70px;}
+  .switch-row{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    cursor:pointer;
+    flex:0 0 auto;
+  }
+  .switch-row input{position:absolute;opacity:0;width:0;height:0;}
+  .switch-track{
+    position:relative;
+    width:34px;
+    height:19px;
+    background:var(--line);
+    border-radius:10px;
+    flex:0 0 auto;
+    transition:background .15s;
+  }
+  .switch-thumb{
+    position:absolute;
+    top:2px;
+    left:2px;
+    width:15px;
+    height:15px;
+    background:#fff;
+    border-radius:50%;
+    box-shadow:0 1px 2px rgba(0,0,0,.3);
+    transition:left .15s;
+  }
+  .switch-row input:checked + .switch-track{background:var(--accent);}
+  .switch-row input:checked + .switch-track .switch-thumb{left:17px;}
+  .switch-row input:focus-visible + .switch-track{box-shadow:0 0 0 3px var(--accent-soft);}
+  .switch-text{font-size:.78rem;font-weight:600;color:var(--muted);white-space:nowrap;}
 
   /* Reference / info box */
   .ref-box{
@@ -684,7 +730,7 @@
     <div>
       <p class="brand-eyebrow">AGFF · Weideplanung</p>
       <h1><img src="favicon.svg" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.2em;margin-right:0.15em;">Interaktiver Weideplaner</h1>
-      <p>Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
+      <p class="sub">Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
     </div>
   </header>
   <div class="season-strip"><span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span></div>
@@ -748,6 +794,19 @@
       </div>
     </div>
     <div class="ref-box" id="tierRef"></div>
+
+    <div class="field" style="margin-top:14px;max-width:320px;">
+      <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
+      <div class="weidflaeche-row">
+        <input type="number" id="maxWeidflaeche" value="20" min="0" step="0.1" oninput="calculate()">
+        <label class="switch-row" for="eAutoToggle">
+          <input type="checkbox" id="eAutoToggle" onchange="onEAutoToggle()" aria-describedby="eAutoHint">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-text">E automatisch</span>
+        </label>
+      </div>
+    </div>
+    <p class="sub" id="eAutoHint" style="margin-top:4px;">Verzehrsanteil Weide (Zeile E) automatisch anpassen: wenn aktiv, wird Zeile E je Phase automatisch so hoch gesetzt, wie es die maximal nutzbare Weidefläche und der Graszuwachs (Zeile B) dieser Phase zulassen — die Felder in der Tabelle sind dann gesperrt.</p>
 
     <div class="locate-panel hidden" id="locatePanel">
       <p class="locate-status" id="locateStatus">Optional: übernimmt die Höhenlage per GPS und schätzt grob das Klima anhand von Niederschlagsdaten. Boden/Lage bitte weiterhin selbst einschätzen.</p>
@@ -831,6 +890,16 @@
         <span class="small">reduzierter Graszuwachs je Phase</span>
       </button>
     </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-top:14px;">
+      <p class="sub" style="margin:0;max-width:480px;">Geglättete Kurve(n) durch die vier Phasenwerte von Zeile B: Normaljahr (grün, aus Schritt 1) und — im Dürre-Szenario zusätzlich — die reduzierte Kurve (braun). Punkte lassen sich per Drag &amp; Drop verschieben — Normaljahr-Punkte passen den Standortwert an, Dürre-Punkte die Reduktion (%) unten. Tabelle und Auswertungen aktualisieren sich live.</p>
+      <button type="button" class="locate-btn" onclick="loadStandardCurve()">Standardkurve laden</button>
+    </div>
+    <div class="chart-legend" style="justify-content:flex-start;">
+      <span><i style="background:#4f9d5c;"></i> Normaljahr</span>
+      <span id="duerreLegendItem" class="hidden"><i style="background:#bb6a37;"></i> Dürre-Szenario</span>
+    </div>
+    <div id="growthCurveChart"></div>
 
     <div class="assist-panel hidden" id="duerrePanel" style="margin-top:14px;">
       <div class="field-grid">
@@ -1035,7 +1104,7 @@
     <p class="step-label">Ergebnis</p>
     <h2>Koppelplanung</h2>
     <p class="sub">Ø Flächenbedarf der Herde pro Tag über alle vier Phasen: <strong id="avgM">–</strong> ha/Herde/Tag</p>
-    <p class="sub">Koppelgrösse und Mindestanzahl Koppeln für „<span id="tierNameKoppel">Milchkühe</span>“ — wie im Excel-Original je Besatzzeit (kürzester/längster AGFF-Richtwert) separat ausgewiesen, berechnet mit den aktuellen Betriebsdaten oben.</p>
+    <p class="sub">Koppelgrösse und Mindestanzahl Koppeln für „<span id="tierNameKoppel">Milchkühe</span>“ — je Besatzzeit separat ausgewiesen: kürzester/längster AGFF-Richtwert (wie im Excel-Original) sowie 24 Stunden und 2 Tage als zusätzliche Referenzwerte, berechnet mit den aktuellen Betriebsdaten oben.</p>
     <div class="table-scroll">
       <table class="koppel-table">
         <thead>
@@ -1112,7 +1181,7 @@
   <div class="panel">
     <p class="step-label">Hilfsmittel</p>
     <h2>Futterdichten-Umrechner (Rising-Plate-Meter)</h2>
-    <p class="sub">Rechnet zwischen Bestandeshöhe (cm RPM), Klicks und Futterdichte (kg TS/ha) um.</p>
+    <p class="sub">Rechnet zwischen Bestandeshöhe (cm RPM, Klicks, cm Doppelmeter) und Futterdichte (kg TS/ha) um.</p>
     <div class="rpm-tool">
       <div class="field">
         <label for="rpmVal">Wert</label>
@@ -1123,6 +1192,7 @@
         <select id="rpmFrom" onchange="calcRpm()">
           <option value="cm">cm RPM</option>
           <option value="clicks">Klicks RPM</option>
+          <option value="doppelmeter">cm Doppelmeter</option>
           <option value="kg">kg TS/ha</option>
         </select>
       </div>
@@ -1132,9 +1202,19 @@
           <option value="kg">kg TS/ha</option>
           <option value="cm">cm RPM</option>
           <option value="clicks">Klicks RPM</option>
+          <option value="doppelmeter">cm Doppelmeter</option>
         </select>
       </div>
       <div class="rpm-result" id="rpmResult">73.00</div>
+    </div>
+
+    <button type="button" class="assist-toggle" id="rpmFormulaToggleBtn" onclick="toggleRpmFormulas()">Umrechnungsformeln anzeigen</button>
+    <div class="assist-panel hidden" id="rpmFormulaPanel">
+      <p class="sub" style="margin-top:0;">Basis ist stets kg TS/ha; alle anderen Einheiten werden darüber ineinander umgerechnet.</p>
+      <div class="rpm-formula">kg TS/ha = cm RPM × 240 − 767</div>
+      <div class="rpm-formula">kg TS/ha = Klicks RPM × 120 − 767</div>
+      <div class="rpm-formula">kg TS/ha = (cm Doppelmeter × 1.21) × 120 − 767</div>
+      <p class="sub" style="margin-top:8px;margin-bottom:0;">Doppelmeter-Faktor 1.21 gemäss AGFF-Merkblatt W11 (Plate Pasture Meter Höhe : 1.21 = Doppelmeterhöhe).</p>
     </div>
   </div>
 
@@ -1433,7 +1513,8 @@ function onTierChange(){
   calculate();
 }
 
-// Excel "Koppelplanung": pro Besatzzeit (kürzester/längster AGFF-Richtwert der Tierkategorie)
+// Excel "Koppelplanung": pro Besatzzeit (kürzester/längster AGFF-Richtwert der Tierkategorie,
+// ergänzt um 24 Stunden und 2 Tage als feste Referenzwerte, doppelte Zeiten werden zusammengelegt)
 // Koppelgrösse Frühling (= M Frühling * Besatzzeit), Koppelgrösse ganzjährig (= Ø M * Besatzzeit)
 // und Mindestanzahl Koppeln (= Ø Weideruhezeit Frühling/Sommer / Besatzzeit + 1).
 function renderKoppelTable(Ms, avgM){
@@ -1442,13 +1523,27 @@ function renderKoppelTable(Ms, avgM){
   const mFruehling = Ms[1];
   const avgWeideruhe = (val("Iu1") + val("Iu2")) / 2;
 
-  const rows = [0,1].map(k=>{
-    const besatzTage = t.koppel[k];
-    const groesseFruehling = mFruehling * besatzTage;
-    const groesseGanzjaehrig = avgM * besatzTage;
-    const koppelAnzahl = besatzTage>0 ? (avgWeideruhe/besatzTage)+1 : 0;
+  const candidates = [
+    {tage: t.koppel[0], label: t.besatz[0]},
+    {tage: t.koppel[1], label: t.besatz[1]},
+    {tage: 1, label: "24 Stunden"},
+    {tage: 2, label: "2 Tage"}
+  ];
+  const seenTage = new Set();
+  const besatzEntries = candidates
+    .filter(c=>{
+      if(seenTage.has(c.tage)) return false;
+      seenTage.add(c.tage);
+      return true;
+    })
+    .sort((a,b)=>a.tage-b.tage);
+
+  const rows = besatzEntries.map(({tage, label})=>{
+    const groesseFruehling = mFruehling * tage;
+    const groesseGanzjaehrig = avgM * tage;
+    const koppelAnzahl = tage>0 ? (avgWeideruhe/tage)+1 : 0;
     return `<tr>
-      <td class="besatz">${t.besatz[k]}</td>
+      <td class="besatz">${label}</td>
       <td><strong>${groesseFruehling.toFixed(2)}</strong></td>
       <td><strong>${groesseGanzjaehrig.toFixed(2)}</strong></td>
       <td><strong>${koppelAnzahl.toFixed(1)}</strong></td>
@@ -1463,6 +1558,34 @@ function applyStdTierzahl(){
     document.getElementById("C"+i).value = n;
   }
   calculate();
+}
+
+/* ---------- E (Verzehrsanteil Weide) automatisch maximieren ---------- */
+function onEAutoToggle(){
+  const active = document.getElementById("eAutoToggle").checked;
+  for(let i=0;i<4;i++){
+    const cell = document.getElementById("E"+i);
+    cell.disabled = active;
+    cell.classList.toggle("auto", active);
+  }
+  calculate();
+}
+
+// E_max (%) = maximal nutzbare Fläche * 100 * Graszuwachs (B) / (Tierzahl (C) * Tagesverzehr (D)).
+// Entspricht der Tabellenformel Flächenbedarf = C*D*E/(100*B), nach E aufgelöst und auf [0,100] begrenzt.
+function applyEAuto(){
+  const toggle = document.getElementById("eAutoToggle");
+  if(!toggle || !toggle.checked) return;
+  const maxArea = parseFloat(document.getElementById("maxWeidflaeche").value) || 0;
+  for(let i=0;i<4;i++){
+    const B = val("B"+i), C = val("C"+i), D = val("D"+i);
+    let e = 100;
+    if(B>0 && C>0 && D>0){
+      e = (maxArea*100*B)/(C*D);
+    }
+    // Abrunden statt runden: die maximal nutzbare Fläche darf nie überschritten werden.
+    document.getElementById("E"+i).value = Math.max(0, Math.min(100, Math.floor(e)));
+  }
 }
 
 /* ---------- Szenario: Normaljahr / Dürre ---------- */
@@ -1497,6 +1620,150 @@ function onBInput(el){
   calculate();
 }
 
+/* ---------- Graswachstumskurven (Zeile B): Normaljahr vs. Dürre, per Drag & Drop anpassbar ---------- */
+
+// Catmull-Rom durch 4 Punkte, als kubische Bezier-Segmente (gleichmässige Glättung).
+function catmullRomPath(pts){
+  const p = [pts[0], ...pts, pts[pts.length-1]];
+  let d = `M${p[1].x.toFixed(1)},${p[1].y.toFixed(1)} `;
+  for(let i=1;i<p.length-2;i++){
+    const p0=p[i-1], p1=p[i], p2=p[i+1], p3=p[i+2];
+    const c1x=p1.x+(p2.x-p0.x)/6, c1y=p1.y+(p2.y-p0.y)/6;
+    const c2x=p2.x-(p3.x-p1.x)/6, c2y=p2.y-(p3.y-p1.y)/6;
+    d += `C${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)} `;
+  }
+  return d;
+}
+
+function catmullRomAreaPath(pts, baseY){
+  return catmullRomPath(pts) + `L${pts[pts.length-1].x.toFixed(1)},${baseY} L${pts[0].x.toFixed(1)},${baseY} Z`;
+}
+
+// Feste Skala (statt Autoscale) damit die Punkte beim Ziehen exakt dem Cursor folgen.
+const growthCurveScale = {w:600, h:210, padL:34, padR:16, padT:16, padB:26, maxVal:150};
+let growthCurveDrag = null; // {curve:"normal"|"duerre", phase:0..3}
+
+function growthCurveY(v){
+  const {padT, padB, h, maxVal} = growthCurveScale;
+  const chartH = h - padT - padB;
+  return padT + chartH - (Math.min(Math.max(v,0),maxVal)/maxVal)*chartH;
+}
+
+function renderGrowthCurve(){
+  const container = document.getElementById("growthCurveChart");
+  if(!container) return;
+  const showDuerre = szenario === "duerre";
+  const legendItem = document.getElementById("duerreLegendItem");
+  if(legendItem) legendItem.classList.toggle("hidden", !showDuerre);
+
+  const {w,h,padL,padR,padT,padB,maxVal} = growthCurveScale;
+  const chartW = w-padL-padR, chartH = h-padT-padB;
+  const baseY = padT + chartH;
+  const labels = ["Vorweide","Frühling","Sommer","Herbst"];
+  const normalVals = [0,1,2,3].map(i => B_baseline[i]);
+  const xs = [0,1,2,3].map(i => padL + chartW*(i+0.5)/4);
+  const normalPts = xs.map((x,i)=>({x, y:growthCurveY(normalVals[i])}));
+
+  let svg = `<svg viewBox="0 0 ${w} ${h}" id="growthCurveSvg" style="touch-action:none;width:100%;height:auto;display:block;">`;
+  [0,50,100,150].forEach(gv=>{
+    const gy = growthCurveY(gv);
+    svg += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${w-padR}" y2="${gy.toFixed(1)}" stroke="#dde2d6" stroke-width="1"/>`;
+    svg += `<text x="${padL-6}" y="${(gy+3).toFixed(1)}" font-size="9" fill="#5c6b5d" text-anchor="end">${gv}</text>`;
+  });
+
+  svg += `<path d="${catmullRomAreaPath(normalPts, baseY)}" fill="#dbead0" stroke="none"/>`;
+  if(showDuerre){
+    const duerreVals = [0,1,2,3].map(i => val("B"+i));
+    const duerrePts = xs.map((x,i)=>({x, y:growthCurveY(duerreVals[i])}));
+    svg += `<path d="${catmullRomAreaPath(duerrePts, baseY)}" fill="#f3e2d0" stroke="none"/>`;
+    svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
+    svg += `<path d="${catmullRomPath(duerrePts)}" fill="none" stroke="#bb6a37" stroke-width="2.5" stroke-linecap="round"/>`;
+    duerrePts.forEach((p,i)=>{
+      svg += `<text x="${p.x.toFixed(1)}" y="${(p.y+20).toFixed(1)}" font-size="10" fill="#8a4a22" text-anchor="middle" font-weight="600">${duerreVals[i].toFixed(0)}</text>`;
+      svg += `<circle class="curve-point" data-curve="duerre" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#bb6a37" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
+    });
+  } else {
+    svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
+  }
+
+  labels.forEach((label,i)=>{
+    svg += `<text x="${xs[i].toFixed(1)}" y="${h-8}" font-size="10" fill="#5c6b5d" text-anchor="middle">${label}</text>`;
+  });
+  normalPts.forEach((p,i)=>{
+    svg += `<text x="${p.x.toFixed(1)}" y="${(p.y-11).toFixed(1)}" font-size="10" fill="#204a2c" text-anchor="middle" font-weight="600">${normalVals[i].toFixed(0)}</text>`;
+    svg += `<circle class="curve-point" data-curve="normal" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#2f6b40" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
+  });
+  svg += `</svg>`;
+  container.innerHTML = svg;
+}
+
+const RED_INPUT_IDS = ["redVor","redFruehling","redSommer","redHerbst"];
+
+function setupGrowthCurveDrag(){
+  const container = document.getElementById("growthCurveChart");
+  if(!container) return;
+  container.addEventListener("pointerdown", (e)=>{
+    const ptEl = e.target.closest(".curve-point");
+    if(!ptEl) return;
+    growthCurveDrag = {curve: ptEl.dataset.curve, phase: parseInt(ptEl.dataset.phase, 10)};
+    try{ container.setPointerCapture(e.pointerId); }catch(_e){ /* z.B. synthetische Events ohne aktiven Pointer */ }
+    e.preventDefault();
+  });
+  container.addEventListener("pointermove", (e)=>{
+    if(growthCurveDrag === null) return;
+    const svg = document.getElementById("growthCurveSvg");
+    if(!svg) return;
+    const ctm = svg.getScreenCTM();
+    if(!ctm) return;
+    const svgPt = svg.createSVGPoint();
+    svgPt.x = e.clientX; svgPt.y = e.clientY;
+    const p = svgPt.matrixTransform(ctm.inverse());
+    const {padT, padB, h, maxVal} = growthCurveScale;
+    const chartH = h - padT - padB;
+    let value = maxVal * (1 - (p.y - padT)/chartH);
+    value = Math.max(0, Math.round(value));
+    const {curve, phase} = growthCurveDrag;
+    if(curve === "normal"){
+      B_baseline[phase] = value;
+      if(szenario === "duerre"){
+        applyDuerre();
+      } else {
+        document.getElementById("B"+phase).value = value;
+        calculate();
+      }
+    } else {
+      const base = B_baseline[phase];
+      const reduction = base > 0 ? Math.round((1 - value/base) * 100) : 0;
+      document.getElementById(RED_INPUT_IDS[phase]).value = Math.min(100, Math.max(0, reduction));
+      applyDuerre();
+    }
+  });
+  function endGrowthCurveDrag(e){
+    if(growthCurveDrag !== null){
+      try{ container.releasePointerCapture(e.pointerId); }catch(_e){}
+    }
+    growthCurveDrag = null;
+  }
+  container.addEventListener("pointerup", endGrowthCurveDrag);
+  container.addEventListener("pointercancel", endGrowthCurveDrag);
+}
+
+function loadStandardCurve(){
+  const key = document.getElementById("hoehe").value
+            + document.getElementById("boden").value
+            + document.getElementById("klima").value
+            + document.getElementById("veg").value;
+  const data = KOMBI[key];
+  if(data){
+    for(let i=0;i<4;i++){ B_baseline[i] = data.B[i]; }
+  }
+  document.getElementById("redVor").value = 10;
+  document.getElementById("redFruehling").value = 15;
+  document.getElementById("redSommer").value = 45;
+  document.getElementById("redHerbst").value = 20;
+  applyDuerre();
+}
+
 /* ---------- System-Umschaltung ---------- */
 function setSystem(sys){
   currentSystem = sys;
@@ -1514,6 +1781,7 @@ function setSystem(sys){
 function val(id){ return parseFloat(document.getElementById(id).value) || 0; }
 
 function calculate(){
+  applyEAuto();
   const isUmtrieb = currentSystem === "umtrieb";
   const F_res = document.querySelectorAll(".F_res");
   const G_res = document.querySelectorAll(".G_res");
@@ -1589,6 +1857,7 @@ function calculate(){
   }
 
   updateFutterkosten();
+  renderGrowthCurve();
   saveInputState();
 }
 
@@ -1772,15 +2041,19 @@ function renderFeedChart(stallDt, weideDt){
 }
 
 /* ---------- RPM-Umrechner ---------- */
+// Doppelmeter -> Klicks RPM: Faktor 1.21 gemäss AGFF-Merkblatt W11
+// (Plate Pasture Meter Höhe : 1.21 = Doppelmeterhöhe).
 function toKg(unit, v){
   if(unit === "kg") return v;
   if(unit === "cm") return v*240 - 767;
   if(unit === "clicks") return v*120 - 767;
+  if(unit === "doppelmeter") return (v*1.21)*120 - 767;
 }
 function fromKg(unit, kg){
   if(unit === "kg") return kg;
   if(unit === "cm") return (kg+767)/240;
   if(unit === "clicks") return (kg+767)/120;
+  if(unit === "doppelmeter") return ((kg+767)/120)/1.21;
 }
 function calcRpm(){
   const v = parseFloat(document.getElementById("rpmVal").value) || 0;
@@ -1788,8 +2061,17 @@ function calcRpm(){
   const to = document.getElementById("rpmTo").value;
   const kg = toKg(from, v);
   const result = fromKg(to, kg);
-  document.getElementById("rpmResult").innerText = result.toFixed(2) + (to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : " Klicks");
+  const unitLabel = to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : to==="doppelmeter" ? " cm Doppelmeter" : " Klicks";
+  document.getElementById("rpmResult").innerText = result.toFixed(2) + unitLabel;
   saveInputState();
+}
+
+function toggleRpmFormulas(){
+  const panel = document.getElementById("rpmFormulaPanel");
+  const btn = document.getElementById("rpmFormulaToggleBtn");
+  const isHidden = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden");
+  btn.innerText = isHidden ? "Umrechnungsformeln ausblenden" : "Umrechnungsformeln anzeigen";
 }
 
 /* ---------- Standorterkennung (GPS) ---------- */
@@ -2071,6 +2353,7 @@ onTierChange();
 calcRpm();
 calculate();
 renderAssistant();
+setupGrowthCurveDrag();
 if(window.location.search){
   applyUrlParams();
 } else {
