@@ -4,6 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AGFF Weideplaner</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <style>
@@ -128,7 +132,7 @@
     gap:14px;
   }
   .field{display:flex;flex-direction:column;gap:5px;}
-  .field label{font-size:.78rem;font-weight:600;color:var(--muted);}
+  .field label{font-size:.78rem;font-weight:600;color:var(--muted);display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;}
   .field select, .field input{
     padding:9px 10px;
     border:1px solid var(--line);
@@ -299,15 +303,42 @@
     margin-top:36px;
   }
 
-  /* Standorterkennung (GPS) */
-  .locate-row{
-    display:flex;
+  /* Standorterkennung (GPS + Ortssuche) */
+  .sat-btn{
+    display:inline-flex;
     align-items:center;
-    gap:12px;
-    flex-wrap:wrap;
-    margin-top:16px;
-    padding-top:14px;
-    border-top:1px dashed var(--line);
+    justify-content:center;
+    width:20px;
+    height:20px;
+    flex:0 0 auto;
+    border-radius:50%;
+    border:1px solid var(--accent);
+    background:#fff;
+    font-size:.7rem;
+    line-height:1;
+    padding:0;
+    cursor:pointer;
+    transition:background .15s;
+  }
+  .sat-btn:hover, .sat-btn.active{background:var(--accent-soft);}
+  .locate-panel{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    margin-top:8px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:var(--accent-soft);
+  }
+  .locate-search-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .locate-search-row input{
+    flex:1 1 140px;
+    padding:8px 10px;
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:.85rem;
+    font-family:inherit;
+    color:var(--ink);
   }
   .locate-btn{
     display:inline-flex;
@@ -330,8 +361,7 @@
   .locate-status{
     font-size:.8rem;
     color:var(--muted);
-    flex:1;
-    min-width:200px;
+    margin:0;
   }
   .est-badge{
     display:inline-block;
@@ -486,11 +516,11 @@
   .cost-highlight strong{color:var(--accent-dark) !important;font-size:1.05rem;}
 
   /* Standard-Tierzahl übernehmen */
-  .apply-row{display:flex;gap:6px;}
+  .apply-row{display:flex;gap:6px;flex-wrap:wrap;}
   .apply-row input{flex:0 0 70px;}
   .apply-btn{
-    flex:1;
-    padding:0 10px;
+    flex:1 1 140px;
+    padding:8px 10px;
     border-radius:7px;
     border:1px solid var(--accent);
     background:#fff;
@@ -499,7 +529,7 @@
     font-size:.8rem;
     font-weight:600;
     cursor:pointer;
-    white-space:nowrap;
+    white-space:normal;
   }
   .apply-btn:hover{background:var(--accent-soft);}
 
@@ -517,7 +547,7 @@
   <header class="top">
     <div>
       <p class="brand-eyebrow">AGFF · Weideplanung</p>
-      <h1>🌱 Interaktiver Weideplaner</h1>
+      <h1><img src="favicon.svg" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.2em;margin-right:0.15em;">Interaktiver Weideplaner</h1>
       <p>Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
     </div>
   </header>
@@ -531,7 +561,7 @@
     <p class="sub">Bestimmt automatisch Start der Weidephasen und Graszuwachs (Zeile A &amp; B unten). Werte bleiben danach editierbar.</p>
     <div class="field-grid">
       <div class="field">
-        <label for="hoehe">Höhenlage (m ü. M.)</label>
+        <label for="hoehe">Höhenlage (m ü. M.)<button type="button" class="sat-btn" id="satToggleBtn" onclick="toggleLocatePanel()" aria-expanded="false" aria-controls="locatePanel" title="Standort per Ortssuche oder GPS erkennen" aria-label="Standort per Ortssuche oder GPS erkennen">🛰️</button></label>
         <select id="hoehe" onchange="onStandortChange()">
           <option value="unter_700">unter 700</option>
           <option value="unter_900">unter 900</option>
@@ -583,9 +613,13 @@
     </div>
     <div class="ref-box" id="tierRef"></div>
 
-    <div class="locate-row">
-      <button class="locate-btn" id="btnLocate" onclick="handleLocate()">📍 Standort erkennen</button>
-      <span class="locate-status" id="locateStatus">Optional: übernimmt die Höhenlage per GPS und schätzt grob das Klima anhand von Niederschlagsdaten. Boden/Lage bitte weiterhin selbst einschätzen.</span>
+    <div class="locate-panel hidden" id="locatePanel">
+      <p class="locate-status" id="locateStatus">Optional: übernimmt die Höhenlage per GPS und schätzt grob das Klima anhand von Niederschlagsdaten. Boden/Lage bitte weiterhin selbst einschätzen.</p>
+      <div class="locate-search-row">
+        <input type="text" id="locateSearchInput" placeholder="Ort oder PLZ suchen …" onkeydown="if(event.key==='Enter'){event.preventDefault();handleLocateSearch();}">
+        <button type="button" class="locate-btn" id="locateSearchBtn" onclick="handleLocateSearch()">🔍 Suchen</button>
+      </div>
+      <button type="button" class="locate-btn" id="btnLocate" onclick="handleLocate()">📍 GPS-Standort verwenden</button>
     </div>
   </div>
 
@@ -1261,6 +1295,37 @@ function markEstimated(fieldId, on){
   }
 }
 
+async function applyCoordinates(lat, lon, sourceLabel, status){
+  status.innerText = "Höhe wird ermittelt …";
+  const elevData = await fetchJsonWithTimeout(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
+  const elevation = Array.isArray(elevData.elevation) ? elevData.elevation[0] : null;
+  const hoehe = mapElevationToHoehe(elevation);
+  if(hoehe){
+    document.getElementById("hoehe").value = hoehe;
+    markEstimated("hoehe", true);
+  }
+
+  status.innerText = "Niederschlag wird geschätzt …";
+  let klimaLabel = "";
+  try{
+    const now = new Date();
+    const endY = now.getFullYear()-1;
+    const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${endY}-01-01&end_date=${endY}-12-31&daily=precipitation_sum&timezone=auto`;
+    const precipData = await fetchJsonWithTimeout(url, 9000);
+    const vals = (precipData.daily && precipData.daily.precipitation_sum) || [];
+    const total = vals.reduce((a,b)=>a+(b||0),0);
+    if(total > 0){
+      const klima = total >= 900 ? "frisch" : "trocken";
+      document.getElementById("klima").value = klima;
+      markEstimated("klima", true);
+      klimaLabel = ` · Niederschlag ca. ${total.toFixed(0)} mm/Jahr → Klima-Schätzung „${klima}"`;
+    }
+  }catch(_e){ /* Klima-Schätzung ist optional, bei Fehler einfach weglassen */ }
+
+  onStandortChange();
+  status.innerText = `${sourceLabel}: ${lat.toFixed(4)}, ${lon.toFixed(4)} · Höhe ca. ${Math.round(elevation)} m → „${hoehe}"${klimaLabel}. Boden/Lage und Vegetationsbeginn bitte selbst prüfen.`;
+}
+
 async function handleLocate(){
   const btn = document.getElementById("btnLocate");
   const status = document.getElementById("locateStatus");
@@ -1274,41 +1339,49 @@ async function handleLocate(){
     const pos = await new Promise((resolve,reject)=>{
       navigator.geolocation.getCurrentPosition(resolve, reject, {enableHighAccuracy:true, timeout:10000, maximumAge:120000});
     });
-    const lat = pos.coords.latitude, lon = pos.coords.longitude;
-
-    status.innerText = "Höhe wird ermittelt …";
-    const elevData = await fetchJsonWithTimeout(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
-    const elevation = Array.isArray(elevData.elevation) ? elevData.elevation[0] : null;
-    const hoehe = mapElevationToHoehe(elevation);
-    if(hoehe){
-      document.getElementById("hoehe").value = hoehe;
-      markEstimated("hoehe", true);
-    }
-
-    status.innerText = "Niederschlag wird geschätzt …";
-    let klimaLabel = "";
-    try{
-      const now = new Date();
-      const endY = now.getFullYear()-1;
-      const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&start_date=${endY}-01-01&end_date=${endY}-12-31&daily=precipitation_sum&timezone=auto`;
-      const precipData = await fetchJsonWithTimeout(url, 9000);
-      const vals = (precipData.daily && precipData.daily.precipitation_sum) || [];
-      const total = vals.reduce((a,b)=>a+(b||0),0);
-      if(total > 0){
-        const klima = total >= 900 ? "frisch" : "trocken";
-        document.getElementById("klima").value = klima;
-        markEstimated("klima", true);
-        klimaLabel = ` · Niederschlag ca. ${total.toFixed(0)} mm/Jahr → Klima-Schätzung „${klima}"`;
-      }
-    }catch(_e){ /* Klima-Schätzung ist optional, bei Fehler einfach weglassen */ }
-
-    onStandortChange();
-    status.innerText = `Standort erkannt: ${lat.toFixed(4)}, ${lon.toFixed(4)} · Höhe ca. ${Math.round(elevation)} m → „${hoehe}"${klimaLabel}. Boden/Lage und Vegetationsbeginn bitte selbst prüfen.`;
+    await applyCoordinates(pos.coords.latitude, pos.coords.longitude, "Standort erkannt", status);
   }catch(err){
     status.innerText = "Standort konnte nicht ermittelt werden: " + err.message;
   }finally{
     btn.disabled = false;
   }
+}
+
+async function handleLocateSearch(){
+  const input = document.getElementById("locateSearchInput");
+  const searchBtn = document.getElementById("locateSearchBtn");
+  const status = document.getElementById("locateStatus");
+  const query = input.value.trim();
+  if(!query){
+    status.innerText = "Bitte einen Ort oder eine PLZ eingeben.";
+    return;
+  }
+  searchBtn.disabled = true;
+  status.innerText = "Ort wird gesucht …";
+  try{
+    const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=1&language=de&format=json`;
+    const data = await fetchJsonWithTimeout(url, 8000);
+    const hit = data.results && data.results[0];
+    if(!hit){
+      status.innerText = `Kein Ort gefunden für „${query}".`;
+      return;
+    }
+    const label = [hit.name, hit.admin1, hit.country].filter(Boolean).join(", ");
+    await applyCoordinates(hit.latitude, hit.longitude, `Gefunden: ${label}`, status);
+  }catch(err){
+    status.innerText = "Ortssuche fehlgeschlagen: " + err.message;
+  }finally{
+    searchBtn.disabled = false;
+  }
+}
+
+function toggleLocatePanel(){
+  const panel = document.getElementById("locatePanel");
+  const btn = document.getElementById("satToggleBtn");
+  const willShow = panel.classList.contains("hidden");
+  panel.classList.toggle("hidden");
+  btn.setAttribute("aria-expanded", String(willShow));
+  btn.classList.toggle("active", willShow);
 }
 
 // Manuelle Änderung an Höhe/Klima entfernt die "Schätzung"-Markierung wieder
