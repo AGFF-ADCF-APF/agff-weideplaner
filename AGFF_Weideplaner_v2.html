@@ -684,7 +684,7 @@
     <div>
       <p class="brand-eyebrow">AGFF · Weideplanung</p>
       <h1><img src="favicon.svg" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.2em;margin-right:0.15em;">Interaktiver Weideplaner</h1>
-      <p>Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
+      <p class="sub">Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
     </div>
   </header>
   <div class="season-strip"><span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span></div>
@@ -1112,7 +1112,7 @@
   <div class="panel">
     <p class="step-label">Hilfsmittel</p>
     <h2>Futterdichten-Umrechner (Rising-Plate-Meter)</h2>
-    <p class="sub">Rechnet zwischen Bestandeshöhe (cm RPM), Klicks und Futterdichte (kg TS/ha) um.</p>
+    <p class="sub">Rechnet zwischen Bestandeshöhe (cm RPM, Klicks, cm Doppelmeter) und Futterdichte (kg TS/ha) um.</p>
     <div class="rpm-tool">
       <div class="field">
         <label for="rpmVal">Wert</label>
@@ -1123,6 +1123,7 @@
         <select id="rpmFrom" onchange="calcRpm()">
           <option value="cm">cm RPM</option>
           <option value="clicks">Klicks RPM</option>
+          <option value="doppelmeter">cm Doppelmeter</option>
           <option value="kg">kg TS/ha</option>
         </select>
       </div>
@@ -1132,6 +1133,7 @@
           <option value="kg">kg TS/ha</option>
           <option value="cm">cm RPM</option>
           <option value="clicks">Klicks RPM</option>
+          <option value="doppelmeter">cm Doppelmeter</option>
         </select>
       </div>
       <div class="rpm-result" id="rpmResult">73.00</div>
@@ -1772,15 +1774,19 @@ function renderFeedChart(stallDt, weideDt){
 }
 
 /* ---------- RPM-Umrechner ---------- */
+// Doppelmeter -> Klicks RPM: Faktor 1.21 gemäss AGFF-Merkblatt W11
+// (Plate Pasture Meter Höhe : 1.21 = Doppelmeterhöhe).
 function toKg(unit, v){
   if(unit === "kg") return v;
   if(unit === "cm") return v*240 - 767;
   if(unit === "clicks") return v*120 - 767;
+  if(unit === "doppelmeter") return (v*1.21)*120 - 767;
 }
 function fromKg(unit, kg){
   if(unit === "kg") return kg;
   if(unit === "cm") return (kg+767)/240;
   if(unit === "clicks") return (kg+767)/120;
+  if(unit === "doppelmeter") return ((kg+767)/120)/1.21;
 }
 function calcRpm(){
   const v = parseFloat(document.getElementById("rpmVal").value) || 0;
@@ -1788,7 +1794,8 @@ function calcRpm(){
   const to = document.getElementById("rpmTo").value;
   const kg = toKg(from, v);
   const result = fromKg(to, kg);
-  document.getElementById("rpmResult").innerText = result.toFixed(2) + (to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : " Klicks");
+  const unitLabel = to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : to==="doppelmeter" ? " cm Doppelmeter" : " Klicks";
+  document.getElementById("rpmResult").innerText = result.toFixed(2) + unitLabel;
   saveInputState();
 }
 
