@@ -1063,7 +1063,7 @@ function renderKoppelRef(name){
     ref("Besatzzeit-Spanne", t.besatz[0] + " – " + t.besatz[1]) +
     ref("Koppelgrösse min–max (ha)", t.groesse[0].toFixed(2) + " – " + t.groesse[1].toFixed(2)) +
     ref("Koppelgrösse ganzjährig (ha)", t.groesseMw[0].toFixed(2) + " – " + t.groesseMw[1].toFixed(2)) +
-    ref("Koppelanzahl (Sommer, ≥)", t.anzahl[1].toFixed(1) + " – " + t.anzahl[0].toFixed(1));
+    ref("Koppelanzahl (Sommer, ≥)", Math.ceil(t.anzahl[1]) + " – " + Math.ceil(t.anzahl[0]));
 }
 function ref(label,val){
   return "<div><span>"+label+"</span>"+val+"</div>";
@@ -1139,7 +1139,7 @@ function calculate(){
       M_res[i].innerText = M.toFixed(3);
       N_res[i].innerText = N.toFixed(2);
       P_res[i].innerText = P.toFixed(2);
-      Q_res[i].innerText = Q.toFixed(2);
+      Q_res[i].innerText = Math.ceil(Q).toString();
       Ms.push(M);
     } else {
       const Ik = B>0 ? (F*C)/B : 0;

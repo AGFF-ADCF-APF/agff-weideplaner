@@ -1546,7 +1546,7 @@ function renderKoppelTable(Ms, avgM){
       <td class="besatz">${label}</td>
       <td><strong>${groesseFruehling.toFixed(2)}</strong></td>
       <td><strong>${groesseGanzjaehrig.toFixed(2)}</strong></td>
-      <td><strong>${koppelAnzahl.toFixed(1)}</strong></td>
+      <td><strong>${Math.ceil(koppelAnzahl)}</strong></td>
     </tr>`;
   });
   document.getElementById("koppelRefBody").innerHTML = rows.join("");
@@ -1839,7 +1839,7 @@ function calculate(){
       M_res[i].innerText = M.toFixed(3);
       N_res[i].innerText = N.toFixed(2);
       P_res[i].innerText = P.toFixed(2);
-      Q_res[i].innerText = Q.toFixed(2);
+      Q_res[i].innerText = Math.ceil(Q).toString();
       Ms.push(M);
     } else {
       const Ik = B>0 ? (F*C)/B : 0;
