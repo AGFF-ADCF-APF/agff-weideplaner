@@ -23,7 +23,7 @@
     --gold:#b9832c;
     --gold-soft:#f6ecd8;
     --vor:#7d9a86;
-    --hauptwachstum:#4f9d5c;
+    --wachstumsspitze:#4f9d5c;
     --bestockungskrise:#94a83c;
     --sommer:#d3a02f;
     --herbst:#bb6a37;
@@ -91,7 +91,7 @@
   }
   .season-strip span{flex:1;}
   .season-strip .s1{background:var(--vor);}
-  .season-strip .s2{background:var(--hauptwachstum);}
+  .season-strip .s2{background:var(--wachstumsspitze);}
   .season-strip .s3{background:var(--bestockungskrise);}
   .season-strip .s4{background:var(--sommer);}
   .season-strip .s5{background:var(--herbst);}
@@ -201,7 +201,7 @@
     font-weight:600;
     font-size:.82rem;
   }
-  thead th.season-hauptwachstum{background:#eaf4ea;}
+  thead th.season-wachstumsspitze{background:#eaf4ea;}
   thead th.season-bestockungskrise{background:#eef0da;}
   thead th.season-sommer{background:var(--gold-soft);}
   thead th.season-herbst{background:#f5e6dc;}
@@ -733,7 +733,7 @@
     <div>
       <p class="brand-eyebrow">AGFF · Weideplanung · v3</p>
       <h1><img src="favicon.svg" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.2em;margin-right:0.15em;">Interaktiver Weideplaner</h1>
-      <p class="sub">Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original. Didaktische 5-Phasen-Variante für die Berufsschule: das Graswachstum wird hier in fünf statt vier Phasen abgebildet (Vorweide, Hauptwachstum, Bestockungskrise, Sommer, Herbst) — 5-Phasen-Modell nach INFORAMA-Lehrmittel Futterbau 3. Lehrjahr, Kapitel A6.5.</p>
+      <p class="sub">Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original. Didaktische 5-Phasen-Variante für die Berufsschule: das Graswachstum wird hier in fünf statt vier Phasen abgebildet (Vorweide, Wachstumsspitze, Bestockungskrise, Sommer, Herbst).</p>
     </div>
   </header>
   <div class="season-strip"><span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span><span class="s5"></span></div>
@@ -805,7 +805,7 @@
         <span class="switch-text">Saisonale Abkalbung im Frühjahr</span>
       </label>
     </div>
-    <p class="sub" id="seasonalCalvingHint" style="margin-top:4px;">Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Hauptwachstum 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder in der Tabelle sind dann gesperrt.</p>
+    <p class="sub" id="seasonalCalvingHint" style="margin-top:4px;">Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Wachstumsspitze 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder in der Tabelle sind dann gesperrt.</p>
 
     <div class="field" style="margin-top:14px;max-width:320px;">
       <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
@@ -920,8 +920,8 @@
           <input type="number" id="redVor" value="10" min="0" max="100" oninput="applyDuerre()">
         </div>
         <div class="field">
-          <label for="redHauptwachstum">Reduktion Hauptwachstum (%)</label>
-          <input type="number" id="redHauptwachstum" value="15" min="0" max="100" oninput="applyDuerre()">
+          <label for="redWachstumsspitze">Reduktion Wachstumsspitze (%)</label>
+          <input type="number" id="redWachstumsspitze" value="15" min="0" max="100" oninput="applyDuerre()">
         </div>
         <div class="field">
           <label for="redBestockungskrise">Reduktion Bestockungskrise (%)</label>
@@ -945,11 +945,11 @@
     <p class="step-label">Schritt 4</p>
     <h2>Betriebs- und Standortdaten</h2>
     <p class="sub">Dick hervorgehobene Felder (gelb umrandet) sind Auto-Vorschläge aus Schritt 1 — betriebsspezifisch anpassbar.</p>
-    <p class="sub">Die fünf Wachstumsphasen sind mit einem „i"-Symbol in der Kopfzeile erklärt. 5-Phasen-Modell nach INFORAMA-Lehrmittel Futterbau 3. Lehrjahr, Kapitel A6.5, Abschnitt 3.1.</p>
+    <p class="sub">Die fünf Wachstumsphasen sind mit einem „i"-Symbol in der Kopfzeile erklärt. 5-Phasen-Modell nach INFORAMA-Lehrmittel Pflanzenbau, Kapitel A6.5, Abschnitt 3.1 (LMZ 2020).</p>
     <div class="phase-jump" id="phaseJump">
       <span class="phase-jump-label">Phase:</span>
       <button type="button" class="phase-chip active" onclick="scrollToPhase(0,this)">Vorweide</button>
-      <button type="button" class="phase-chip" onclick="scrollToPhase(1,this)">Hauptwachstum</button>
+      <button type="button" class="phase-chip" onclick="scrollToPhase(1,this)">Wachstumsspitze</button>
       <button type="button" class="phase-chip" onclick="scrollToPhase(2,this)">Bestockungskrise</button>
       <button type="button" class="phase-chip" onclick="scrollToPhase(3,this)">Sommer</button>
       <button type="button" class="phase-chip" onclick="scrollToPhase(4,this)">Herbst</button>
@@ -965,7 +965,7 @@
             <th class="th-code"></th>
             <th class="th-label" style="text-align:left;">Parameter / Rechnungsschritt</th>
             <th>Vorweide<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Die Temperaturen sind noch frisch, die Gräser bestocken; das Wachstum ist langsam. Übergangsphase: Weidebeginn am Ende des Winters, sobald der Boden tragfähig ist — die Tiere gewöhnen sich langsam ans neue Futter, die Bestockung wird gefördert und die sehr frühen Gräser geköpft. Das Weidefutter macht nur einen kleinen Anteil in der Ration aus.">i</button></span></th>
-            <th class="season-hauptwachstum">Hauptwachstum<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Um den 15.–20. April, bei Beginn der Löwenzahnblüte, explodiert das Wachstum und die Gräser schiessen (Verzögerung ca. 4 Tage pro 100 Meter Höhenunterschied). Der Weidedruck muss von Beginn weg hochgehalten werden, um Verluste zu reduzieren; die Weidefläche wird verkleinert und die Aufwuchshöhe kontrolliert. Diese Phase ist entscheidend für den Erfolg der ganzen Weidesaison.">i</button></span></th>
+            <th class="season-wachstumsspitze">Wachstumsspitze<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Um den 15.–20. April, bei Beginn der Löwenzahnblüte, explodiert das Wachstum und die Gräser schiessen (Verzögerung ca. 4 Tage pro 100 Meter Höhenunterschied). Der Weidedruck muss von Beginn weg hochgehalten werden, um Verluste zu reduzieren; die Weidefläche wird verkleinert und die Aufwuchshöhe kontrolliert. Diese Phase ist entscheidend für den Erfolg der ganzen Weidesaison.">i</button></span></th>
             <th class="season-bestockungskrise">Bestockungskrise<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Ab dem 15.–20. Mai schwächt sich das Graswachstum ab: die Gräser bilden Ähren und Rispen und verringern dabei das Wachstum. Die Weidefläche muss vergrössert werden (1. Vergrösserung); ist der Weidedruck in der Vorphase ungenügend gewesen, sinkt Qualität und Verzehr zusätzlich.">i</button></span></th>
             <th class="season-sommer">Sommer<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Ab dem 15.–20. Juni verringert sich das Wachstum weiter, bei Durchschnittstemperaturen über 25°C oder ausbleibenden Niederschlägen manchmal bis zum kompletten Stillstand (Hitze-/Wasserstress). Zusätzliche Weideflächen einplanen oder auf Teilweide wechseln, wenn keine weiteren Flächen verfügbar sind.">i</button></span></th>
             <th class="season-herbst">Herbst<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Ab dem 15.–20. August sinken Temperaturen und Niederschläge kehren zurück, was wieder etwas Wachstum fördert (Herbstaufwuchs) — die kürzere Tageslänge bremst es aber. Am Anfang dieser Phase das Futter der nicht geweideten Fläche konservieren, dann schrittweise alle gemähten Flächen abweiden lassen (Bodenverhältnisse beachten).">i</button></span></th>
@@ -1022,7 +1022,7 @@
           <!-- UMTRIEB ONLY: Weideruhezeit vor F, but order kept like Excel -->
           <tr class="row-umtrieb">
             <td class="code">I</td>
-            <td class="label">Weideruhezeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage zwischen zwei Beweidungen derselben Koppel. Im Frühjahr 14–20 Tage, ab Ende Mai bis August 20–28 Tage, unter Trockenheit im Sommer bis zu 35 Tage (Merkblatt Kap. 3.3). Wert für Bestockungskrise ist eine Schätzung zwischen Hauptwachstum und Sommer.">i</button></span></td>
+            <td class="label">Weideruhezeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage zwischen zwei Beweidungen derselben Koppel. Im Frühjahr 14–20 Tage, ab Ende Mai bis August 20–28 Tage, unter Trockenheit im Sommer bis zu 35 Tage (Merkblatt Kap. 3.3). Wert für Bestockungskrise ist eine Schätzung zwischen Wachstumsspitze und Sommer.">i</button></span></td>
             <td><input type="number" class="cell I_u" id="Iu0" value="30" oninput="calculate()"></td>
             <td><input type="number" class="cell I_u" id="Iu1" value="18" oninput="calculate()"></td>
             <td><input type="number" class="cell I_u" id="Iu2" value="23" oninput="calculate()"></td>
@@ -1138,9 +1138,9 @@
         <thead>
           <tr>
             <th style="text-align:left;">Besatzzeit</th>
-            <th>Koppelgrösse Hauptwachstum (ha)<span class="formula-th">= Flächenbedarf Herde/Tag (Hauptwachstum) × Besatzzeit</span></th>
+            <th>Koppelgrösse Wachstumsspitze (ha)<span class="formula-th">= Flächenbedarf Herde/Tag (Wachstumsspitze) × Besatzzeit</span></th>
             <th>Koppelgrösse ganzjährig (ha)<span class="formula-th">= Ø Flächenbedarf Herde/Tag × Besatzzeit</span></th>
-            <th>Min. Koppelanzahl<span class="formula-th">= Ø Weideruhezeit (Hauptwachstum/Bestockungskrise/Sommer) / Besatzzeit + 1</span></th>
+            <th>Min. Koppelanzahl<span class="formula-th">= Ø Weideruhezeit (Wachstumsspitze/Bestockungskrise/Sommer) / Besatzzeit + 1</span></th>
           </tr>
         </thead>
         <tbody id="koppelRefBody"></tbody>
@@ -1266,9 +1266,9 @@
 /* ---------- Referenzdaten aus der Original-Excel (Sheet "Daten"), erweitert auf 5 Phasen ---------- */
 
 // Kombinationen: Höhenlage + Boden + Klima + Vegetationsbeginn -> Graszuwachs (5 Phasen, kg TS/ha/Tag).
-// Reihenfolge je Phase: [Vorweide, Hauptwachstum, Bestockungskrise, Sommer, Herbst].
+// Reihenfolge je Phase: [Vorweide, Wachstumsspitze, Bestockungskrise, Sommer, Herbst].
 // Herleitung aus den ursprünglichen V2-Werten (4 Phasen: Vorweide/Frühling/Sommer/Herbst):
-// Vorweide, Hauptwachstum und Sommer/Herbst werden 1:1 übernommen (alte Indizes 0,1,3 -> neue Indizes 0,1,4;
+// Vorweide, Wachstumsspitze und Sommer/Herbst werden 1:1 übernommen (alte Indizes 0,1,3 -> neue Indizes 0,1,4;
 // alter Index 2 "Sommer" -> neuer Index 3 "Sommer"). Der neue Wert für Bestockungskrise (Index 2) ist eine
 // SCHÄTZUNG = gerundeter Mittelwert aus altem Frühlings- und Sommer-Wert, da diese Phase wachstumsmässig
 // zwischen der Wachstumsspitze und der Sommerdepression liegt (Verlauf gemäss Merkblatt-Wachstumskurve).
@@ -1310,7 +1310,7 @@ const KOMBI = {
 
 // Start der 5 Weidephasen, nur nach Höhenlage (didaktische Vereinfachung gegenüber V2,
 // wo die Startdaten von allen 4 Standortfaktoren abhingen). [Monat, Tag] je Phase in der
-// Reihenfolge [Vorweide, Hauptwachstum, Bestockungskrise, Sommer, Herbst].
+// Reihenfolge [Vorweide, Wachstumsspitze, Bestockungskrise, Sommer, Herbst].
 const PHASE_DATES = {
   unter_700:   [[3,1], [4,15], [5,15], [6,15], [9,1]],
   unter_900:   [[3,15],[4,22], [5,18], [6,18], [8,22]],
@@ -1459,7 +1459,7 @@ function applyUrlParams(){
     const mode = URL_MAPS.scenario[params.get("scenario")];
     if(mode === "duerre"){
       if(params.has("rpre")) document.getElementById("redVor").value = parseFloat(params.get("rpre"))||0;
-      if(params.has("rmain")) document.getElementById("redHauptwachstum").value = parseFloat(params.get("rmain"))||0;
+      if(params.has("rspitze")) document.getElementById("redWachstumsspitze").value = parseFloat(params.get("rspitze"))||0;
       if(params.has("rcrisis")) document.getElementById("redBestockungskrise").value = parseFloat(params.get("rcrisis"))||0;
       if(params.has("rsummer")) document.getElementById("redSommer").value = parseFloat(params.get("rsummer"))||0;
       if(params.has("rautumn")) document.getElementById("redHerbst").value = parseFloat(params.get("rautumn"))||0;
@@ -1488,7 +1488,7 @@ function generateShareLink(){
   params.set("scenario", revScenario[szenario] || "");
   if(szenario === "duerre"){
     params.set("rpre", val("redVor"));
-    params.set("rmain", val("redHauptwachstum"));
+    params.set("rspitze", val("redWachstumsspitze"));
     params.set("rcrisis", val("redBestockungskrise"));
     params.set("rsummer", val("redSommer"));
     params.set("rautumn", val("redHerbst"));
@@ -1560,12 +1560,12 @@ function onTierChange(){
 
 // Excel "Koppelplanung": pro Besatzzeit (kürzester/längster AGFF-Richtwert der Tierkategorie,
 // ergänzt um 24 Stunden und 2 Tage als feste Referenzwerte, doppelte Zeiten werden zusammengelegt)
-// Koppelgrösse Hauptwachstum (= M Hauptwachstum * Besatzzeit), Koppelgrösse ganzjährig (= Ø M * Besatzzeit)
-// und Mindestanzahl Koppeln (= Ø Weideruhezeit Hauptwachstum/Bestockungskrise/Sommer / Besatzzeit + 1).
+// Koppelgrösse Wachstumsspitze (= M Wachstumsspitze * Besatzzeit), Koppelgrösse ganzjährig (= Ø M * Besatzzeit)
+// und Mindestanzahl Koppeln (= Ø Weideruhezeit Wachstumsspitze/Bestockungskrise/Sommer / Besatzzeit + 1).
 function renderKoppelTable(Ms, avgM){
   const name = document.getElementById("tier").value;
   const t = TIER[name];
-  const mHauptwachstum = Ms[1];
+  const mWachstumsspitze = Ms[1];
   const avgWeideruhe = (val("Iu1") + val("Iu2") + val("Iu3")) / 3;
 
   const candidates = [
@@ -1584,12 +1584,12 @@ function renderKoppelTable(Ms, avgM){
     .sort((a,b)=>a.tage-b.tage);
 
   const rows = besatzEntries.map(({tage, label})=>{
-    const groesseHauptwachstum = mHauptwachstum * tage;
+    const groesseWachstumsspitze = mWachstumsspitze * tage;
     const groesseGanzjaehrig = avgM * tage;
     const koppelAnzahl = tage>0 ? (avgWeideruhe/tage)+1 : 0;
     return `<tr>
       <td class="besatz">${label}</td>
-      <td><strong>${groesseHauptwachstum.toFixed(2)}</strong></td>
+      <td><strong>${groesseWachstumsspitze.toFixed(2)}</strong></td>
       <td><strong>${groesseGanzjaehrig.toFixed(2)}</strong></td>
       <td><strong>${Math.ceil(koppelAnzahl)}</strong></td>
     </tr>`;
@@ -1684,7 +1684,7 @@ function setSzenario(mode){
 }
 
 function applyDuerre(){
-  const reds = [val("redVor"), val("redHauptwachstum"), val("redBestockungskrise"), val("redSommer"), val("redHerbst")];
+  const reds = [val("redVor"), val("redWachstumsspitze"), val("redBestockungskrise"), val("redSommer"), val("redHerbst")];
   for(let i=0;i<PHASE_COUNT;i++){
     const reduced = B_baseline[i] * (1 - reds[i]/100);
     document.getElementById("B"+i).value = Math.max(0, Math.round(reduced));
@@ -1739,7 +1739,7 @@ function renderGrowthCurve(){
   const {w,h,padL,padR,padT,padB,maxVal} = growthCurveScale;
   const chartW = w-padL-padR, chartH = h-padT-padB;
   const baseY = padT + chartH;
-  const labels = ["Vorweide","Hauptwachstum","Bestockungskrise","Sommer","Herbst"];
+  const labels = ["Vorweide","Wachstumsspitze","Bestockungskrise","Sommer","Herbst"];
   const idxs = [0,1,2,3,4];
   const normalVals = idxs.map(i => B_baseline[i]);
   const xs = idxs.map(i => padL + chartW*(i+0.5)/PHASE_COUNT);
@@ -1778,7 +1778,7 @@ function renderGrowthCurve(){
   container.innerHTML = svg;
 }
 
-const RED_INPUT_IDS = ["redVor","redHauptwachstum","redBestockungskrise","redSommer","redHerbst"];
+const RED_INPUT_IDS = ["redVor","redWachstumsspitze","redBestockungskrise","redSommer","redHerbst"];
 
 function setupGrowthCurveDrag(){
   const container = document.getElementById("growthCurveChart");
@@ -1839,7 +1839,7 @@ function loadStandardCurve(){
     for(let i=0;i<PHASE_COUNT;i++){ B_baseline[i] = data.B[i]; }
   }
   document.getElementById("redVor").value = 10;
-  document.getElementById("redHauptwachstum").value = 15;
+  document.getElementById("redWachstumsspitze").value = 15;
   document.getElementById("redBestockungskrise").value = 30;
   document.getElementById("redSommer").value = 45;
   document.getElementById("redHerbst").value = 20;
@@ -2047,7 +2047,7 @@ function computeAreaResult(Barr){
 }
 
 function getDuerreB(){
-  const reds = [val("redVor"), val("redHauptwachstum"), val("redBestockungskrise"), val("redSommer"), val("redHerbst")];
+  const reds = [val("redVor"), val("redWachstumsspitze"), val("redBestockungskrise"), val("redSommer"), val("redHerbst")];
   return [0,1,2,3,4].map(i => Math.max(0, B_baseline[i]*(1-reds[i]/100)));
 }
 
