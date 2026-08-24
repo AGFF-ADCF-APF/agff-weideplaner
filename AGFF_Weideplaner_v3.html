@@ -1748,7 +1748,9 @@ function catmullRomAreaPath(pts, baseY){
 }
 
 // Feste Skala (statt Autoscale) damit die Punkte beim Ziehen exakt dem Cursor folgen.
-const growthCurveScale = {w:680, h:210, padL:34, padR:16, padT:16, padB:26, maxVal:150};
+// x-Achse: volles Kalenderjahr (Tag 0 = 1. Januar) statt gleichmässig verteilter Phasen-Slots —
+// die Punkte sitzen an den echten Phasen-Startdaten (Zeile A) und laufen beidseitig auf 0 aus.
+const growthCurveScale = {w:680, h:220, padL:34, padR:16, padT:20, padB:30, maxVal:150};
 let growthCurveDrag = null; // {curve:"normal"|"duerre", phase:0..4}
 
 function growthCurveY(v){
@@ -1756,6 +1758,9 @@ function growthCurveY(v){
   const chartH = h - padT - padB;
   return padT + chartH - (Math.min(Math.max(v,0),maxVal)/maxVal)*chartH;
 }
+
+const PHASE_LABELS = ["Vorweide","Wachstumsspitze","Bestockungskrise","Sommer","Herbst"];
+const PHASE_COLOR_VARS = ["--vor","--wachstumsspitze","--bestockungskrise","--sommer","--herbst"];
 
 function renderGrowthCurve(){
   const container = document.getElementById("growthCurveChart");
@@ -1767,13 +1772,48 @@ function renderGrowthCurve(){
   const {w,h,padL,padR,padT,padB,maxVal} = growthCurveScale;
   const chartW = w-padL-padR, chartH = h-padT-padB;
   const baseY = padT + chartH;
-  const labels = ["Vorweide","Wachstumsspitze","Bestockungskrise","Sommer","Herbst"];
   const idxs = [0,1,2,3,4];
+
+  const year = new Date(document.getElementById("A0").value+"T00:00:00").getFullYear();
+  const yearStart = new Date(year,0,1);
+  const totalDays = (new Date(year,11,31) - yearStart)/86400000;
+  const dayOf = (dateStr)=> (new Date(dateStr+"T00:00:00") - yearStart)/86400000;
+  const xOf = (day)=> padL + chartW * Math.min(Math.max(day,0),totalDays)/totalDays;
+
+  const phaseDays = idxs.map(i => dayOf(document.getElementById("A"+i).value));
+  const endeDay = dayOf(document.getElementById("endeWeide").value);
+  const bandEnds = [phaseDays[1], phaseDays[2], phaseDays[3], phaseDays[4], endeDay];
+
+  function buildPts(vals){
+    const real = idxs.map(i => ({x: xOf(phaseDays[i]), y: growthCurveY(vals[i])}));
+    const full = [
+      {x: xOf(0), y: growthCurveY(0)},
+      ...real,
+      {x: xOf(endeDay), y: growthCurveY(0)},
+      {x: xOf(totalDays), y: growthCurveY(0)}
+    ];
+    return {real, full};
+  }
+
   const normalVals = idxs.map(i => B_baseline[i]);
-  const xs = idxs.map(i => padL + chartW*(i+0.5)/PHASE_COUNT);
-  const normalPts = xs.map((x,i)=>({x, y:growthCurveY(normalVals[i])}));
+  const {real: normalRealPts, full: normalPts} = buildPts(normalVals);
 
   let svg = `<svg viewBox="0 0 ${w} ${h}" id="growthCurveSvg" style="touch-action:none;width:100%;height:auto;display:block;">`;
+
+  // Weidephasen als Hintergrundbänder im Diagramm (analog Lehrmittel), nicht als Achsenbeschriftung.
+  PHASE_LABELS.forEach((label,i)=>{
+    const bx0 = xOf(phaseDays[i]), bx1 = xOf(bandEnds[i]);
+    const bw = Math.max(0, bx1-bx0);
+    const colorVar = `var(${PHASE_COLOR_VARS[i]})`;
+    svg += `<rect x="${bx0.toFixed(1)}" y="${padT}" width="${bw.toFixed(1)}" height="${chartH.toFixed(1)}" style="fill:${colorVar};opacity:.13"/>`;
+    if(i>0){
+      svg += `<line x1="${bx0.toFixed(1)}" y1="${padT}" x2="${bx0.toFixed(1)}" y2="${baseY.toFixed(1)}" style="stroke:${colorVar}" stroke-width="1" stroke-dasharray="2,2" opacity=".7"/>`;
+    }
+    const cx = (bx0+bx1)/2;
+    const lx = cx.toFixed(1), ly = (padT+9).toFixed(1);
+    svg += `<text x="${lx}" y="${ly}" font-size="9" style="fill:${colorVar}" text-anchor="start" font-weight="700" transform="rotate(90 ${lx} ${ly})">${label}</text>`;
+  });
+
   [0,50,100,150].forEach(gv=>{
     const gy = growthCurveY(gv);
     svg += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${w-padR}" y2="${gy.toFixed(1)}" stroke="#dde2d6" stroke-width="1"/>`;
@@ -1783,11 +1823,11 @@ function renderGrowthCurve(){
   svg += `<path d="${catmullRomAreaPath(normalPts, baseY)}" fill="#dbead0" stroke="none"/>`;
   if(showDuerre){
     const duerreVals = idxs.map(i => val("B"+i));
-    const duerrePts = xs.map((x,i)=>({x, y:growthCurveY(duerreVals[i])}));
+    const {real: duerreRealPts, full: duerrePts} = buildPts(duerreVals);
     svg += `<path d="${catmullRomAreaPath(duerrePts, baseY)}" fill="#f3e2d0" stroke="none"/>`;
     svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
     svg += `<path d="${catmullRomPath(duerrePts)}" fill="none" stroke="#bb6a37" stroke-width="2.5" stroke-linecap="round"/>`;
-    duerrePts.forEach((p,i)=>{
+    duerreRealPts.forEach((p,i)=>{
       svg += `<text x="${p.x.toFixed(1)}" y="${(p.y+20).toFixed(1)}" font-size="10" fill="#8a4a22" text-anchor="middle" font-weight="600">${duerreVals[i].toFixed(0)}</text>`;
       svg += `<circle class="curve-point" data-curve="duerre" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#bb6a37" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
     });
@@ -1795,10 +1835,17 @@ function renderGrowthCurve(){
     svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
   }
 
-  labels.forEach((label,i)=>{
-    svg += `<text x="${xs[i].toFixed(1)}" y="${h-8}" font-size="10" fill="#5c6b5d" text-anchor="middle">${label}</text>`;
-  });
-  normalPts.forEach((p,i)=>{
+  // x-Achse mit Halbmonats-Auflösung: 1. jedes Monats beschriftet, 15. als ungelabelte Zwischenmarke.
+  svg += `<line x1="${padL}" y1="${baseY.toFixed(1)}" x2="${(w-padR).toFixed(1)}" y2="${baseY.toFixed(1)}" stroke="#8a9186" stroke-width="1"/>`;
+  for(let m=0;m<12;m++){
+    const x1 = xOf(dayOf(mdToIso(m+1,1,year)));
+    const x15 = xOf(dayOf(mdToIso(m+1,15,year)));
+    svg += `<line x1="${x1.toFixed(1)}" y1="${baseY.toFixed(1)}" x2="${x1.toFixed(1)}" y2="${(baseY+4).toFixed(1)}" stroke="#8a9186" stroke-width="1"/>`;
+    svg += `<text x="${x1.toFixed(1)}" y="${(baseY+14).toFixed(1)}" font-size="8.5" fill="#5c6b5d" text-anchor="middle">${MONTH_LABELS[m]}</text>`;
+    svg += `<line x1="${x15.toFixed(1)}" y1="${baseY.toFixed(1)}" x2="${x15.toFixed(1)}" y2="${(baseY+2.5).toFixed(1)}" stroke="#c3c9bc" stroke-width="1"/>`;
+  }
+
+  normalRealPts.forEach((p,i)=>{
     svg += `<text x="${p.x.toFixed(1)}" y="${(p.y-11).toFixed(1)}" font-size="10" fill="#204a2c" text-anchor="middle" font-weight="600">${normalVals[i].toFixed(0)}</text>`;
     svg += `<circle class="curve-point" data-curve="normal" data-phase="${i}" cx="${p.x.toFixed(1)}" cy="${p.y.toFixed(1)}" r="7" fill="#2f6b40" stroke="#fff" stroke-width="2" style="cursor:ns-resize;"/>`;
   });
