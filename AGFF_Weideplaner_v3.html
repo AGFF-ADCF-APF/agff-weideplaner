@@ -1810,11 +1810,8 @@ function renderGrowthCurve(){
       svg += `<line x1="${bx0.toFixed(1)}" y1="${padT}" x2="${bx0.toFixed(1)}" y2="${baseY.toFixed(1)}" style="stroke:${colorVar}" stroke-width="1" stroke-dasharray="2,2" opacity=".7"/>`;
     }
     const cx = (bx0+bx1)/2;
-    if(bw >= 62){
-      svg += `<text x="${cx.toFixed(1)}" y="${(padT+11).toFixed(1)}" font-size="9.5" style="fill:${colorVar}" text-anchor="middle" font-weight="700">${label}</text>`;
-    } else {
-      svg += `<text x="${(cx+3.5).toFixed(1)}" y="${(baseY-6).toFixed(1)}" font-size="9" style="fill:${colorVar}" text-anchor="start" font-weight="700" transform="rotate(-90 ${(cx+3.5).toFixed(1)} ${(baseY-6).toFixed(1)})">${label}</text>`;
-    }
+    const lx = cx.toFixed(1), ly = (padT+9).toFixed(1);
+    svg += `<text x="${lx}" y="${ly}" font-size="9" style="fill:${colorVar}" text-anchor="start" font-weight="700" transform="rotate(90 ${lx} ${ly})">${label}</text>`;
   });
 
   [0,50,100,150].forEach(gv=>{
