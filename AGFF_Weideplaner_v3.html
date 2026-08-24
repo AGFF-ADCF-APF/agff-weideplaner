@@ -798,6 +798,15 @@
     </div>
     <div class="ref-box" id="tierRef"></div>
 
+    <div style="margin-top:14px;">
+      <label class="switch-row" for="seasonalCalvingToggle">
+        <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+        <span class="switch-text">Saisonale Abkalbung im Frühjahr</span>
+      </label>
+    </div>
+    <p class="sub" id="seasonalCalvingHint" style="margin-top:4px;">Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Hauptwachstum 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder in der Tabelle sind dann gesperrt.</p>
+
     <div class="field" style="margin-top:14px;max-width:320px;">
       <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
       <div class="weidflaeche-row">
@@ -1636,6 +1645,29 @@ function applyEAuto(){
   }
 }
 
+/* ---------- Saisonale Abkalbung: Verzehr (Zeile D) auf saisontypische Werte ---------- */
+const D_DEFAULT = 16;
+const D_SEASONAL_CALVING = [17, 18, 18, 16, 15];
+
+function onSeasonalCalvingToggle(){
+  const active = document.getElementById("seasonalCalvingToggle").checked;
+  for(let i=0;i<PHASE_COUNT;i++){
+    const cell = document.getElementById("D"+i);
+    cell.disabled = active;
+    cell.classList.toggle("auto", active);
+    if(!active) cell.value = D_DEFAULT;
+  }
+  calculate();
+}
+
+function applySeasonalCalving(){
+  const toggle = document.getElementById("seasonalCalvingToggle");
+  if(!toggle || !toggle.checked) return;
+  for(let i=0;i<PHASE_COUNT;i++){
+    document.getElementById("D"+i).value = D_SEASONAL_CALVING[i];
+  }
+}
+
 /* ---------- Szenario: Normaljahr / Dürre ---------- */
 function setSzenario(mode){
   szenario = mode;
@@ -1831,6 +1863,7 @@ function setSystem(sys){
 function val(id){ return parseFloat(document.getElementById(id).value) || 0; }
 
 function calculate(){
+  applySeasonalCalving();
   applyEAuto();
   const isUmtrieb = currentSystem === "umtrieb";
   const F_res = document.querySelectorAll(".F_res");
