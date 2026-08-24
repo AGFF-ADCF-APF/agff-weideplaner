@@ -371,6 +371,9 @@
   .switch-row input:checked + .switch-track{background:var(--accent);}
   .switch-row input:checked + .switch-track .switch-thumb{left:17px;}
   .switch-row input:focus-visible + .switch-track{box-shadow:0 0 0 3px var(--accent-soft);}
+  .switch-row input:disabled + .switch-track{opacity:.45;}
+  .switch-row input:disabled ~ .switch-text{opacity:.45;}
+  .switch-row input:disabled{cursor:not-allowed;}
   .switch-text{font-size:.78rem;font-weight:600;color:var(--muted);max-width:170px;line-height:1.3;}
 
   /* Reference / info box */
@@ -788,6 +791,14 @@
           <option value="Jungvieh < 160 Tage">Jungvieh &lt; 160 Tage</option>
         </select>
       </div>
+      <div class="field" id="seasonalCalvingRow">
+        <label>&nbsp;</label>
+        <label class="switch-row" for="seasonalCalvingToggle">
+          <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-text">Saisonale Abkalbung im Frühjahr</span>
+        </label>
+      </div>
       <div class="field">
         <label for="stdTierzahl">Standard-Tierzahl</label>
         <div class="apply-row">
@@ -798,14 +809,7 @@
     </div>
     <div class="ref-box" id="tierRef"></div>
 
-    <div style="margin-top:14px;">
-      <label class="switch-row" for="seasonalCalvingToggle">
-        <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
-        <span class="switch-track"><span class="switch-thumb"></span></span>
-        <span class="switch-text">Saisonale Abkalbung im Frühjahr</span>
-      </label>
-    </div>
-    <p class="sub" id="seasonalCalvingHint" style="margin-top:4px;">Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Wachstumsspitze 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder in der Tabelle sind dann gesperrt.</p>
+    <p class="sub" id="seasonalCalvingHint" style="margin-top:14px;">Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Wachstumsspitze 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder in der Tabelle sind dann gesperrt. Nur für Milchkühe und Mutterkühe verfügbar.</p>
 
     <div class="field" style="margin-top:14px;max-width:320px;">
       <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
@@ -1555,7 +1559,22 @@ function onTierChange(){
     "<strong>" + name + "</strong> — Tagesverzehr-Richtwert: " + t.verzehr + " kg TS/Tier/Tag " +
     "(Ausgangspunkt für Zeile D, betriebsspezifisch anpassen).";
   document.getElementById("tierNameKoppel").innerText = name;
+  updateSeasonalCalvingAvailability();
   calculate();
+}
+
+// Saisonale Abkalbung ergibt nur für laktierende Herden (Milchkühe/Mutterkühe) Sinn.
+const SEASONAL_CALVING_TIERE = ["Milchkühe", "Mutterkühe"];
+
+function updateSeasonalCalvingAvailability(){
+  const name = document.getElementById("tier").value;
+  const toggle = document.getElementById("seasonalCalvingToggle");
+  const allowed = SEASONAL_CALVING_TIERE.includes(name);
+  toggle.disabled = !allowed;
+  if(!allowed && toggle.checked){
+    toggle.checked = false;
+    onSeasonalCalvingToggle();
+  }
 }
 
 // Excel "Koppelplanung": pro Besatzzeit (kürzester/längster AGFF-Richtwert der Tierkategorie,
