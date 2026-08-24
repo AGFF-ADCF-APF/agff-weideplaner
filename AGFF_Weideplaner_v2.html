@@ -798,15 +798,15 @@
     <div class="field" style="margin-top:14px;max-width:320px;">
       <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
       <div class="weidflaeche-row">
-        <input type="number" id="maxWeidflaeche" value="20" min="0" step="0.1" oninput="calculate()">
+        <input type="number" id="maxWeidflaeche" placeholder="z. B. 20" min="0" step="0.1" oninput="onMaxWeidflaecheInput()">
         <label class="switch-row" for="eAutoToggle">
-          <input type="checkbox" id="eAutoToggle" checked onchange="onEAutoToggle()" aria-describedby="eAutoHint">
+          <input type="checkbox" id="eAutoToggle" onchange="onEAutoToggle()" aria-describedby="eAutoHint">
           <span class="switch-track"><span class="switch-thumb"></span></span>
           <span class="switch-text">E Verzehrsanteil Weide automatisch optimieren</span>
         </label>
       </div>
     </div>
-    <p class="sub" id="eAutoHint" style="margin-top:4px;">Verzehrsanteil Weide (Zeile E) automatisch anpassen: wenn aktiv, wird Zeile E je Phase automatisch so hoch gesetzt, wie es die maximal nutzbare Weidefläche und der Graszuwachs (Zeile B) dieser Phase zulassen — die Felder in der Tabelle sind dann gesperrt.</p>
+    <p class="sub" id="eAutoHint" style="margin-top:4px;">Verzehrsanteil Weide (Zeile E) automatisch anpassen: schaltet sich mit einer eingegebenen Weidefläche automatisch ein und setzt Zeile E je Phase so hoch, wie es Fläche und Graszuwachs (Zeile B) zulassen — die Felder in der Tabelle sind dann gesperrt. Ohne Weidefläche bleibt der Schalter aus und Zeile E zeigt die AGFF-Standardwerte (60/100/100/75 %).</p>
 
     <div class="locate-panel hidden" id="locatePanel">
       <p class="locate-status" id="locateStatus">Optional: übernimmt die Höhenlage per GPS und schätzt grob das Klima anhand von Niederschlagsdaten. Boden/Lage bitte weiterhin selbst einschätzen.</p>
@@ -1561,14 +1561,26 @@ function applyStdTierzahl(){
 }
 
 /* ---------- E (Verzehrsanteil Weide) automatisch maximieren ---------- */
+const E_DEFAULTS = [60,100,100,75];
+
 function onEAutoToggle(){
   const active = document.getElementById("eAutoToggle").checked;
   for(let i=0;i<4;i++){
     const cell = document.getElementById("E"+i);
     cell.disabled = active;
     cell.classList.toggle("auto", active);
+    if(!active) cell.value = E_DEFAULTS[i];
   }
   calculate();
+}
+
+// Ohne eingegebene Weidefläche ergibt die Automatik nur E=0 — deshalb an den
+// Feldinhalt gekoppelt: leer/0 schaltet sie aus (Standardwerte), ein Wert schaltet sie ein.
+function onMaxWeidflaecheInput(){
+  const raw = document.getElementById("maxWeidflaeche").value.trim();
+  const hasArea = raw !== "" && parseFloat(raw) > 0;
+  document.getElementById("eAutoToggle").checked = hasArea;
+  onEAutoToggle();
 }
 
 // E_max (%) = maximal nutzbare Fläche * 100 * Graszuwachs (B) / (Tierzahl (C) * Tagesverzehr (D)).
@@ -2361,7 +2373,7 @@ function scrollToPhase(idx, btn){
 onStandortChange();
 onTierChange();
 calcRpm();
-onEAutoToggle();
+onMaxWeidflaecheInput();
 calculate();
 renderAssistant();
 setupGrowthCurveDrag();
@@ -2371,6 +2383,7 @@ if(window.location.search){
 } else {
   restoreInputState();
 }
+onMaxWeidflaecheInput();
 initDescToggle();
 {
   const calcScrollBox = document.getElementById("calcTable").closest(".table-scroll");
