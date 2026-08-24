@@ -798,18 +798,14 @@
     </div>
     <div class="ref-box" id="tierRef"></div>
 
-    <div class="field" style="margin-top:14px;max-width:360px;">
-      <label for="peakVerzehr">Verzehr auf Laktationsspitze (kg TS/Tier/Tag)</label>
-      <div class="weidflaeche-row">
-        <input type="number" id="peakVerzehr" value="18" min="0" step="0.5" oninput="calculate()">
-        <label class="switch-row" for="seasonalCalvingToggle">
-          <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
-          <span class="switch-track"><span class="switch-thumb"></span></span>
-          <span class="switch-text">Saisonale Abkalbung im Frühjahr</span>
-        </label>
-      </div>
+    <div style="margin-top:14px;">
+      <label class="switch-row" for="seasonalCalvingToggle">
+        <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
+        <span class="switch-track"><span class="switch-thumb"></span></span>
+        <span class="switch-text">Saisonale Abkalbung im Frühjahr</span>
+      </label>
     </div>
-    <p class="sub" id="seasonalCalvingHint" style="margin-top:4px;">Nimmt Blockabkalbung Mitte Januar an und passt den Verzehr (Zeile D) je Phase automatisch ans Laktationsstadium der Herde an (bezogen auf den eingegebenen Spitzenverzehr): Tag 1–21 nach der Kalbung ca. 80%, Tag 22–70 ca. 95%, Tag 71–150 100% (Laktationsspitze), Tag 151–270 ca. 90%, ab Tag 271 ca. 75%. Die Felder in der Tabelle sind dann gesperrt.</p>
+    <p class="sub" id="seasonalCalvingHint" style="margin-top:4px;">Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Hauptwachstum 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder in der Tabelle sind dann gesperrt.</p>
 
     <div class="field" style="margin-top:14px;max-width:320px;">
       <label for="maxWeidflaeche">Maximal nutzbare Weidefläche (ha)</label>
@@ -1649,18 +1645,9 @@ function applyEAuto(){
   }
 }
 
-/* ---------- Saisonale Abkalbung: Verzehr (Zeile D) nach Laktationsstadium ---------- */
+/* ---------- Saisonale Abkalbung: Verzehr (Zeile D) auf saisontypische Werte ---------- */
 const D_DEFAULT = 16;
-
-// Relativer Verzehr zum Spitzenverzehr, je nach Tagen seit der (angenommenen) Kalbung —
-// vereinfachtes 5-Stufen-Modell für den Unterricht, keine kontinuierliche Laktationskurve.
-function lactationIntakeFactor(daysInMilk){
-  if(daysInMilk < 21) return 0.80;
-  if(daysInMilk < 70) return 0.95;
-  if(daysInMilk < 150) return 1.00;
-  if(daysInMilk < 270) return 0.90;
-  return 0.75;
-}
+const D_SEASONAL_CALVING = [17, 18, 18, 16, 15];
 
 function onSeasonalCalvingToggle(){
   const active = document.getElementById("seasonalCalvingToggle").checked;
@@ -1673,19 +1660,11 @@ function onSeasonalCalvingToggle(){
   calculate();
 }
 
-// Referenz: Blockabkalbung Mitte Januar (15.1.) desselben Jahres wie die Weidephasen.
 function applySeasonalCalving(){
   const toggle = document.getElementById("seasonalCalvingToggle");
   if(!toggle || !toggle.checked) return;
-  const peak = parseFloat(document.getElementById("peakVerzehr").value) || 0;
   for(let i=0;i<PHASE_COUNT;i++){
-    const aVal = document.getElementById("A"+i).value;
-    if(!aVal) continue;
-    const phaseDate = new Date(aVal);
-    const calvingDate = new Date(phaseDate.getFullYear(), 0, 15);
-    const daysInMilk = Math.round((phaseDate - calvingDate) / 86400000);
-    const factor = lactationIntakeFactor(daysInMilk);
-    document.getElementById("D"+i).value = (peak * factor).toFixed(1);
+    document.getElementById("D"+i).value = D_SEASONAL_CALVING[i];
   }
 }
 
