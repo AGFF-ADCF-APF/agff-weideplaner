@@ -958,7 +958,7 @@
     </div>
   </div>
 
-  <footer>Nachbau des AGFF Weideplaners · Formellogik 1:1 aus der Original-Excel übernommen · info@agff.ch · Generation v1 · Stand: 13.08.2026</footer>
+  <footer>Nachbau des AGFF Weideplaners · Formellogik 1:1 aus der Original-Excel übernommen · info@agff.ch · Generation v1 · Stand: <span id="standDatum">13.08.2026</span></footer>
 </div>
 <div id="ttPortal"></div>
 
@@ -1300,6 +1300,16 @@ function calcRpm(){
   document.getElementById("rpmResult").innerText = result.toFixed(2) + unitLabel;
 }
 
+/* ---------- Fusszeile ---------- */
+function updateStandDatum(){
+  const el = document.getElementById("standDatum");
+  if(!el) return;
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  el.textContent = `${dd}.${mm}.${d.getFullYear()}`;
+}
+
 function toggleRpmFormulas(){
   const panel = document.getElementById("rpmFormulaPanel");
   const btn = document.getElementById("rpmFormulaToggleBtn");
@@ -1549,6 +1559,7 @@ onTierChange();
 calcRpm();
 calculate();
 renderAssistant();
+updateStandDatum();
 </script>
 </body>
 </html>

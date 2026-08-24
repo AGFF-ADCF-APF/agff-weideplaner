@@ -315,7 +315,7 @@
     <button type="button" class="add-btn" onclick="addRow()">+ Neue Massnahme hinzufügen</button>
   </div>
 
-  <footer>Weideinfrastruktur-Rechner · Zusatzkosten je Massnahme in Rp./kg Milch · Generation v3 · Stand: 13.08.2026</footer>
+  <footer>Weideinfrastruktur-Rechner · Zusatzkosten je Massnahme in Rp./kg Milch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
 </div>
 
 <script>
@@ -489,7 +489,17 @@ function calculateAll(){
   });
 }
 
+function updateStandDatum(){
+  const el = document.getElementById("standDatum");
+  if(!el) return;
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  el.textContent = `${dd}.${mm}.${d.getFullYear()}`;
+}
+
 renderCards();
+updateStandDatum();
 </script>
 </body>
 </html>

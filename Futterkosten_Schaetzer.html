@@ -392,7 +392,7 @@
     </div>
   </div>
 
-  <footer>Futterkosten-Schätzer · ergänzt den AGFF Weideplaner · kein Ersatz für eine betriebsindividuelle Vollkostenrechnung · Generation v1 · Stand: 13.08.2026</footer>
+  <footer>Futterkosten-Schätzer · ergänzt den AGFF Weideplaner · kein Ersatz für eine betriebsindividuelle Vollkostenrechnung · Generation v1 · Stand: <span id="standDatum">13.08.2026</span></footer>
 </div>
 
 <script>
@@ -487,7 +487,17 @@ function copyResult(kind){
   }
 }
 
+function updateStandDatum(){
+  const el = document.getElementById("standDatum");
+  if(!el) return;
+  const d = new Date();
+  const dd = String(d.getDate()).padStart(2,"0");
+  const mm = String(d.getMonth()+1).padStart(2,"0");
+  el.textContent = `${dd}.${mm}.${d.getFullYear()}`;
+}
+
 calculate();
+updateStandDatum();
 </script>
 </body>
 </html>
