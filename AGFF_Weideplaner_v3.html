@@ -796,7 +796,7 @@
         <label class="switch-row" for="seasonalCalvingToggle">
           <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
           <span class="switch-track"><span class="switch-thumb"></span></span>
-          <span class="switch-text">Saisonale Abkalbung im Frühjahr<span class="info-tip-wrap"><button type="button" class="info-tip" id="seasonalCalvingHint" data-tip="Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Wachstumsspitze 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder bleiben editierbar, werden aber bei Änderungen an Standort, Graswachstum oder Dürre-Szenario wieder auf diese Werte zurückgesetzt. Nur für Milchkühe und Mutterkühe verfügbar.">i</button></span></span>
+          <span class="switch-text">Saisonale Abkalbung im Frühjahr<span class="info-tip-wrap"><button type="button" class="info-tip" id="seasonalCalvingHint" data-tip="Setzt den Verzehr (Zeile D) beim Einschalten einmalig auf saisontypische Werte: Vorweide 17, Wachstumsspitze 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder bleiben editierbar — spätere Änderungen an Standort, Graswachstum oder Dürre-Szenario überschreiben manuelle Anpassungen nicht mehr. Nur für Milchkühe und Mutterkühe verfügbar.">i</button></span></span>
         </label>
       </div>
       <div class="field">
@@ -1546,7 +1546,6 @@ function onStandortChange(){
   const cap = new Date(a4.getFullYear(), 11, 5);
   const ende = endeDefault > cap ? cap : endeDefault;
   document.getElementById("endeWeide").value = ende.toISOString().slice(0,10);
-  applySeasonalCalving();
   calculate();
 }
 
@@ -1633,7 +1632,6 @@ function onEAutoToggle(){
     cell.classList.toggle("auto", active);
     if(!active) cell.value = E_DEFAULTS[i];
   }
-  applySeasonalCalving();
   calculate();
 }
 
@@ -1682,9 +1680,9 @@ function onSeasonalCalvingToggle(){
   calculate();
 }
 
-// Setzt Zeile D auf die saisontypischen Werte zurück, bleibt aber editierbar (Zeile D
-// ist bewusst nicht gesperrt) — wird deshalb nur bei relevanten Ausgangsgrössen wie
-// Standort, Graswachstum oder Dürre-Szenario neu aufgerufen, nicht bei jedem calculate().
+// Setzt Zeile D auf die saisontypischen Werte, bleibt aber editierbar (Zeile D ist
+// bewusst nicht gesperrt) — wird nur einmalig beim Einschalten des Schalters aufgerufen,
+// damit spätere manuelle Anpassungen nicht durch andere Eingaben überschrieben werden.
 function applySeasonalCalving(){
   const toggle = document.getElementById("seasonalCalvingToggle");
   if(!toggle || !toggle.checked) return;
@@ -1704,7 +1702,6 @@ function setSzenario(mode){
     applyDuerre();
   } else {
     for(let i=0;i<PHASE_COUNT;i++){ document.getElementById("B"+i).value = Math.round(B_baseline[i]); }
-    applySeasonalCalving();
     calculate();
   }
 }
@@ -1715,7 +1712,6 @@ function applyDuerre(){
     const reduced = B_baseline[i] * (1 - reds[i]/100);
     document.getElementById("B"+i).value = Math.max(0, Math.round(reduced));
   }
-  applySeasonalCalving();
   calculate();
 }
 
@@ -1724,7 +1720,6 @@ function onBInput(el){
   if(szenario === "normal"){
     B_baseline[i] = parseFloat(el.value) || 0;
   }
-  applySeasonalCalving();
   calculate();
 }
 
@@ -1885,7 +1880,6 @@ function setupGrowthCurveDrag(){
         applyDuerre();
       } else {
         document.getElementById("B"+phase).value = value;
-        applySeasonalCalving();
         calculate();
       }
     } else {
