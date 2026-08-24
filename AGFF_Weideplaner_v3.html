@@ -793,14 +793,11 @@
       </div>
       <div class="field" id="seasonalCalvingRow">
         <label>&nbsp;</label>
-        <div style="display:flex;align-items:center;">
-          <label class="switch-row" for="seasonalCalvingToggle">
-            <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
-            <span class="switch-track"><span class="switch-thumb"></span></span>
-            <span class="switch-text">Saisonale Abkalbung im Frühjahr</span>
-          </label>
-          <span class="info-tip-wrap"><button type="button" class="info-tip" id="seasonalCalvingHint" data-tip="Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Wachstumsspitze 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder bleiben editierbar, werden aber bei Änderungen an Standort, Graswachstum oder Dürre-Szenario wieder auf diese Werte zurückgesetzt. Nur für Milchkühe und Mutterkühe verfügbar.">i</button></span>
-        </div>
+        <label class="switch-row" for="seasonalCalvingToggle">
+          <input type="checkbox" id="seasonalCalvingToggle" onchange="onSeasonalCalvingToggle()" aria-describedby="seasonalCalvingHint">
+          <span class="switch-track"><span class="switch-thumb"></span></span>
+          <span class="switch-text">Saisonale Abkalbung im Frühjahr<span class="info-tip-wrap"><button type="button" class="info-tip" id="seasonalCalvingHint" data-tip="Nimmt eine Herde mit Blockabkalbung an und setzt den Verzehr (Zeile D) je Phase auf saisontypische Werte: Vorweide 17, Wachstumsspitze 18, Bestockungskrise 18, Sommer 16, Herbst 15 kg TS/Tier/Tag. Die Felder bleiben editierbar, werden aber bei Änderungen an Standort, Graswachstum oder Dürre-Szenario wieder auf diese Werte zurückgesetzt. Nur für Milchkühe und Mutterkühe verfügbar.">i</button></span></span>
+        </label>
       </div>
       <div class="field">
         <label for="stdTierzahl">Standard-Tierzahl</label>
@@ -819,9 +816,8 @@
         <label class="switch-row" for="eAutoToggle">
           <input type="checkbox" id="eAutoToggle" onchange="onEAutoToggle()" aria-describedby="eAutoHint">
           <span class="switch-track"><span class="switch-thumb"></span></span>
-          <span class="switch-text">E Verzehrsanteil Weide automatisch optimieren</span>
+          <span class="switch-text">E Verzehrsanteil Weide automatisch optimieren<span class="info-tip-wrap"><button type="button" class="info-tip" id="eAutoHint" data-tip="Verzehrsanteil Weide (Zeile E) automatisch anpassen: schaltet sich mit einer eingegebenen Weidefläche automatisch ein und setzt Zeile E je Phase so hoch, wie es Fläche und Graszuwachs (Zeile B) zulassen — die Felder in der Tabelle sind dann gesperrt. Ohne Weidefläche bleibt der Schalter aus und Zeile E zeigt die AGFF-Standardwerte (60/100/100/100/75 %).">i</button></span></span>
         </label>
-        <span class="info-tip-wrap"><button type="button" class="info-tip" id="eAutoHint" data-tip="Verzehrsanteil Weide (Zeile E) automatisch anpassen: schaltet sich mit einer eingegebenen Weidefläche automatisch ein und setzt Zeile E je Phase so hoch, wie es Fläche und Graszuwachs (Zeile B) zulassen — die Felder in der Tabelle sind dann gesperrt. Ohne Weidefläche bleibt der Schalter aus und Zeile E zeigt die AGFF-Standardwerte (60/100/100/100/75 %).">i</button></span>
       </div>
     </div>
 
@@ -916,7 +912,7 @@
       <span id="duerreLegendItem" class="hidden"><i style="background:#bb6a37;"></i> Dürre-Szenario</span>
     </div>
     <div id="growthCurveChart"></div>
-    <p class="sub" style="margin-top:10px;max-width:480px;">Phasenwerte von Zeile B: Normaljahr (grün, aus Schritt 1) und — im Dürre-Szenario zusätzlich — die reduzierte Kurve (braun). Punkte lassen sich per Drag &amp; Drop verschieben — Normaljahr-Punkte passen den Standortwert an, Dürre-Punkte die Reduktion (%) unten. Tabelle und Auswertungen aktualisieren sich live.</p>
+    <p class="sub" style="margin-top:10px;">Phasenwerte von Zeile B: Normaljahr (grün, aus Schritt 1) und — im Dürre-Szenario zusätzlich — die reduzierte Kurve (braun). Punkte lassen sich per Drag &amp; Drop verschieben — Normaljahr-Punkte passen den Standortwert an, Dürre-Punkte die Reduktion (%) unten. Tabelle und Auswertungen aktualisieren sich live.</p>
 
     <div class="assist-panel hidden" id="duerrePanel" style="margin-top:14px;">
       <div class="field-grid">
@@ -1263,7 +1259,7 @@
     </div>
   </div>
 
-  <footer>Nachbau des AGFF Weideplaners · Formellogik 1:1 aus der Original-Excel übernommen (Bestockungskrise ergänzt als didaktische 5. Phase, Werte teils geschätzt) · info@agff.ch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
+  <footer>Nachbau des AGFF Weideplaners · info@agff.ch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
 </div>
 <div id="ttPortal"></div>
 
