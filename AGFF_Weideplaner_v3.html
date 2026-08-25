@@ -1779,12 +1779,23 @@ function renderGrowthCurve(){
   const endeDay = dayOf(document.getElementById("endeWeide").value);
   const bandEnds = [phaseDays[1], phaseDays[2], phaseDays[3], phaseDays[4], endeDay];
 
+  // Vegetationsruhe: zusätzliche 0-Stützpunkte kurz vor Vorweide-Start bzw. kurz nach
+  // Saisonende halten die Kurve über Winter flach bei 0, statt gleichmässig ab 1. Januar
+  // hochzulaufen — der feste Vorlauf/Nachlauf wird durch die (nach Höhenlage variierenden)
+  // echten Phasendaten automatisch mit verschoben, ergibt also ungefähr die richtige,
+  // höhenlagenabhängige Ruhephase-Länge, ohne eine eigene Höhenlage-Tabelle zu brauchen.
+  const DORMANCY_SHOULDER_DAYS = 20;
+  const preShoulderDay = Math.max(0, phaseDays[0] - DORMANCY_SHOULDER_DAYS);
+  const postShoulderDay = Math.min(totalDays, endeDay + DORMANCY_SHOULDER_DAYS);
+
   function buildPts(vals){
     const real = idxs.map(i => ({x: xOf(phaseDays[i]), y: growthCurveY(vals[i])}));
     const full = [
       {x: xOf(0), y: growthCurveY(0)},
+      ...(preShoulderDay > 0.5 ? [{x: xOf(preShoulderDay), y: growthCurveY(0)}] : []),
       ...real,
       {x: xOf(endeDay), y: growthCurveY(0)},
+      ...(postShoulderDay < totalDays-0.5 ? [{x: xOf(postShoulderDay), y: growthCurveY(0)}] : []),
       {x: xOf(totalDays), y: growthCurveY(0)}
     ];
     return {real, full};
