@@ -2288,7 +2288,7 @@ function overlapDays(segStart, segEnd, monStart, monEnd){
   return Math.max(0, Math.round((e-s)/86400000));
 }
 
-function computeFeedResult(Barr){
+function computeFeedResult(Barr, ratioOverride){
   const idxs = Array.from({length:PHASE_COUNT}, (_,i)=>i);
   const A = idxs.map(i=>{
     const v = document.getElementById("A"+i).value;
@@ -2307,8 +2307,13 @@ function computeFeedResult(Barr){
 
   // Gekoppelter Weideanteil: sinkt der Graszuwachs gegenüber der Baseline, sinkt
   // proportional auch der über die Weide erreichbare Anteil (mehr Zufütterung nötig).
+  // ratioOverride wird für den Dürre-Vergleich genutzt: dort ist duerreB bereits als
+  // B_baseline*(1-Reduktion%) definiert, eine Rückrechnung über Barr/B_baseline würde sich
+  // exakt zur Reduktion kürzen und macht Änderungen am Graswachstum selbst wirkungslos —
+  // stattdessen wird die Reduktion direkt als Verhältnis übergeben.
   const effE = idxs.map(i=>{
-    const ratio = B_baseline[i]>0 ? Math.min(1, Barr[i]/B_baseline[i]) : 1;
+    const ratio = ratioOverride ? ratioOverride[i]
+                : (B_baseline[i]>0 ? Math.min(1, Barr[i]/B_baseline[i]) : 0);
     return E[i]*ratio;
   });
 
@@ -2383,6 +2388,11 @@ function getDuerreB(){
   return Array.from({length:PHASE_COUNT}, (_,i)=>Math.max(0, B_baseline[i]*(1-reds[i]/100)));
 }
 
+function getDuerreRatio(){
+  const reds = activePhaseSet.duerreRedIds.map(id=>val(id));
+  return reds.map(r=>Math.max(0, Math.min(1, 1 - r/100)));
+}
+
 function updateFutterkosten(){
   const Bcurrent = Array.from({length:PHASE_COUNT}, (_,i)=>val("B"+i));
   const activeRes = computeFeedResult(Bcurrent);
@@ -2402,7 +2412,7 @@ function updateFutterkosten(){
   // Vergleich Normaljahr vs. Dürre-Szenario läuft immer parallel, unabhängig vom aktiven Toggle
   const duerreB = getDuerreB();
   const normalRes = computeFeedResult(B_baseline);
-  const duerreRes = computeFeedResult(duerreB);
+  const duerreRes = computeFeedResult(duerreB, getDuerreRatio());
   if(normalRes && duerreRes){
     const nArea = computeAreaResult(B_baseline);
     const dArea = computeAreaResult(duerreB);
