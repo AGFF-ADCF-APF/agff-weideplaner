@@ -2015,8 +2015,13 @@ function renderGrowthCurve(){
   const preShoulderDay = Math.max(0, phaseDays[0] - DORMANCY_SHOULDER_DAYS);
   const postShoulderDay = Math.min(totalDays, endeDay + DORMANCY_SHOULDER_DAYS);
 
+  // Die Tabellenwerte (B/Iu je Phase) sind Phasen-Durchschnitte, kein Wert am Phasenbeginn —
+  // die Kurvenpunkte gehören daher auf den Phasen-Mittelpunkt, nicht auf den Starttag
+  // (sonst wirkt z.B. die Vorweide direkt nach der Ruhephase unrealistisch wachstumsstark).
+  const phaseMidDays = idxs.map(i => (phaseDays[i] + bandEnds[i]) / 2);
+
   function buildPts(vals){
-    const real = idxs.map(i => ({x: xOf(phaseDays[i]), y: growthCurveY(vals[i])}));
+    const real = idxs.map(i => ({x: xOf(phaseMidDays[i]), y: growthCurveY(vals[i])}));
     const full = [
       {x: xOf(0), y: growthCurveY(0)},
       ...(preShoulderDay > 0.5 ? [{x: xOf(preShoulderDay), y: growthCurveY(0)}] : []),
