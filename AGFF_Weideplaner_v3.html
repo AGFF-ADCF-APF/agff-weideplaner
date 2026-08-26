@@ -1451,6 +1451,7 @@ function restoreInputState(){
   document.querySelectorAll(".wrap input[id]:not([readonly]), .wrap select[id]").forEach(el=>{
     if(Object.prototype.hasOwnProperty.call(data, el.id)) el.value = data[el.id];
   });
+  syncBaselineFromStandort();
   onTierChange();
   calcRpm();
   calculate();
@@ -1728,6 +1729,22 @@ function onPhaseCountToggle(){
   const n = document.getElementById("phaseCountToggle").checked ? 5 : 4;
   applyPhaseCount(n, {resetValues:true});
   calculate();
+}
+
+// Nur B_baseline aus der aktuellen Standortwahl auffrischen, ohne Daten/Zeilen zu
+// überschreiben — für die Wiederherstellung aus localStorage, wo Zeile A/B/Iu bereits mit
+// den gespeicherten (ggf. individuell angepassten) Werten überschrieben werden. B_baseline
+// wird nie selbst gespeichert, sondern immer aus der Standortwahl abgeleitet — ohne diesen
+// Sync bliebe es nach einer Wiederherstellung auf dem Stand der Default-Standortwahl beim
+// Skriptstart stehen, was den Dürre-Vergleich (und die Normaljahr-Kurve) verfälscht.
+function syncBaselineFromStandort(){
+  const key = document.getElementById("hoehe").value
+            + document.getElementById("boden").value
+            + document.getElementById("klima").value
+            + document.getElementById("veg").value;
+  const data = activePhaseSet.kombi[key];
+  if(!data) return;
+  for(let i=0;i<PHASE_COUNT;i++){ B_baseline[i] = data.B[i]; }
 }
 
 /* ---------- Standort / Tierkategorie ---------- */
