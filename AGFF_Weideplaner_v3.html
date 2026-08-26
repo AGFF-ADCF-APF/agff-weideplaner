@@ -1017,7 +1017,7 @@
           <!-- UMTRIEB ONLY: Weideruhezeit vor F, but order kept like Excel -->
           <tr class="row-umtrieb" data-phaserow="Iu">
             <td class="code">I</td>
-            <td class="label">Weideruhezeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage zwischen zwei Beweidungen derselben Koppel. Im Frühjahr 14–20 Tage, ab Ende Mai bis August 20–28 Tage, unter Trockenheit im Sommer bis zu 35 Tage (Merkblatt Kap. 3.3). Wert für Bestockungskrise ist eine Schätzung zwischen Wachstumsspitze und Sommer.">i</button></span></td>
+            <td class="label">Weideruhezeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage zwischen zwei Beweidungen derselben Koppel. Wird automatisch aus dem Ziel-Aufwuchs von 1300 kg TS/ha nutzbarer Grasmasse ÷ Graswachstum der Phase berechnet (Zeile B) und bei Standortwechsel bzw. Dürre-Reduktion neu gesetzt — danach frei editierbar. Unter Trockenheit auf maximal 45 Tage begrenzt, da bei sehr geringem Wachstum sonst unrealistisch lange Ruhezeiten entstünden.">i</button></span></td>
             <td><input type="number" class="cell I_u" id="Iu0" value="30" oninput="calculate()"></td>
             <td><input type="number" class="cell I_u" id="Iu1" value="18" oninput="calculate()"></td>
             <td><input type="number" class="cell I_u" id="Iu2" value="23" oninput="calculate()"></td>
@@ -1760,6 +1760,7 @@ function onStandortChange(){
   } else {
     for(let i=0;i<PHASE_COUNT;i++){ document.getElementById("B"+i).value = B_baseline[i]; }
   }
+  updateRuhezeitFromGrowth();
   const aLast = new Date(document.getElementById("A"+(PHASE_COUNT-1)).value);
   const endeDefault = new Date(aLast); endeDefault.setDate(endeDefault.getDate()+70);
   const cap = new Date(aLast.getFullYear(), 11, 5);
@@ -1910,6 +1911,25 @@ function applySeasonalCalving(){
   }
 }
 
+/* ---------- Weideruhezeit: aus Ziel-Nutzbarer Grasmasse statt fixer Vorgabe ---------- */
+// Ruhezeit (Iu) = Ziel-Nutzbare Grasmasse ÷ Graswachstum der Phase (B), denn K=B*I+J,
+// also L=K-J=B*I. Wird bei Standortwechsel/Dürre-Reduktion neu gesetzt, bleibt sonst editierbar.
+const TARGET_NUTZBARE_GRASMASSE = 1300; // kg TS/ha
+const MAX_RUHEZEIT_DUERRE = 45; // Tage, Obergrenze bei stark reduziertem Wachstum
+
+function computeTargetRuhezeit(B, cap){
+  if(B <= 0) return cap != null ? cap : 0;
+  const days = Math.round(TARGET_NUTZBARE_GRASMASSE / B);
+  return cap != null ? Math.min(cap, days) : days;
+}
+
+function updateRuhezeitFromGrowth(){
+  const cap = szenario === "duerre" ? MAX_RUHEZEIT_DUERRE : null;
+  for(let i=0;i<PHASE_COUNT;i++){
+    document.getElementById("Iu"+i).value = computeTargetRuhezeit(val("B"+i), cap);
+  }
+}
+
 /* ---------- Szenario: Normaljahr / Dürre ---------- */
 function setSzenario(mode){
   szenario = mode;
@@ -1921,6 +1941,7 @@ function setSzenario(mode){
     applyDuerre();
   } else {
     for(let i=0;i<PHASE_COUNT;i++){ document.getElementById("B"+i).value = Math.round(B_baseline[i]); }
+    updateRuhezeitFromGrowth();
     calculate();
   }
 }
@@ -1931,6 +1952,7 @@ function applyDuerre(){
     const reduced = B_baseline[i] * (1 - reds[i]/100);
     document.getElementById("B"+i).value = Math.max(0, Math.round(reduced));
   }
+  updateRuhezeitFromGrowth();
   calculate();
 }
 
