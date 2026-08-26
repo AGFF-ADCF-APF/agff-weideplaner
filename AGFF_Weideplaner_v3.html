@@ -2044,9 +2044,6 @@ function renderGrowthCurve(){
     const bw = Math.max(0, bx1-bx0);
     const colorVar = `var(${activePhaseSet.colorVars[i]})`;
     svg += `<rect x="${bx0.toFixed(1)}" y="${padT}" width="${bw.toFixed(1)}" height="${chartH.toFixed(1)}" style="fill:${colorVar};opacity:.13"/>`;
-    if(i>0){
-      svg += `<line x1="${bx0.toFixed(1)}" y1="${padT}" x2="${bx0.toFixed(1)}" y2="${baseY.toFixed(1)}" style="stroke:${colorVar}" stroke-width="1" stroke-dasharray="2,2" opacity=".7"/>`;
-    }
     const cx = (bx0+bx1)/2;
     const lx = cx.toFixed(1), ly = (padT+9).toFixed(1);
     svg += `<text x="${lx}" y="${ly}" font-size="9" style="fill:${colorVar}" text-anchor="start" font-weight="700" transform="rotate(90 ${lx} ${ly})">${label}</text>`;
@@ -2072,6 +2069,14 @@ function renderGrowthCurve(){
   } else {
     svg += `<path d="${catmullRomPath(normalPts)}" fill="none" stroke="#4f9d5c" stroke-width="2.5" stroke-linecap="round"/>`;
   }
+
+  // Phasengrenzen im Vordergrund (über Flächen/Kurve), damit sie bis ganz nach unten sichtbar bleiben.
+  idxs.forEach(i=>{
+    if(i===0) return;
+    const bx0 = xOf(phaseDays[i]);
+    const colorVar = `var(${activePhaseSet.colorVars[i]})`;
+    svg += `<line x1="${bx0.toFixed(1)}" y1="${padT}" x2="${bx0.toFixed(1)}" y2="${h}" style="stroke:${colorVar}" stroke-width="1" stroke-dasharray="2,2" opacity=".7"/>`;
+  });
 
   // x-Achse mit Halbmonats-Auflösung: 1. jedes Monats beschriftet, 15. als ungelabelte Zwischenmarke.
   svg += `<line x1="${padL}" y1="${baseY.toFixed(1)}" x2="${(w-padR).toFixed(1)}" y2="${baseY.toFixed(1)}" stroke="#8a9186" stroke-width="1"/>`;
