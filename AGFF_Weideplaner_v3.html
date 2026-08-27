@@ -1017,7 +1017,7 @@
           <!-- UMTRIEB ONLY: Weideruhezeit vor F, but order kept like Excel -->
           <tr class="row-umtrieb" data-phaserow="Iu">
             <td class="code">I</td>
-            <td class="label">Weideruhezeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage zwischen zwei Beweidungen derselben Koppel. Wird automatisch aus dem Ziel-Aufwuchs von 1300 kg TS/ha nutzbarer Grasmasse ÷ Graswachstum der Phase berechnet (Zeile B) und bei Standortwechsel bzw. Dürre-Reduktion neu gesetzt — danach frei editierbar. Unter Trockenheit auf maximal 45 Tage begrenzt, da bei sehr geringem Wachstum sonst unrealistisch lange Ruhezeiten entstünden.">i</button></span></td>
+            <td class="label">Weideruhezeit (Tage)<span class="info-tip-wrap"><button type="button" class="info-tip" data-tip="Anzahl Tage zwischen zwei Beweidungen derselben Koppel. Wird automatisch aus dem Ziel-Aufwuchs von 1300 kg TS/ha nutzbarer Grasmasse ÷ Graswachstum der Phase berechnet (Zeile B) und bei Standortwechsel bzw. Dürre-Reduktion neu gesetzt — danach frei editierbar. Unter Trockenheit auf maximal 60 Tage begrenzt, da bei sehr geringem Wachstum sonst unrealistisch lange Ruhezeiten entstünden.">i</button></span></td>
             <td><input type="number" class="cell I_u" id="Iu0" value="30" oninput="calculate()"></td>
             <td><input type="number" class="cell I_u" id="Iu1" value="18" oninput="calculate()"></td>
             <td><input type="number" class="cell I_u" id="Iu2" value="23" oninput="calculate()"></td>
@@ -1932,7 +1932,7 @@ function applySeasonalCalving(){
 // Ruhezeit (Iu) = Ziel-Nutzbare Grasmasse ÷ Graswachstum der Phase (B), denn K=B*I+J,
 // also L=K-J=B*I. Wird bei Standortwechsel/Dürre-Reduktion neu gesetzt, bleibt sonst editierbar.
 const TARGET_NUTZBARE_GRASMASSE = 1300; // kg TS/ha
-const MAX_RUHEZEIT_DUERRE = 45; // Tage, Obergrenze bei stark reduziertem Wachstum
+const MAX_RUHEZEIT_DUERRE = 60; // Tage, Obergrenze bei stark reduziertem Wachstum
 
 function computeTargetRuhezeit(B, cap){
   if(B <= 0) return cap != null ? cap : 0;
