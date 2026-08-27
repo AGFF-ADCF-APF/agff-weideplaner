@@ -1947,6 +1947,14 @@ function updateRuhezeitFromGrowth(){
   }
 }
 
+// Wie updateRuhezeitFromGrowth(), aber nur für eine einzelne Phase — für die laufende
+// Anpassung bei manueller Graswachstums-Änderung (Tabelle/Kurve), damit dabei nicht die
+// Ruhezeit anderer, unveränderter Phasen überschrieben wird.
+function updateRuhezeitForPhase(i){
+  const cap = szenario === "duerre" ? MAX_RUHEZEIT_DUERRE : null;
+  document.getElementById("Iu"+i).value = computeTargetRuhezeit(val("B"+i), cap);
+}
+
 /* ---------- Szenario: Normaljahr / Dürre ---------- */
 function setSzenario(mode){
   szenario = mode;
@@ -1978,6 +1986,7 @@ function onBInput(el){
   if(szenario === "normal"){
     B_baseline[i] = parseFloat(el.value) || 0;
   }
+  updateRuhezeitForPhase(i);
   calculate();
 }
 
@@ -2165,6 +2174,7 @@ function setupGrowthCurveDrag(){
         applyDuerre();
       } else {
         document.getElementById("B"+phase).value = value;
+        updateRuhezeitForPhase(phase);
         calculate();
       }
     } else {
