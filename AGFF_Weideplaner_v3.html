@@ -286,6 +286,26 @@
     animation:infoPulse 9s ease-in-out infinite;
   }
   .info-toggle-btn:hover{background:var(--accent-dark);}
+  .calc-toggle-btn{left:72px;animation:none;display:inline-flex;align-items:center;justify-content:center;}
+  .calc-toggle-btn svg{display:block;}
+
+  /* Modal-Dialog für Hilfsmittel (Umrechner) */
+  .tool-dialog{
+    border:none;border-radius:var(--radius);padding:20px 22px 22px;
+    width:min(560px, calc(100vw - 32px));max-height:calc(100vh - 32px);
+    background:var(--panel);color:var(--ink);box-shadow:0 12px 40px rgba(0,0,0,.25);
+  }
+  .tool-dialog::backdrop{background:rgba(28,40,31,.45);}
+  .mob-sheet-close{
+    flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;
+    color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;
+  }
+  .mob-sheet-close:hover{background:var(--accent-soft);color:var(--accent-dark);}
+  .tool-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
+  .tool-dialog-head h3{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.1rem;margin:0;color:var(--accent-dark);}
+  .tool-dialog .sub.keep{display:block;}
+  .tool-dialog .rpm-tool .field{min-width:0;flex:1 1 130px;}
+  .tool-dialog .rpm-result{flex:1 1 100%;text-align:center;font-size:1.15rem;}
   .info-toggle-btn.no-pulse{animation:none;}
   .info-toggle-btn[aria-pressed="false"]{background:var(--muted);}
   @keyframes infoPulse{
@@ -753,6 +773,9 @@
   @media (max-width:760px){
     body.is-mobile{padding-bottom:96px;}
     body.is-mobile .info-toggle-btn{bottom:84px;width:38px;height:38px;font-size:1rem;}
+    body.is-mobile .calc-toggle-btn{left:68px;}
+    body.is-mobile .calc-toggle-btn svg{width:19px;height:19px;}
+    body.mob-sheet-open .calc-toggle-btn{display:none;}
     body.is-mobile .panel{padding:14px 16px;margin-bottom:12px;}
     body.is-mobile .panel h2{
       display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -774,22 +797,30 @@
     }
     body.is-mobile .panel.mob-closed .mob-summary strong{color:var(--accent-dark);font-weight:600;}
 
-    /* Ergebnis-Leiste */
+    /* Ergebnis-Leiste = Kopf/Griff des Sheets */
     body.is-mobile .mob-bar{
-      position:fixed;left:0;right:0;bottom:0;z-index:450;
-      display:flex;flex-direction:column;
+      display:flex;flex-direction:column;flex:none;
       background:var(--accent-dark);color:#fff;
-      padding:8px 14px calc(6px + env(safe-area-inset-bottom,0px));
-      box-shadow:0 -2px 12px rgba(0,0,0,.18);
-      cursor:pointer;
+      padding:4px 14px 8px;
+      border-radius:16px 16px 0 0;
+      cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+      touch-action:none;
     }
-    .mob-bar-tiles{display:flex;gap:8px;}
+    .mob-bar-grip{display:flex;justify-content:center;padding:2px 0 5px;}
+    .mob-bar-grip span{width:38px;height:4px;border-radius:2px;background:rgba(255,255,255,.45);}
+    .mob-bar-row{display:flex;align-items:center;gap:8px;}
+    .mob-bar-chevron{
+      flex:none;width:10px;height:10px;margin:0 2px 4px 4px;
+      border-right:2px solid rgba(255,255,255,.85);border-bottom:2px solid rgba(255,255,255,.85);
+      transform:rotate(-135deg);transition:transform .25s;
+    }
+    body.mob-sheet-open .mob-bar-chevron{transform:rotate(45deg);margin-bottom:0;margin-top:-4px;}
+    .mob-bar-tiles{display:flex;gap:8px;flex:1;min-width:0;}
     .mob-bar-tile{flex:1;min-width:0;}
     .mob-bar-tile span{display:block;font-size:.62rem;letter-spacing:.02em;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
     .mob-bar-tile strong{display:block;font-family:'IBM Plex Mono',monospace;font-size:.92rem;font-weight:600;line-height:1.25;white-space:nowrap;}
     .mob-bar-tile strong small{font-family:'Inter',sans-serif;font-weight:500;font-size:.68rem;opacity:.85;}
     .mob-bar-tile.hl strong{color:#ffe9a8;}
-    .mob-bar-hint{font-size:.62rem;text-align:center;opacity:.7;margin-top:3px;letter-spacing:.06em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
 
     /* Bottom-Sheet */
     body.is-mobile .mob-sheet-backdrop{
@@ -797,25 +828,21 @@
       opacity:0;pointer-events:none;transition:opacity .2s;
     }
     body.is-mobile .mob-sheet{
+      --bar-h:72px; /* wird per JS an die gemessene Leistenhöhe angepasst */
       position:fixed;left:0;right:0;bottom:0;z-index:470;
-      display:flex;flex-direction:column;max-height:82vh;
+      display:flex;flex-direction:column;max-height:84vh;
       background:var(--panel);border-radius:16px 16px 0 0;
-      box-shadow:0 -6px 24px rgba(0,0,0,.22);
-      transform:translateY(100%);transition:transform .25s ease-out;
-      padding:0 16px calc(12px + env(safe-area-inset-bottom,0px));
+      box-shadow:0 -4px 18px rgba(0,0,0,.2);
+      transform:translateY(calc(100% - var(--bar-h)));transition:transform .25s ease-out;
+      padding-bottom:env(safe-area-inset-bottom,0px);
     }
     body.mob-sheet-open .mob-sheet-backdrop{opacity:1;pointer-events:auto;}
     body.mob-sheet-open .mob-sheet{transform:none;}
-    body.mob-sheet-open .mob-bar{visibility:hidden;}
+    .mob-sheet-content{display:flex;flex-direction:column;min-height:0;padding:10px 16px 12px;}
+    body:not(.mob-sheet-open) .mob-sheet-content{visibility:hidden;}
     body.mob-sheet-open .info-toggle-btn{display:none;}
-    .mob-sheet-handle{padding:10px 0 6px;display:flex;justify-content:center;cursor:grab;touch-action:none;}
-    .mob-sheet-handle span{width:40px;height:4px;border-radius:2px;background:var(--line);}
-    .mob-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+    .mob-sheet-head{margin-bottom:8px;}
     .mob-sheet-head h3{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.1rem;margin:0;color:var(--accent-dark);}
-    .mob-sheet-close{
-      flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;
-      color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;
-    }
     .mob-sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0;}
     .mob-sheet-body h4{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:.98rem;margin:16px 0 6px;color:var(--accent-dark);}
     .mob-sheet-body .sheet-line{font-size:.85rem;color:var(--muted);margin:0 0 10px;}
@@ -835,12 +862,19 @@
     body.is-mobile #calcTable.mob-single td.code, body.is-mobile #calcTable.mob-single th.th-code{position:static;}
     body.is-mobile #calcTable.mob-single input.cell{font-size:.9rem;padding:8px 6px;}
     body.is-mobile .phase-jump{position:sticky;top:0;z-index:5;background:var(--panel);padding:6px 0;margin:0 0 6px;}
+    body.is-mobile .mob-next{
+      display:flex;align-items:center;justify-content:center;gap:8px;width:100%;
+      margin-top:16px;padding:12px 14px;border-radius:8px;border:none;
+      background:var(--accent);color:#fff;font-family:'Inter',sans-serif;font-size:.92rem;font-weight:600;cursor:pointer;
+    }
+    body.is-mobile .mob-next:active{background:var(--accent-dark);}
     body.is-mobile .swipe-hint{display:block;width:100%;font-size:.68rem;color:var(--muted);margin-top:2px;}
     body.is-mobile #calcTable.mob-single{touch-action:pan-y;}
     body.is-mobile #calcTable.mob-slide-left{animation:mobSlideLeft .22s ease-out;}
     body.is-mobile #calcTable.mob-slide-right{animation:mobSlideRight .22s ease-out;}
   }
   .swipe-hint{display:none;}
+  .mob-next{display:none;}
   @keyframes mobSlideLeft{from{transform:translateX(28px);opacity:.35;}to{transform:none;opacity:1;}}
   @keyframes mobSlideRight{from{transform:translateX(-28px);opacity:.35;}to{transform:none;opacity:1;}}
   @media (max-width:760px){
@@ -858,6 +892,10 @@
 <div class="wrap">
 
   <button type="button" id="descToggleBtn" class="info-toggle-btn" onclick="toggleDesc()" aria-label="Beschreibungstexte ein-/ausblenden" aria-pressed="true" title="Beschreibungstexte ein-/ausblenden">i</button>
+
+  <button type="button" id="rpmToggleBtn" class="info-toggle-btn calc-toggle-btn" onclick="openRpmDialog()" aria-label="Futterdichten-Umrechner öffnen" title="Futterdichten-Umrechner (Rising-Plate-Meter)">
+    <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="2.2" fill="none" stroke="currentColor" stroke-width="1.8"/><rect x="7.5" y="5" width="9" height="4" rx=".8" fill="currentColor"/><g fill="currentColor"><circle cx="9" cy="12.5" r="1.2"/><circle cx="12" cy="12.5" r="1.2"/><circle cx="15" cy="12.5" r="1.2"/><circle cx="9" cy="16" r="1.2"/><circle cx="12" cy="16" r="1.2"/><circle cx="15" cy="16" r="1.2"/><circle cx="9" cy="19.5" r="1.2"/><circle cx="12" cy="19.5" r="1.2"/><circle cx="15" cy="19.5" r="1.2"/></g></svg>
+  </button>
 
   <a class="back-link" href="index.html">← zurück zur Übersicht</a>
 
@@ -1324,10 +1362,15 @@
   </div>
 
   <!-- RPM Umrechner -->
-  <div class="panel" id="panelRpm" data-mob="closed">
-    <p class="step-label">Hilfsmittel</p>
-    <h2>Futterdichten-Umrechner (Rising-Plate-Meter)</h2>
-    <p class="sub">Rechnet zwischen Bestandeshöhe (cm RPM, Klicks, cm Doppelmeter) und Futterdichte (kg TS/ha) um.</p>
+  <footer>Nachbau des AGFF Weideplaners · info@agff.ch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
+</div>
+<!-- Futterdichten-Umrechner als Modal (Rechner-Knopf unten links) -->
+<dialog id="rpmDialog" class="tool-dialog" aria-labelledby="rpmDialogTitle" onclick="if(event.target===this) this.close()">
+  <div class="tool-dialog-head">
+    <div><p class="step-label">Hilfsmittel</p><h3 id="rpmDialogTitle">Futterdichten-Umrechner (Rising-Plate-Meter)</h3></div>
+    <button type="button" class="mob-sheet-close" onclick="document.getElementById('rpmDialog').close()" aria-label="Schliessen">×</button>
+  </div>
+  <p class="sub keep" style="margin:0 0 14px;">Rechnet zwischen Bestandeshöhe (cm RPM, Klicks, cm Doppelmeter) und Futterdichte (kg TS/ha) um.</p>
     <div class="rpm-tool">
       <div class="field">
         <label for="rpmVal">Wert</label>
@@ -1362,25 +1405,28 @@
       <div class="rpm-formula">kg TS/ha = (cm Doppelmeter × 1.21) × 120 − 767</div>
       <p class="sub" style="margin-top:8px;margin-bottom:0;">Doppelmeter-Faktor 1.21 gemäss AGFF-Merkblatt W11 (Plate Pasture Meter Höhe : 1.21 = Doppelmeterhöhe).</p>
     </div>
-  </div>
 
-  <footer>Nachbau des AGFF Weideplaners · info@agff.ch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
-</div>
+</dialog>
+
 <!-- Mobile Ergebnis-Leiste: Kernzahlen immer im Blick, Tipp springt zum Ergebnis-Panel -->
-<div class="mob-bar" id="mobBar" role="button" tabindex="0" aria-label="Ergebnis-Details anzeigen" aria-expanded="false" onclick="mobOpenSheet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();mobOpenSheet();}">
-  <div class="mob-bar-tiles" id="mobBarTiles"></div>
-  <div class="mob-bar-hint">Details ▴</div>
-</div>
-<!-- Bottom-Sheet: aufgezogene Ergebnis-Leiste mit Koppelplanung, Futterkosten und (bei Dürre) Vergleich -->
+<!-- Mobile Ergebnis-Sheet: die grüne Kennzahlen-Leiste ist zugleich Griff und Kopf des
+     Bottom-Sheets – zugeklappt schaut nur sie heraus, aufgezogen fährt sie mit nach oben. -->
 <div class="mob-sheet-backdrop" id="mobSheetBackdrop" onclick="mobCloseSheet()"></div>
-<div class="mob-sheet" id="mobSheet" role="dialog" aria-modal="true" aria-labelledby="mobSheetTitle" aria-hidden="true">
-  <div class="mob-sheet-handle" id="mobSheetHandle"><span></span></div>
-  <div class="mob-sheet-head">
-    <div><p class="step-label">Ergebnis</p><h3 id="mobSheetTitle">Koppelplanung</h3></div>
-    <button type="button" class="mob-sheet-close" onclick="mobCloseSheet()" aria-label="Schliessen">×</button>
+<div class="mob-sheet" id="mobSheet" aria-labelledby="mobSheetTitle">
+  <div class="mob-bar" id="mobBar" role="button" tabindex="0" aria-label="Ergebnis-Details ein-/ausklappen" aria-expanded="false" aria-controls="mobSheetContent" onclick="mobToggleSheet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();mobToggleSheet();}">
+    <div class="mob-bar-grip"><span></span></div>
+    <div class="mob-bar-row">
+      <div class="mob-bar-tiles" id="mobBarTiles"></div>
+      <div class="mob-bar-chevron" aria-hidden="true"></div>
+    </div>
   </div>
-  <div class="mob-sheet-body" id="mobSheetBody"></div>
-  <button type="button" class="assist-toggle mob-sheet-more" onclick="mobSheetToPanel()">Diagramm, Details und Eingaben anzeigen ↓</button>
+  <div class="mob-sheet-content" id="mobSheetContent">
+    <div class="mob-sheet-head">
+      <p class="step-label">Ergebnis</p><h3 id="mobSheetTitle">Koppelplanung</h3>
+    </div>
+    <div class="mob-sheet-body" id="mobSheetBody"></div>
+    <button type="button" class="assist-toggle mob-sheet-more" onclick="mobSheetToPanel()">Diagramm, Details und Eingaben anzeigen ↓</button>
+  </div>
 </div>
 <div id="ttPortal"></div>
 
@@ -2669,6 +2715,13 @@ function updateStandDatum(){
   el.textContent = `${dd}.${mm}.${d.getFullYear()}`;
 }
 
+function openRpmDialog(){
+  const dlg = document.getElementById("rpmDialog");
+  if(typeof dlg.showModal === "function"){ dlg.showModal(); } else { dlg.setAttribute("open", ""); }
+  const input = document.getElementById("rpmVal");
+  if(input && !isMobile()){ input.focus(); input.select(); }
+}
+
 function toggleRpmFormulas(){
   const panel = document.getElementById("rpmFormulaPanel");
   const btn = document.getElementById("rpmFormulaToggleBtn");
@@ -2980,6 +3033,33 @@ function initMobilePanels(){
   });
 }
 
+// Mobil: am Ende jedes Schritt-Panels ein «Weiter»-Knopf, der zum nächsten Panel führt.
+const MOB_STEP_ORDER = ["panelStandort", "panelSystem", "panelSzenario", "panelTabelle"];
+function initMobStepButtons(){
+  MOB_STEP_ORDER.forEach((id, i)=>{
+    const panel = document.getElementById(id);
+    if(!panel) return;
+    const nextId = i + 1 < MOB_STEP_ORDER.length ? MOB_STEP_ORDER[i+1] : null;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "mob-next";
+    if(nextId){
+      const nextTitle = document.getElementById(nextId).querySelector("h2").firstChild.textContent.trim();
+      btn.innerHTML = `Weiter: ${nextTitle} <span aria-hidden="true">→</span>`;
+      btn.onclick = ()=>{ mobSetPanelOpen(panel, false); mobGotoPanel(nextId); };
+    } else {
+      btn.innerHTML = `Zum Ergebnis <span aria-hidden="true">→</span>`;
+      btn.onclick = ()=>{ mobSetPanelOpen(panel, false); mobGotoResult(); };
+    }
+    panel.appendChild(btn);
+  });
+}
+function mobGotoPanel(id){
+  const panel = document.getElementById(id);
+  mobSetPanelOpen(panel, true);
+  panel.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
 function mobSetPanelOpen(panel, open){
   panel.classList.toggle("mob-closed", !open);
   const state = {};
@@ -2993,14 +3073,18 @@ function mobOpenSheet(){
   mobSheetOpen = true;
   renderMobSheet();
   document.body.classList.add("mob-sheet-open");
-  document.getElementById("mobSheet").setAttribute("aria-hidden", "false");
   document.getElementById("mobBar").setAttribute("aria-expanded", "true");
 }
 function mobCloseSheet(){
   mobSheetOpen = false;
   document.body.classList.remove("mob-sheet-open");
-  document.getElementById("mobSheet").setAttribute("aria-hidden", "true");
   document.getElementById("mobBar").setAttribute("aria-expanded", "false");
+}
+function mobToggleSheet(){ if(mobSheetOpen) mobCloseSheet(); else mobOpenSheet(); }
+// Zugeklappt schaut genau die Leiste heraus: ihre Höhe als CSS-Variable ans Sheet geben.
+function syncMobBarHeight(){
+  const bar = document.getElementById("mobBar");
+  if(bar && bar.offsetHeight) document.getElementById("mobSheet").style.setProperty("--bar-h", bar.offsetHeight + "px");
 }
 function mobSheetToPanel(){ mobCloseSheet(); mobGotoResult(); }
 
@@ -3025,25 +3109,22 @@ function renderMobSheet(){
 }
 
 function setupMobSheet(){
-  const handle = document.getElementById("mobSheetHandle");
-  const sheet = document.getElementById("mobSheet");
-  let startY = null;
-  const onStart = e => { startY = (e.touches ? e.touches[0] : e).clientY; };
-  const onEnd = e => {
+  const bar = document.getElementById("mobBar");
+  // Wischen auf der Leiste: nach oben öffnet, nach unten schliesst; ein Tipp schaltet um (onclick).
+  let startY = null, swiped = false;
+  bar.addEventListener("touchstart", e => { startY = e.touches[0].clientY; swiped = false; }, {passive:true});
+  bar.addEventListener("touchend", e => {
     if(startY === null) return;
-    const y = (e.changedTouches ? e.changedTouches[0] : e).clientY;
-    if(y - startY > 50) mobCloseSheet();
+    const dy = e.changedTouches[0].clientY - startY;
     startY = null;
-  };
-  handle.addEventListener("touchstart", onStart, {passive:true});
-  handle.addEventListener("touchend", onEnd, {passive:true});
-  handle.addEventListener("click", mobCloseSheet);
-  // Nach unten wischen auf dem Kopfbereich schliesst ebenfalls
-  const head = sheet.querySelector(".mob-sheet-head");
-  head.addEventListener("touchstart", onStart, {passive:true});
-  head.addEventListener("touchend", onEnd, {passive:true});
+    if(Math.abs(dy) < 40) return;
+    swiped = true;
+    if(dy < 0) mobOpenSheet(); else mobCloseSheet();
+  }, {passive:true});
+  bar.addEventListener("click", e => { if(swiped){ swiped = false; e.stopImmediatePropagation(); } }, true);
   document.addEventListener("keydown", e => { if(e.key === "Escape" && mobSheetOpen) mobCloseSheet(); });
   mobMedia.addEventListener("change", ()=>{ if(!isMobile()) mobCloseSheet(); });
+  window.addEventListener("resize", syncMobBarHeight);
 }
 
 function mobGotoResult(){
@@ -3072,7 +3153,6 @@ function updateMobSummaries(){
   set("zusammenfassungPanel", `Ø <strong>${document.getElementById("avgI").innerText}</strong> ha/Herde/Tag · <strong>${document.getElementById("avgJ").innerText}</strong> Aren/Tier/Tag`);
   set("panelFutter", lastFeedResult ? `Einsparung <strong>${fmtChf0(lastFeedResult.savings)} CHF/Jahr</strong> · Weide ${lastFeedResult.pctWeide.toFixed(0)}%` : "–");
   set("szenarioComparePanel", "Flächenbedarf und Kosten beider Szenarien nebeneinander");
-  set("panelRpm", `${document.getElementById("rpmVal").value} ${selText("rpmFrom")} = <strong>${document.getElementById("rpmResult").innerText}</strong> ${selText("rpmTo")}`);
 }
 
 function updateMobBar(){
@@ -3098,6 +3178,7 @@ function updateMobileUi(){
   if(!isMobile()) return;
   updateMobSummaries();
   updateMobBar();
+  syncMobBarHeight();
   renderMobSheet();
 }
 
@@ -3174,8 +3255,11 @@ function mobStepPhase(dir){
 function initMobileUi(){
   setupPhaseSwipe();
   setupMobSheet();
+  // Bei 100 % würde die 680px-viewBox auf Handybreite halbiert und unlesbar; 200 % ≈ 1:1, scrollbar.
+  if(isMobile() && growthChartZoom === 100) setGrowthChartZoom(200);
   document.body.classList.toggle("is-mobile", isMobile());
   initMobilePanels();
+  initMobStepButtons();
   if(isMobile()){ mobPhaseIdx = currentPhaseIndex(); applyMobPhaseView(); }
   mobMedia.addEventListener("change", ()=>{
     document.body.classList.toggle("is-mobile", isMobile());
