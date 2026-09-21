@@ -3093,15 +3093,15 @@ function renderMobSheet(){
   if(!mobSheetOpen) return;
   const stripIds = html => html.replace(/\s+id="[^"]*"/g, "");
   const isUmtrieb = currentSystem === "umtrieb";
-  document.getElementById("mobSheetTitle").textContent = isUmtrieb ? "Koppelplanung" : "Zusammenfassung";
+  document.getElementById("mobSheetTitle").textContent = isUmtrieb ? "Koppelplanung" : "Futterkosten";
+  // Flächenbedarf und Einsparung stehen bereits in der Leiste darüber — hier nur, was dort fehlt.
   let html = "";
   if(isUmtrieb){
-    html += `<p class="sheet-line">Ø Flächenbedarf Herde/Tag über alle ${PHASE_COUNT === 5 ? "fünf" : "vier"} Phasen: <strong>${document.getElementById("avgM").innerText}</strong> ha · ${document.getElementById("tier").value}</p>`;
     html += `<table class="koppel-table">${stripIds(document.querySelector("#koppelplanungPanel .koppel-table").innerHTML)}</table>`;
-  } else {
-    html += `<div class="ref-grid">${stripIds(document.querySelector("#zusammenfassungPanel .ref-grid").innerHTML)}</div>`;
   }
-  html += `<h4>Eingesparte Futterkosten</h4><div class="ref-grid">${stripIds(document.getElementById("costSummaryGrid").innerHTML)}</div>`;
+  const costGrid = document.getElementById("costSummaryGrid").cloneNode(true);
+  costGrid.querySelectorAll(".cost-highlight").forEach(el=>el.remove());
+  html += (isUmtrieb ? `<h4>Futterkosten</h4>` : "") + `<div class="ref-grid">${stripIds(costGrid.innerHTML)}</div>`;
   if(szenario === "duerre"){
     html += `<h4>Normaljahr vs. Dürre-Szenario</h4><table>${stripIds(document.querySelector("#szenarioComparePanel table").innerHTML)}</table>`;
   }
