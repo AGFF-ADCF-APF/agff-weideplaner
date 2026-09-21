@@ -505,8 +505,14 @@
     align-items:center;
     gap:10px;
     flex-wrap:wrap;
-    margin-top:12px;
+    margin:-14px 0 14px;
+    padding:10px 12px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
   }
+  .share-note{flex-basis:100%;font-size:.75rem;color:var(--muted);}
+  .header-actions{display:flex;align-items:flex-end;padding-bottom:2px;}
   .share-input{
     flex:1;
     min-width:240px;
@@ -741,6 +747,7 @@
   /* ---------- Mobil-Modus (≤760px): Akkordeon, Ergebnis-Leiste, Einzelphasen-Tabelle ---------- */
   .mob-summary{display:none;}
   .mob-bar{display:none;}
+  .mob-sheet, .mob-sheet-backdrop{display:none;}
   .phase-chip-all{display:none;}
   body.is-mobile .sub.keep{display:block;}
   @media (max-width:760px){
@@ -784,6 +791,38 @@
     .mob-bar-tile.hl strong{color:#ffe9a8;}
     .mob-bar-hint{font-size:.62rem;text-align:center;opacity:.7;margin-top:3px;letter-spacing:.06em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
 
+    /* Bottom-Sheet */
+    body.is-mobile .mob-sheet-backdrop{
+      display:block;position:fixed;inset:0;z-index:460;background:rgba(28,40,31,.45);
+      opacity:0;pointer-events:none;transition:opacity .2s;
+    }
+    body.is-mobile .mob-sheet{
+      position:fixed;left:0;right:0;bottom:0;z-index:470;
+      display:flex;flex-direction:column;max-height:82vh;
+      background:var(--panel);border-radius:16px 16px 0 0;
+      box-shadow:0 -6px 24px rgba(0,0,0,.22);
+      transform:translateY(100%);transition:transform .25s ease-out;
+      padding:0 16px calc(12px + env(safe-area-inset-bottom,0px));
+    }
+    body.mob-sheet-open .mob-sheet-backdrop{opacity:1;pointer-events:auto;}
+    body.mob-sheet-open .mob-sheet{transform:none;}
+    body.mob-sheet-open .mob-bar{visibility:hidden;}
+    body.mob-sheet-open .info-toggle-btn{display:none;}
+    .mob-sheet-handle{padding:10px 0 6px;display:flex;justify-content:center;cursor:grab;touch-action:none;}
+    .mob-sheet-handle span{width:40px;height:4px;border-radius:2px;background:var(--line);}
+    .mob-sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px;}
+    .mob-sheet-head h3{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.1rem;margin:0;color:var(--accent-dark);}
+    .mob-sheet-close{
+      flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;
+      color:var(--muted);font-size:1.3rem;line-height:1;cursor:pointer;
+    }
+    .mob-sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;min-height:0;}
+    .mob-sheet-body h4{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:.98rem;margin:16px 0 6px;color:var(--accent-dark);}
+    .mob-sheet-body .sheet-line{font-size:.85rem;color:var(--muted);margin:0 0 10px;}
+    .mob-sheet-body .sheet-line strong{color:var(--accent-dark);font-family:'IBM Plex Mono',monospace;}
+    .mob-sheet-body .ref-grid{grid-template-columns:1fr 1fr;}
+    .mob-sheet-more{margin-top:10px;}
+
     /* Einzelphasen-Ansicht der Tabelle: nur eine Phase, kein horizontales Scrollen */
     body.is-mobile .phase-chip-all{display:inline-block;}
     body.is-mobile #calcTable .mob-hide{display:none;}
@@ -807,9 +846,9 @@
   @media (max-width:760px){
 
     /* Ergebnis-Tabellen (Koppelplanung, Szenario-Vergleich) ohne horizontales Scrollen */
-    body.is-mobile .koppel-table, body.is-mobile #szenarioComparePanel table{min-width:0;table-layout:fixed;font-size:.8rem;}
-    body.is-mobile .koppel-table th, body.is-mobile #szenarioComparePanel th{padding:6px 4px;font-size:.68rem;line-height:1.25;hyphens:manual;}
-    body.is-mobile .koppel-table td, body.is-mobile #szenarioComparePanel td{padding:7px 4px;}
+    body.is-mobile .koppel-table, body.is-mobile #szenarioComparePanel table, body.is-mobile .mob-sheet table{min-width:0;table-layout:fixed;font-size:.8rem;}
+    body.is-mobile .koppel-table th, body.is-mobile #szenarioComparePanel th, body.is-mobile .mob-sheet th{padding:6px 4px;font-size:.68rem;line-height:1.25;hyphens:manual;}
+    body.is-mobile .koppel-table td, body.is-mobile #szenarioComparePanel td, body.is-mobile .mob-sheet td{padding:7px 4px;}
     body.is-mobile .koppel-table th:first-child, body.is-mobile .koppel-table td.besatz{width:26%;font-size:.76rem;padding-left:6px;}
     body.is-mobile .koppel-table .formula-th{display:none;}
   }
@@ -828,7 +867,15 @@
       <h1><img src="favicon.svg" alt="" style="height:1.15em;width:1.15em;vertical-align:-0.2em;margin-right:0.15em;">Interaktiver Weideplaner</h1>
       <p class="sub">Standort und Tierkategorie wählen, System bestimmen, Betriebsdaten anpassen — alle Ergebnisse berechnen sich automatisch, wie im Excel-Original.</p>
     </div>
+    <div class="header-actions">
+      <button type="button" class="locate-btn" onclick="generateShareLink()" title="Erzeugt einen Link mit Standort, Tierkategorie, Tierzahl, System und Szenario als URL-Parameter — zum Weiterleiten oder als Lesezeichen.">🔗 Konfiguration als Link teilen</button>
+    </div>
   </header>
+  <div class="share-row hidden" id="shareRow">
+    <input type="text" class="share-input" id="shareInput" readonly onclick="this.select()">
+    <button type="button" class="locate-btn" id="shareCopyBtn" onclick="copyShareLink()">Kopieren</button>
+    <span class="share-note">Wer den Link öffnet, sieht dieselbe Ausgangskonfiguration vorausgewählt.</span>
+  </div>
   <div class="season-strip" id="seasonStrip"></div>
   <br>
 
@@ -1317,24 +1364,23 @@
     </div>
   </div>
 
-  <!-- Konfiguration als Link teilen -->
-  <div class="panel" id="panelShare" data-mob="closed">
-    <p class="step-label">Link</p>
-    <h2>Konfiguration als Link teilen</h2>
-    <p class="sub">Erzeugt einen Link mit Standort, Tierkategorie, Tierzahl, System und Szenario als URL-Parameter. Wer den Link öffnet, sieht dieselbe Ausgangskonfiguration schon vorausgewählt — praktisch zum Weiterleiten oder als Lesezeichen.</p>
-    <button type="button" class="locate-btn" onclick="generateShareLink()">🔗 Link erzeugen</button>
-    <div class="share-row hidden" id="shareRow">
-      <input type="text" class="share-input" id="shareInput" readonly onclick="this.select()">
-      <button type="button" class="locate-btn" id="shareCopyBtn" onclick="copyShareLink()">Kopieren</button>
-    </div>
-  </div>
-
   <footer>Nachbau des AGFF Weideplaners · info@agff.ch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
 </div>
 <!-- Mobile Ergebnis-Leiste: Kernzahlen immer im Blick, Tipp springt zum Ergebnis-Panel -->
-<div class="mob-bar" id="mobBar" role="button" tabindex="0" aria-label="Zum Ergebnis springen" onclick="mobGotoResult()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();mobGotoResult();}">
+<div class="mob-bar" id="mobBar" role="button" tabindex="0" aria-label="Ergebnis-Details anzeigen" aria-expanded="false" onclick="mobOpenSheet()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();mobOpenSheet();}">
   <div class="mob-bar-tiles" id="mobBarTiles"></div>
-  <div class="mob-bar-hint">Ergebnis ▴</div>
+  <div class="mob-bar-hint">Details ▴</div>
+</div>
+<!-- Bottom-Sheet: aufgezogene Ergebnis-Leiste mit Koppelplanung, Futterkosten und (bei Dürre) Vergleich -->
+<div class="mob-sheet-backdrop" id="mobSheetBackdrop" onclick="mobCloseSheet()"></div>
+<div class="mob-sheet" id="mobSheet" role="dialog" aria-modal="true" aria-labelledby="mobSheetTitle" aria-hidden="true">
+  <div class="mob-sheet-handle" id="mobSheetHandle"><span></span></div>
+  <div class="mob-sheet-head">
+    <div><p class="step-label">Ergebnis</p><h3 id="mobSheetTitle">Koppelplanung</h3></div>
+    <button type="button" class="mob-sheet-close" onclick="mobCloseSheet()" aria-label="Schliessen">×</button>
+  </div>
+  <div class="mob-sheet-body" id="mobSheetBody"></div>
+  <button type="button" class="assist-toggle mob-sheet-more" onclick="mobSheetToPanel()">Diagramm, Details und Eingaben anzeigen ↓</button>
 </div>
 <div id="ttPortal"></div>
 
@@ -2941,6 +2987,65 @@ function mobSetPanelOpen(panel, open){
   try{ localStorage.setItem(MOB_PANEL_KEY, JSON.stringify(state)); }catch(e){}
 }
 
+let mobSheetOpen = false;
+function mobOpenSheet(){
+  if(!isMobile()) return;
+  mobSheetOpen = true;
+  renderMobSheet();
+  document.body.classList.add("mob-sheet-open");
+  document.getElementById("mobSheet").setAttribute("aria-hidden", "false");
+  document.getElementById("mobBar").setAttribute("aria-expanded", "true");
+}
+function mobCloseSheet(){
+  mobSheetOpen = false;
+  document.body.classList.remove("mob-sheet-open");
+  document.getElementById("mobSheet").setAttribute("aria-hidden", "true");
+  document.getElementById("mobBar").setAttribute("aria-expanded", "false");
+}
+function mobSheetToPanel(){ mobCloseSheet(); mobGotoResult(); }
+
+// Inhalte der Ergebnis-Panels ins Sheet spiegeln (IDs entfernen, damit sie eindeutig bleiben).
+function renderMobSheet(){
+  if(!mobSheetOpen) return;
+  const stripIds = html => html.replace(/\s+id="[^"]*"/g, "");
+  const isUmtrieb = currentSystem === "umtrieb";
+  document.getElementById("mobSheetTitle").textContent = isUmtrieb ? "Koppelplanung" : "Zusammenfassung";
+  let html = "";
+  if(isUmtrieb){
+    html += `<p class="sheet-line">Ø Flächenbedarf Herde/Tag über alle ${PHASE_COUNT === 5 ? "fünf" : "vier"} Phasen: <strong>${document.getElementById("avgM").innerText}</strong> ha · ${document.getElementById("tier").value}</p>`;
+    html += `<table class="koppel-table">${stripIds(document.querySelector("#koppelplanungPanel .koppel-table").innerHTML)}</table>`;
+  } else {
+    html += `<div class="ref-grid">${stripIds(document.querySelector("#zusammenfassungPanel .ref-grid").innerHTML)}</div>`;
+  }
+  html += `<h4>Eingesparte Futterkosten</h4><div class="ref-grid">${stripIds(document.getElementById("costSummaryGrid").innerHTML)}</div>`;
+  if(szenario === "duerre"){
+    html += `<h4>Normaljahr vs. Dürre-Szenario</h4><table>${stripIds(document.querySelector("#szenarioComparePanel table").innerHTML)}</table>`;
+  }
+  document.getElementById("mobSheetBody").innerHTML = html;
+}
+
+function setupMobSheet(){
+  const handle = document.getElementById("mobSheetHandle");
+  const sheet = document.getElementById("mobSheet");
+  let startY = null;
+  const onStart = e => { startY = (e.touches ? e.touches[0] : e).clientY; };
+  const onEnd = e => {
+    if(startY === null) return;
+    const y = (e.changedTouches ? e.changedTouches[0] : e).clientY;
+    if(y - startY > 50) mobCloseSheet();
+    startY = null;
+  };
+  handle.addEventListener("touchstart", onStart, {passive:true});
+  handle.addEventListener("touchend", onEnd, {passive:true});
+  handle.addEventListener("click", mobCloseSheet);
+  // Nach unten wischen auf dem Kopfbereich schliesst ebenfalls
+  const head = sheet.querySelector(".mob-sheet-head");
+  head.addEventListener("touchstart", onStart, {passive:true});
+  head.addEventListener("touchend", onEnd, {passive:true});
+  document.addEventListener("keydown", e => { if(e.key === "Escape" && mobSheetOpen) mobCloseSheet(); });
+  mobMedia.addEventListener("change", ()=>{ if(!isMobile()) mobCloseSheet(); });
+}
+
 function mobGotoResult(){
   const id = currentSystem === "umtrieb" ? "koppelplanungPanel" : "zusammenfassungPanel";
   const panel = document.getElementById(id);
@@ -2968,7 +3073,6 @@ function updateMobSummaries(){
   set("panelFutter", lastFeedResult ? `Einsparung <strong>${fmtChf0(lastFeedResult.savings)} CHF/Jahr</strong> · Weide ${lastFeedResult.pctWeide.toFixed(0)}%` : "–");
   set("szenarioComparePanel", "Flächenbedarf und Kosten beider Szenarien nebeneinander");
   set("panelRpm", `${document.getElementById("rpmVal").value} ${selText("rpmFrom")} = <strong>${document.getElementById("rpmResult").innerText}</strong> ${selText("rpmTo")}`);
-  set("panelShare", "Aktuelle Einstellungen als Link weitergeben");
 }
 
 function updateMobBar(){
@@ -2994,6 +3098,7 @@ function updateMobileUi(){
   if(!isMobile()) return;
   updateMobSummaries();
   updateMobBar();
+  renderMobSheet();
 }
 
 // Welche Phase läuft gerade? Startdaten (Zeile A) im Jahr der Planung mit dem heutigen Datum vergleichen.
@@ -3068,6 +3173,7 @@ function mobStepPhase(dir){
 
 function initMobileUi(){
   setupPhaseSwipe();
+  setupMobSheet();
   document.body.classList.toggle("is-mobile", isMobile());
   initMobilePanels();
   if(isMobile()){ mobPhaseIdx = currentPhaseIndex(); applyMobPhaseView(); }
