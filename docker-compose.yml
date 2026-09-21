@@ -4,11 +4,17 @@
 # Dateien sind ohne Neustart sofort sichtbar (F5 reicht).
 #
 #   docker compose up -d
+#
+# Zusätzlich http://localhost:8791 (nur von diesem Rechner): der In-App-Browser
+# von Claude Code lässt ohne Freigabe nur den Host «localhost» zu, keine
+# *.localhost-Subdomains — darüber laufen die automatisierten Screenshot-Tests.
 services:
   web:
     image: nginx:alpine
     container_name: agff-weideplaner
     restart: unless-stopped
+    ports:
+      - "127.0.0.1:8791:80"
     volumes:
       - ./:/usr/share/nginx/html:ro
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
