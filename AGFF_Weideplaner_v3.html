@@ -204,16 +204,6 @@
     color:var(--ink);
     min-width:230px;
   }
-  .rpm-formula{
-    font-family:'IBM Plex Mono',monospace;
-    font-size:.82rem;
-    color:var(--ink);
-    background:#fafbf7;
-    border:1px solid var(--line);
-    border-radius:6px;
-    padding:6px 10px;
-    margin:6px 0;
-  }
   td.label .formula{
     display:block;
     font-family:'IBM Plex Mono',monospace;
@@ -304,8 +294,48 @@
   .tool-dialog-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px;}
   .tool-dialog-head h3{font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:1.1rem;margin:0;color:var(--accent-dark);}
   .tool-dialog .sub.keep{display:block;}
-  .tool-dialog .rpm-tool .field{min-width:0;flex:1 1 130px;}
-  .tool-dialog .rpm-result{flex:1 1 100%;text-align:center;font-size:1.15rem;}
+  /* Umrechner im Übersetzer-Layout: Quelle | ⇄ | Ziel */
+  .rpm-dialog{width:min(720px, calc(100vw - 32px));}
+  .rpm-translate{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:stretch;}
+  .rpm-pane{
+    border:1px solid var(--line);border-radius:10px;padding:10px 12px 12px;background:#fff;
+    display:flex;flex-direction:column;gap:8px;min-width:0;
+  }
+  .rpm-pane-out{background:var(--accent-soft);border-color:transparent;}
+  .rpm-units{display:flex;flex-wrap:wrap;gap:5px;}
+  .rpm-unit{
+    padding:4px 9px;border-radius:14px;border:1px solid var(--line);background:#fff;
+    font-family:'Inter',sans-serif;font-size:.74rem;font-weight:600;color:var(--muted);cursor:pointer;white-space:nowrap;
+  }
+  .rpm-unit:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .rpm-unit.active{background:var(--accent);border-color:var(--accent);color:#fff;}
+  .rpm-big-input, .rpm-big-out{
+    display:block;width:100%;border:none;background:transparent;padding:6px 0 0;margin:0;
+    font-family:'IBM Plex Mono',monospace;font-size:2rem;font-weight:600;line-height:1.15;color:var(--ink);
+    text-align:left;min-width:0;
+  }
+  .rpm-big-input:focus{outline:none;}
+  .rpm-big-input::-webkit-outer-spin-button, .rpm-big-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .rpm-big-input{-moz-appearance:textfield;appearance:textfield;}
+  .rpm-big-out{color:var(--accent-dark);overflow-wrap:anywhere;}
+  .rpm-unit-name{font-size:.78rem;color:var(--muted);font-weight:600;}
+  .rpm-swap{
+    align-self:center;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;
+    color:var(--accent-dark);font-size:1.15rem;line-height:1;cursor:pointer;
+  }
+  .rpm-swap:hover{background:var(--accent-soft);border-color:var(--accent);}
+  .rpm-explain{
+    display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:14px 0 0;
+    font-size:.82rem;
+  }
+  .rpm-explain dt{color:var(--muted);font-weight:600;font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;align-self:center;}
+  .rpm-explain dd{margin:0;font-family:'IBM Plex Mono',monospace;color:var(--ink);overflow-wrap:anywhere;}
+  .rpm-note{margin:14px 0 0;font-size:.76rem;}
+  @media (max-width:560px){
+    .rpm-translate{grid-template-columns:1fr;}
+    .rpm-swap{transform:rotate(90deg);justify-self:center;}
+    .rpm-big-input, .rpm-big-out{font-size:1.7rem;}
+  }
   .info-toggle-btn.no-pulse{animation:none;}
   .info-toggle-btn[aria-pressed="false"]{background:var(--muted);}
   @keyframes infoPulse{
@@ -409,25 +439,6 @@
   }
   .ref-grid div span{display:block;color:#8a6314;font-family:'Inter',sans-serif;font-size:.72rem;}
 
-  /* RPM converter */
-  .rpm-tool{
-    display:flex;
-    gap:14px;
-    align-items:flex-end;
-    flex-wrap:wrap;
-  }
-  .rpm-tool .field{min-width:150px;}
-  .rpm-result{
-    background:var(--accent-soft);
-    border-radius:8px;
-    padding:10px 16px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:1rem;
-    font-weight:600;
-    color:var(--accent-dark);
-    min-width:160px;
-    text-align:center;
-  }
 
   footer{
     text-align:center;
@@ -1365,47 +1376,30 @@
   <footer>Nachbau des AGFF Weideplaners · info@agff.ch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
 </div>
 <!-- Futterdichten-Umrechner als Modal (Rechner-Knopf unten links) -->
-<dialog id="rpmDialog" class="tool-dialog" aria-labelledby="rpmDialogTitle" onclick="if(event.target===this) this.close()">
+<dialog id="rpmDialog" class="tool-dialog rpm-dialog" aria-labelledby="rpmDialogTitle" onclick="if(event.target===this) this.close()">
   <div class="tool-dialog-head">
-    <div><p class="step-label">Hilfsmittel</p><h3 id="rpmDialogTitle">Futterdichten-Umrechner (Rising-Plate-Meter)</h3></div>
+    <div><p class="step-label">Hilfsmittel</p><h3 id="rpmDialogTitle">Futterdichten-Umrechner</h3></div>
     <button type="button" class="mob-sheet-close" onclick="document.getElementById('rpmDialog').close()" aria-label="Schliessen">×</button>
   </div>
-  <p class="sub keep" style="margin:0 0 14px;">Rechnet zwischen Bestandeshöhe (cm RPM, Klicks, cm Doppelmeter) und Futterdichte (kg TS/ha) um.</p>
-    <div class="rpm-tool">
-      <div class="field">
-        <label for="rpmVal">Wert</label>
-        <input type="number" id="rpmVal" value="3.5" step="0.01" oninput="calcRpm()">
-      </div>
-      <div class="field">
-        <label for="rpmFrom">Von</label>
-        <select id="rpmFrom" onchange="calcRpm()">
-          <option value="cm">cm RPM</option>
-          <option value="clicks">Klicks RPM</option>
-          <option value="doppelmeter">cm Doppelmeter</option>
-          <option value="kg">kg TS/ha</option>
-        </select>
-      </div>
-      <div class="field">
-        <label for="rpmTo">In</label>
-        <select id="rpmTo" onchange="calcRpm()">
-          <option value="kg">kg TS/ha</option>
-          <option value="cm">cm RPM</option>
-          <option value="clicks">Klicks RPM</option>
-          <option value="doppelmeter">cm Doppelmeter</option>
-        </select>
-      </div>
-      <div class="rpm-result" id="rpmResult">73.00</div>
+  <div class="rpm-translate">
+    <div class="rpm-pane">
+      <div class="rpm-units" id="rpmFromUnits" role="tablist" aria-label="Ausgangseinheit"></div>
+      <input type="number" id="rpmVal" class="rpm-big-input" value="3.5" step="0.01" inputmode="decimal" oninput="calcRpm()" aria-label="Wert">
+      <div class="rpm-unit-name" id="rpmFromName"></div>
     </div>
-
-    <button type="button" class="assist-toggle" id="rpmFormulaToggleBtn" onclick="toggleRpmFormulas()">Umrechnungsformeln anzeigen</button>
-    <div class="assist-panel hidden" id="rpmFormulaPanel">
-      <p class="sub" style="margin-top:0;">Basis ist stets kg TS/ha; alle anderen Einheiten werden darüber ineinander umgerechnet.</p>
-      <div class="rpm-formula">kg TS/ha = cm RPM × 240 − 767</div>
-      <div class="rpm-formula">kg TS/ha = Klicks RPM × 120 − 767</div>
-      <div class="rpm-formula">kg TS/ha = (cm Doppelmeter × 1.21) × 120 − 767</div>
-      <p class="sub" style="margin-top:8px;margin-bottom:0;">Doppelmeter-Faktor 1.21 gemäss AGFF-Merkblatt W11 (Plate Pasture Meter Höhe : 1.21 = Doppelmeterhöhe).</p>
+    <button type="button" class="rpm-swap" onclick="swapRpmUnits()" title="Einheiten tauschen" aria-label="Einheiten tauschen">⇄</button>
+    <div class="rpm-pane rpm-pane-out">
+      <div class="rpm-units" id="rpmToUnits" role="tablist" aria-label="Zieleinheit"></div>
+      <output class="rpm-big-out" id="rpmResult" for="rpmVal" aria-live="polite">73.00</output>
+      <div class="rpm-unit-name" id="rpmToName"></div>
     </div>
-
+  </div>
+  <dl class="rpm-explain">
+    <dt>Faktor</dt><dd id="rpmFactor"></dd>
+    <dt>Formel</dt><dd id="rpmFormulaSym"></dd>
+    <dt>Rechnung</dt><dd id="rpmFormulaNum"></dd>
+  </dl>
+  <p class="sub keep rpm-note">Rising-Plate-Meter (RPM): Bestandeshöhe → Futterdichte. Basis ist stets kg TS/ha, alle Einheiten werden darüber ineinander umgerechnet. Doppelmeter-Faktor 1.21 gemäss AGFF-Merkblatt W11 (RPM-Höhe : 1.21 = Doppelmeterhöhe).</p>
 </dialog>
 
 <!-- Mobile Ergebnis-Leiste: Kernzahlen immer im Blick, Tipp springt zum Ergebnis-Panel -->
@@ -1608,6 +1602,7 @@ function saveInputState(){
   data._system = currentSystem;
   data._szenario = szenario;
   data._phaseCount = PHASE_COUNT;
+  data._rpm = {v: document.getElementById("rpmVal").value, from: rpmFrom, to: rpmTo};
   try{ localStorage.setItem(INPUT_STORAGE_KEY, JSON.stringify(data)); }catch(e){}
 }
 
@@ -1626,6 +1621,10 @@ function restoreInputState(){
   });
   syncBaselineFromStandort();
   onTierChange();
+  if(data._rpm && RPM_UNITS[data._rpm.from] && RPM_UNITS[data._rpm.to]){
+    rpmFrom = data._rpm.from; rpmTo = data._rpm.to;
+    document.getElementById("rpmVal").value = data._rpm.v;
+  }
   calcRpm();
   calculate();
 }
@@ -2685,26 +2684,75 @@ function renderFeedChart(stallDt, weideDt){
 /* ---------- RPM-Umrechner ---------- */
 // Doppelmeter -> Klicks RPM: Faktor 1.21 gemäss AGFF-Merkblatt W11
 // (Plate Pasture Meter Höhe : 1.21 = Doppelmeterhöhe).
-function toKg(unit, v){
-  if(unit === "kg") return v;
-  if(unit === "cm") return v*240 - 767;
-  if(unit === "clicks") return v*120 - 767;
-  if(unit === "doppelmeter") return (v*1.21)*120 - 767;
+// Alle Einheiten linear zu kg TS/ha: kg = a·x + b (AGFF-Merkblatt W11).
+const RPM_UNITS = {
+  cm:          {label:"cm RPM",         a:240,      b:-767},
+  clicks:      {label:"Klicks RPM",     a:120,      b:-767},
+  doppelmeter: {label:"cm Doppelmeter", a:1.21*120, b:-767},
+  kg:          {label:"kg TS/ha",       a:1,        b:0}
+};
+let rpmFrom = "cm", rpmTo = "kg";
+function toKg(unit, v){ const u = RPM_UNITS[unit]; return u.a*v + u.b; }
+function fromKg(unit, kg){ const u = RPM_UNITS[unit]; return (kg - u.b)/u.a; }
+
+const fmtNum = (n, d=2) => n.toLocaleString("de-CH", {minimumFractionDigits:d, maximumFractionDigits:d});
+// Zahl möglichst kurz: 240 statt 240.00, 145.2 statt 145.20
+const fmtShort = n => n.toLocaleString("de-CH", {maximumFractionDigits:4});
+
+function renderRpmUnits(){
+  const chips = (group, active, side) => Object.entries(RPM_UNITS).map(([key,u]) =>
+    `<button type="button" role="tab" class="rpm-unit${key===active?" active":""}" aria-selected="${key===active}" onclick="setRpmUnit('${side}','${key}')">${u.label}</button>`).join("");
+  document.getElementById("rpmFromUnits").innerHTML = chips(RPM_UNITS, rpmFrom, "from");
+  document.getElementById("rpmToUnits").innerHTML = chips(RPM_UNITS, rpmTo, "to");
+  document.getElementById("rpmFromName").textContent = RPM_UNITS[rpmFrom].label;
+  document.getElementById("rpmToName").textContent = RPM_UNITS[rpmTo].label;
 }
-function fromKg(unit, kg){
-  if(unit === "kg") return kg;
-  if(unit === "cm") return (kg+767)/240;
-  if(unit === "clicks") return (kg+767)/120;
-  if(unit === "doppelmeter") return ((kg+767)/120)/1.21;
+function setRpmUnit(side, key){
+  if(side === "from"){ if(key === rpmTo) rpmTo = rpmFrom; rpmFrom = key; }
+  else { if(key === rpmFrom) rpmFrom = rpmTo; rpmTo = key; }
+  calcRpm();
 }
-function calcRpm(){
+function swapRpmUnits(){
+  // Ergebnis wird zum neuen Eingabewert, damit die Umrechnung «zurück» stimmt.
   const v = parseFloat(document.getElementById("rpmVal").value) || 0;
-  const from = document.getElementById("rpmFrom").value;
-  const to = document.getElementById("rpmTo").value;
-  const kg = toKg(from, v);
-  const result = fromKg(to, kg);
-  const unitLabel = to==="kg" ? " kg TS/ha" : to==="cm" ? " cm" : to==="doppelmeter" ? " cm Doppelmeter" : " Klicks";
-  document.getElementById("rpmResult").innerText = result.toFixed(2) + unitLabel;
+  const result = fromKg(rpmTo, toKg(rpmFrom, v));
+  [rpmFrom, rpmTo] = [rpmTo, rpmFrom];
+  document.getElementById("rpmVal").value = Math.round(result*100)/100;
+  calcRpm();
+}
+
+function calcRpm(){
+  renderRpmUnits();
+  const v = parseFloat(document.getElementById("rpmVal").value) || 0;
+  const F = RPM_UNITS[rpmFrom], T = RPM_UNITS[rpmTo];
+  const result = fromKg(rpmTo, toKg(rpmFrom, v));
+  document.getElementById("rpmResult").textContent = fmtNum(result);
+
+  // Faktor, symbolische Formel und konkrete Rechnung für das gewählte Paar
+  const slope = F.a / T.a;                 // y = slope·x + offset
+  const offset = (F.b - T.b) / T.a;
+  const sgn = x => (x < 0 ? " − " : " + ") + fmtShort(Math.abs(x));
+  let sym, num;
+  if(rpmFrom === rpmTo){
+    sym = `${T.label} = ${F.label}`; num = `${fmtShort(v)} = ${fmtNum(result)}`;
+  } else if(rpmTo === "kg"){
+    sym = `${T.label} = ${F.label} × ${fmtShort(slope)}${sgn(offset)}`;
+    num = `${fmtShort(v)} × ${fmtShort(slope)}${sgn(offset)} = ${fmtNum(result)}`;
+  } else if(rpmFrom === "kg"){
+    sym = `${T.label} = (${F.label}${sgn(-T.b)}) / ${fmtShort(T.a)}`;
+    num = `(${fmtShort(v)}${sgn(-T.b)}) / ${fmtShort(T.a)} = ${fmtNum(result)}`;
+  } else {
+    sym = `${T.label} = ${F.label} × ${fmtShort(slope)}`;
+    num = `${fmtShort(v)} × ${fmtShort(slope)} = ${fmtNum(result)}`;
+  }
+  document.getElementById("rpmFormulaSym").textContent = sym;
+  document.getElementById("rpmFormulaNum").textContent = num;
+  // Bei kleinen Steigungen (kg → Höhe) pro 100 Einheiten angeben, damit die Zahl greifbar bleibt.
+  const base = slope < 0.05 ? 100 : 1;
+  const factor = rpmFrom === rpmTo ? "—"
+    : `${base} ${F.label} ≙ ${fmtShort(slope*base)} ${T.label}` +
+      (Math.abs(offset) > 1e-9 ? ` (Nullpunkt bei ${fmtShort(offset).replace("-", "−")} ${T.label})` : "");
+  document.getElementById("rpmFactor").textContent = factor;
   saveInputState();
 }
 
@@ -2725,13 +2773,6 @@ function openRpmDialog(){
   if(input && !isMobile()){ input.focus(); input.select(); }
 }
 
-function toggleRpmFormulas(){
-  const panel = document.getElementById("rpmFormulaPanel");
-  const btn = document.getElementById("rpmFormulaToggleBtn");
-  const isHidden = panel.classList.contains("hidden");
-  panel.classList.toggle("hidden");
-  btn.innerText = isHidden ? "Umrechnungsformeln ausblenden" : "Umrechnungsformeln anzeigen";
-}
 
 /* ---------- Standorterkennung (GPS) ---------- */
 function mapElevationToHoehe(elevationM){
