@@ -796,6 +796,15 @@
     body.is-mobile #calcTable.mob-single td.code, body.is-mobile #calcTable.mob-single th.th-code{position:static;}
     body.is-mobile #calcTable.mob-single input.cell{font-size:.9rem;padding:8px 6px;}
     body.is-mobile .phase-jump{position:sticky;top:0;z-index:5;background:var(--panel);padding:6px 0;margin:0 0 6px;}
+    body.is-mobile .swipe-hint{display:block;width:100%;font-size:.68rem;color:var(--muted);margin-top:2px;}
+    body.is-mobile #calcTable.mob-single{touch-action:pan-y;}
+    body.is-mobile #calcTable.mob-slide-left{animation:mobSlideLeft .22s ease-out;}
+    body.is-mobile #calcTable.mob-slide-right{animation:mobSlideRight .22s ease-out;}
+  }
+  .swipe-hint{display:none;}
+  @keyframes mobSlideLeft{from{transform:translateX(28px);opacity:.35;}to{transform:none;opacity:1;}}
+  @keyframes mobSlideRight{from{transform:translateX(-28px);opacity:.35;}to{transform:none;opacity:1;}}
+  @media (max-width:760px){
 
     /* Ergebnis-Tabellen (Koppelplanung, Szenario-Vergleich) ohne horizontales Scrollen */
     body.is-mobile .koppel-table, body.is-mobile #szenarioComparePanel table{min-width:0;table-layout:fixed;font-size:.8rem;}
@@ -1763,7 +1772,8 @@ function renderPhaseColumns(){
   const phaseJump = document.getElementById("phaseJump");
   phaseJump.innerHTML = '<span class="phase-jump-label">Phase:</span>' +
     ps.labels.map((label,i)=>`<button type="button" class="phase-chip${i===0?" active":""}" onclick="scrollToPhase(${i},this)">${label}</button>`).join("") +
-    '<button type="button" class="phase-chip phase-chip-all" onclick="mobSetPhaseView(null,this)">Alle</button>';
+    '<button type="button" class="phase-chip phase-chip-all" onclick="mobSetPhaseView(null,this)">Alle</button>' +
+    '<span class="swipe-hint" id="swipeHint">‹ Tabelle wischen für vorherige/nächste Phase ›</span>';
   applyMobPhaseView();
 
   const note = document.getElementById("phaseModelNote");
@@ -3015,13 +3025,49 @@ function applyMobPhaseView(){
     const i = cell.cellIndex - 2;
     cell.classList.toggle("mob-hide", single && i >= 0 && i !== mobPhaseIdx);
   });
+  const hint = document.getElementById("swipeHint");
+  if(hint) hint.style.display = single ? "" : "none";
   document.querySelectorAll("#phaseJump .phase-chip").forEach((c,i)=>{
     const isAll = c.classList.contains("phase-chip-all");
     c.classList.toggle("active", isAll ? mobPhaseIdx === null : (mobPhaseIdx !== null && i === mobPhaseIdx));
   });
 }
 
+// Wischen nach links/rechts über die Tabelle blättert in der Einzelphasen-Ansicht zur
+// nächsten/vorherigen Phase. Vertikales Scrollen bleibt unberührt (touch-action:pan-y,
+// Richtungstest); in der «Alle»-Ansicht scrollt die Tabelle weiterhin nativ horizontal.
+function setupPhaseSwipe(){
+  const table = document.getElementById("calcTable");
+  let start = null;
+  table.addEventListener("touchstart", (e)=>{
+    if(!table.classList.contains("mob-single") || e.touches.length !== 1){ start = null; return; }
+    start = {x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now()};
+  }, {passive:true});
+  table.addEventListener("touchend", (e)=>{
+    if(!start || !table.classList.contains("mob-single")) return;
+    const dx = e.changedTouches[0].clientX - start.x;
+    const dy = e.changedTouches[0].clientY - start.y;
+    const quick = Date.now() - start.t < 800;
+    start = null;
+    if(!quick || Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    mobStepPhase(dx < 0 ? 1 : -1);
+  }, {passive:true});
+}
+
+function mobStepPhase(dir){
+  if(mobPhaseIdx === null) return;
+  const next = mobPhaseIdx + dir;
+  if(next < 0 || next >= PHASE_COUNT) return;
+  const table = document.getElementById("calcTable");
+  if(document.activeElement && table.contains(document.activeElement)) document.activeElement.blur();
+  mobSetPhaseView(next, null);
+  table.classList.remove("mob-slide-left", "mob-slide-right");
+  void table.offsetWidth; // Animation neu starten
+  table.classList.add(dir > 0 ? "mob-slide-left" : "mob-slide-right");
+}
+
 function initMobileUi(){
+  setupPhaseSwipe();
   document.body.classList.toggle("is-mobile", isMobile());
   initMobilePanels();
   if(isMobile()){ mobPhaseIdx = currentPhaseIndex(); applyMobPhaseView(); }
