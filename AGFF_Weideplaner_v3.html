@@ -737,6 +737,73 @@
     #calcTable input[type="date"].cell{width:100%;}
     #calcTable .info-tip-wrap{margin-left:3px;}
   }
+
+  /* ---------- Mobil-Modus (≤760px): Akkordeon, Ergebnis-Leiste, Einzelphasen-Tabelle ---------- */
+  .mob-summary{display:none;}
+  .mob-bar{display:none;}
+  .phase-chip-all{display:none;}
+  body.is-mobile .sub.keep{display:block;}
+  @media (max-width:760px){
+    body.is-mobile{padding-bottom:96px;}
+    body.is-mobile .info-toggle-btn{bottom:84px;width:38px;height:38px;font-size:1rem;}
+    body.is-mobile .panel{padding:14px 16px;margin-bottom:12px;}
+    body.is-mobile .panel h2{
+      display:flex;align-items:center;justify-content:space-between;gap:10px;
+      cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+      margin:0;
+    }
+    body.is-mobile .panel h2::after{
+      content:"";flex:none;width:9px;height:9px;
+      border-right:2px solid var(--accent);border-bottom:2px solid var(--accent);
+      transform:rotate(45deg);margin:-4px 6px 0 0;transition:transform .15s;
+    }
+    body.is-mobile .panel.mob-closed h2::after{transform:rotate(-45deg);margin-top:2px;}
+    body.is-mobile .panel h2 + *{margin-top:10px;}
+    body.is-mobile .panel .step-label{margin-bottom:2px;}
+    body.is-mobile .panel.mob-closed > *:not(.step-label):not(h2):not(.mob-summary){display:none !important;}
+    body.is-mobile .panel.mob-closed .mob-summary{
+      display:block;margin:4px 0 0;font-size:.8rem;color:var(--muted);line-height:1.35;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+    }
+    body.is-mobile .panel.mob-closed .mob-summary strong{color:var(--accent-dark);font-weight:600;}
+
+    /* Ergebnis-Leiste */
+    body.is-mobile .mob-bar{
+      position:fixed;left:0;right:0;bottom:0;z-index:450;
+      display:flex;flex-direction:column;
+      background:var(--accent-dark);color:#fff;
+      padding:8px 14px calc(6px + env(safe-area-inset-bottom,0px));
+      box-shadow:0 -2px 12px rgba(0,0,0,.18);
+      cursor:pointer;
+    }
+    .mob-bar-tiles{display:flex;gap:8px;}
+    .mob-bar-tile{flex:1;min-width:0;}
+    .mob-bar-tile span{display:block;font-size:.62rem;letter-spacing:.02em;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .mob-bar-tile strong{display:block;font-family:'IBM Plex Mono',monospace;font-size:.92rem;font-weight:600;line-height:1.25;white-space:nowrap;}
+    .mob-bar-tile strong small{font-family:'Inter',sans-serif;font-weight:500;font-size:.68rem;opacity:.85;}
+    .mob-bar-tile.hl strong{color:#ffe9a8;}
+    .mob-bar-hint{font-size:.62rem;text-align:center;opacity:.7;margin-top:3px;letter-spacing:.06em;text-transform:uppercase;font-family:'IBM Plex Mono',monospace;}
+
+    /* Einzelphasen-Ansicht der Tabelle: nur eine Phase, kein horizontales Scrollen */
+    body.is-mobile .phase-chip-all{display:inline-block;}
+    body.is-mobile #calcTable .mob-hide{display:none;}
+    body.is-mobile #calcTable.mob-single{table-layout:auto;min-width:0;}
+    body.is-mobile #calcTable.mob-single .col-label{width:auto;}
+    body.is-mobile #calcTable.mob-single .col-phase{width:118px;}
+    body.is-mobile #calcTable.mob-single td.label, body.is-mobile #calcTable.mob-single th.th-label{
+      position:static;box-shadow:none;font-size:.8rem;white-space:normal;
+    }
+    body.is-mobile #calcTable.mob-single td.code, body.is-mobile #calcTable.mob-single th.th-code{position:static;}
+    body.is-mobile #calcTable.mob-single input.cell{font-size:.9rem;padding:8px 6px;}
+    body.is-mobile .phase-jump{position:sticky;top:0;z-index:5;background:var(--panel);padding:6px 0;margin:0 0 6px;}
+
+    /* Ergebnis-Tabellen (Koppelplanung, Szenario-Vergleich) ohne horizontales Scrollen */
+    body.is-mobile .koppel-table, body.is-mobile #szenarioComparePanel table{min-width:0;table-layout:fixed;font-size:.8rem;}
+    body.is-mobile .koppel-table th, body.is-mobile #szenarioComparePanel th{padding:6px 4px;font-size:.68rem;line-height:1.25;hyphens:manual;}
+    body.is-mobile .koppel-table td, body.is-mobile #szenarioComparePanel td{padding:7px 4px;}
+    body.is-mobile .koppel-table th:first-child, body.is-mobile .koppel-table td.besatz{width:26%;font-size:.76rem;padding-left:6px;}
+    body.is-mobile .koppel-table .formula-th{display:none;}
+  }
 </style>
 </head>
 <body>
@@ -757,7 +824,7 @@
   <br>
 
   <!-- SCHRITT 1: Standort & Tierkategorie -->
-  <div class="panel">
+  <div class="panel" id="panelStandort" data-mob="open">
     <p class="step-label">Schritt 1</p>
     <h2>Standort- und Betriebsangaben</h2>
     <p class="sub">Bestimmt automatisch Start der Weidephasen und Graszuwachs (Zeile A &amp; B unten). Werte bleiben danach editierbar.</p>
@@ -846,7 +913,7 @@
   </div>
 
   <!-- SCHRITT 2: System -->
-  <div class="panel">
+  <div class="panel" id="panelSystem" data-mob="closed">
     <p class="step-label">Schritt 2</p>
     <h2>Weidesystem</h2>
     <div class="toggle-row">
@@ -902,7 +969,7 @@
   </div>
 
   <!-- SCHRITT 3: Dürre-Stresstest -->
-  <div class="panel">
+  <div class="panel" id="panelSzenario" data-mob="closed">
     <p class="step-label">Schritt 3</p>
     <h2>Szenario: Normaljahr oder Dürre-Stresstest</h2>
     <p class="sub">Reduziert den Graszuwachs (Zeile B unten) je Phase und koppelt daran den in der Futterkosten-Auswertung effektiv erreichbaren Weideanteil. So lässt sich abschätzen, wie robust die Planung in einem Trockensommer ist.</p>
@@ -947,7 +1014,7 @@
   </div>
 
   <!-- SCHRITT 4: Berechnungstabelle -->
-  <div class="panel">
+  <div class="panel" id="panelTabelle" data-mob="closed">
     <p class="step-label">Schritt 4</p>
     <h2>Betriebs- und Standortdaten</h2>
     <p class="sub">Dick hervorgehobene Felder (gelb umrandet) sind Auto-Vorschläge aus Schritt 1 — betriebsspezifisch anpassbar.</p>
@@ -1123,19 +1190,19 @@
   </div>
 
   <!-- Koppelplanung / Zusammenfassung -->
-  <div class="panel row-umtrieb" id="koppelplanungPanel">
+  <div class="panel row-umtrieb" id="koppelplanungPanel" data-mob="open">
     <p class="step-label">Ergebnis</p>
     <h2>Koppelplanung</h2>
-    <p class="sub">Ø Flächenbedarf der Herde pro Tag über alle <span id="avgMPhaseWord">fünf</span> Phasen: <strong id="avgM">–</strong> ha/Herde/Tag</p>
+    <p class="sub keep">Ø Flächenbedarf der Herde pro Tag über alle <span id="avgMPhaseWord">fünf</span> Phasen: <strong id="avgM">–</strong> ha/Herde/Tag</p>
     <p class="sub">Koppelgrösse und Mindestanzahl Koppeln für „<span id="tierNameKoppel">Milchkühe</span>“ — je Besatzzeit separat ausgewiesen: kürzester/längster AGFF-Richtwert (wie im Excel-Original) sowie 24 Stunden und 2 Tage als zusätzliche Referenzwerte, berechnet mit den aktuellen Betriebsdaten oben.</p>
     <div class="table-scroll">
       <table class="koppel-table">
         <thead>
           <tr>
             <th style="text-align:left;">Besatzzeit</th>
-            <th>Koppelgrösse <span id="koppelPeakLabel">Wachstumsspitze</span> (ha)<span class="formula-th" id="koppelPeakFormula">= Flächenbedarf Herde/Tag (Wachstumsspitze) × Besatzzeit</span></th>
-            <th>Koppelgrösse ganzjährig (ha)<span class="formula-th">= Ø Flächenbedarf Herde/Tag × Besatzzeit</span></th>
-            <th>Min. Koppelanzahl<span class="formula-th" id="koppelRuheTip">= Ø Weideruhezeit (Wachstumsspitze/Bestockungskrise/Sommer) / Besatzzeit + 1</span></th>
+            <th>Koppel&shy;grösse <span id="koppelPeakLabel">Wachstumsspitze</span> (ha)<span class="formula-th" id="koppelPeakFormula">= Flächenbedarf Herde/Tag (Wachstumsspitze) × Besatzzeit</span></th>
+            <th>Koppel&shy;grösse ganz&shy;jährig (ha)<span class="formula-th">= Ø Flächenbedarf Herde/Tag × Besatzzeit</span></th>
+            <th>Min. Koppel&shy;anzahl<span class="formula-th" id="koppelRuheTip">= Ø Weideruhezeit (Wachstumsspitze/Bestockungskrise/Sommer) / Besatzzeit + 1</span></th>
           </tr>
         </thead>
         <tbody id="koppelRefBody"></tbody>
@@ -1143,7 +1210,7 @@
     </div>
   </div>
 
-  <div class="panel row-kurzrasen hidden" id="zusammenfassungPanel">
+  <div class="panel row-kurzrasen hidden" id="zusammenfassungPanel" data-mob="open">
     <p class="step-label">Ergebnis</p>
     <h2>Zusammenfassung</h2>
     <div class="ref-grid">
@@ -1153,7 +1220,7 @@
   </div>
 
   <!-- Eingesparte Futterkosten -->
-  <div class="panel">
+  <div class="panel" id="panelFutter" data-mob="closed">
     <p class="step-label">Ergebnis</p>
     <h2>Eingesparte Futterkosten</h2>
     <p class="sub">Geschätzte Verteilung von Weide- und Stallfutter über das ganze Jahr, abgeleitet aus den Start-Weidephasen (Zeile A) und dem Verzehrsanteil Weide (Zeile E). Ausserhalb der Weidesaison wird mit 100% Stallfütterung gerechnet, mit dem Tierbestand der jeweils benachbarten Phase.</p>
@@ -1185,7 +1252,7 @@
   </div>
 
   <!-- Szenario-Vergleich (nur relevant, wenn oben das Dürre-Szenario aktiv ist) -->
-  <div class="panel hidden" id="szenarioComparePanel">
+  <div class="panel hidden" id="szenarioComparePanel" data-mob="closed">
     <p class="step-label">Ergebnis</p>
     <h2>Vergleich: Normaljahr vs. Dürre-Szenario</h2>
     <p class="sub">Die Dürre-Spalte nutzt die in Schritt 3 eingestellten Reduktions-Prozentsätze.</p>
@@ -1201,7 +1268,7 @@
   </div>
 
   <!-- RPM Umrechner -->
-  <div class="panel">
+  <div class="panel" id="panelRpm" data-mob="closed">
     <p class="step-label">Hilfsmittel</p>
     <h2>Futterdichten-Umrechner (Rising-Plate-Meter)</h2>
     <p class="sub">Rechnet zwischen Bestandeshöhe (cm RPM, Klicks, cm Doppelmeter) und Futterdichte (kg TS/ha) um.</p>
@@ -1242,7 +1309,7 @@
   </div>
 
   <!-- Konfiguration als Link teilen -->
-  <div class="panel">
+  <div class="panel" id="panelShare" data-mob="closed">
     <p class="step-label">Link</p>
     <h2>Konfiguration als Link teilen</h2>
     <p class="sub">Erzeugt einen Link mit Standort, Tierkategorie, Tierzahl, System und Szenario als URL-Parameter. Wer den Link öffnet, sieht dieselbe Ausgangskonfiguration schon vorausgewählt — praktisch zum Weiterleiten oder als Lesezeichen.</p>
@@ -1254,6 +1321,11 @@
   </div>
 
   <footer>Nachbau des AGFF Weideplaners · info@agff.ch · Generation v3 · Stand: <span id="standDatum">13.08.2026</span></footer>
+</div>
+<!-- Mobile Ergebnis-Leiste: Kernzahlen immer im Blick, Tipp springt zum Ergebnis-Panel -->
+<div class="mob-bar" id="mobBar" role="button" tabindex="0" aria-label="Zum Ergebnis springen" onclick="mobGotoResult()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();mobGotoResult();}">
+  <div class="mob-bar-tiles" id="mobBarTiles"></div>
+  <div class="mob-bar-hint">Ergebnis ▴</div>
 </div>
 <div id="ttPortal"></div>
 
@@ -1470,7 +1542,8 @@ const DESC_PULSE_KEY = "weideplanerV3_infoBtnUsed";
 
 function initDescToggle(){
   const saved = localStorage.getItem(DESC_STORAGE_KEY);
-  const visible = saved === null ? true : saved === "1";
+  // Auf dem Handy standardmässig ausgeblendet — der Platz gehört den Eingaben und Ergebnissen.
+  const visible = saved === null ? !isMobile() : saved === "1";
   applyDescVisibility(visible);
   if(localStorage.getItem(DESC_PULSE_KEY) === "1"){
     document.getElementById("descToggleBtn").classList.add("no-pulse");
@@ -1689,7 +1762,9 @@ function renderPhaseColumns(){
 
   const phaseJump = document.getElementById("phaseJump");
   phaseJump.innerHTML = '<span class="phase-jump-label">Phase:</span>' +
-    ps.labels.map((label,i)=>`<button type="button" class="phase-chip${i===0?" active":""}" onclick="scrollToPhase(${i},this)">${label}</button>`).join("");
+    ps.labels.map((label,i)=>`<button type="button" class="phase-chip${i===0?" active":""}" onclick="scrollToPhase(${i},this)">${label}</button>`).join("") +
+    '<button type="button" class="phase-chip phase-chip-all" onclick="mobSetPhaseView(null,this)">Alle</button>';
+  applyMobPhaseView();
 
   const note = document.getElementById("phaseModelNote");
   note.textContent = n === 5
@@ -1851,6 +1926,12 @@ function renderKoppelTable(Ms, avgM){
     </tr>`;
   });
   document.getElementById("koppelRefBody").innerHTML = rows.join("");
+  const first = besatzEntries[0];
+  lastKoppel = first ? {
+    besatz: first.label,
+    groesse: mWachstumsspitze * first.tage,
+    anzahl: Math.ceil(first.tage>0 ? (avgWeideruhe/first.tage)+1 : 0)
+  } : null;
 }
 
 function applyStdTierzahl(){
@@ -2304,6 +2385,7 @@ function calculate(){
   updateFutterkosten();
   renderGrowthCurve();
   saveInputState();
+  updateMobileUi();
 }
 
 /* ---------- Eingesparte Futterkosten (Jahresschätzung) ---------- */
@@ -2423,6 +2505,7 @@ function getDuerreRatio(){
 function updateFutterkosten(){
   const Bcurrent = Array.from({length:PHASE_COUNT}, (_,i)=>val("B"+i));
   const activeRes = computeFeedResult(Bcurrent);
+  lastFeedResult = activeRes;
   if(!activeRes) return;
 
   renderFeedChart(activeRes.monthlyStall, activeRes.monthlyWeide);
@@ -2775,6 +2858,8 @@ document.addEventListener("keydown", (e)=>{
 
 /* ---------- Phasen-Schnellsprung (mobile Tabelle) ---------- */
 function scrollToPhase(idx, btn){
+  // Mobil zeigt ein Chip-Tipp die gewählte Phase einzeln statt zu scrollen.
+  if(isMobile()){ mobSetPhaseView(idx, btn); return; }
   const table = document.getElementById("calcTable");
   const scrollBox = table && table.closest(".table-scroll");
   if(!scrollBox) return;
@@ -2785,7 +2870,7 @@ function scrollToPhase(idx, btn){
   const stickyRight = stickyCell.getBoundingClientRect().right;
   const targetLeft = target.getBoundingClientRect().left;
   scrollBox.scrollTo({left: scrollBox.scrollLeft + (targetLeft - stickyRight), behavior:"smooth"});
-  document.querySelectorAll("#phaseJump .phase-chip").forEach(c=>c.classList.remove("active"));
+  document.querySelectorAll("#phaseJump .phase-chip:not(.phase-chip-all)").forEach(c=>c.classList.remove("active"));
   if(btn) btn.classList.add("active");
 }
 
@@ -2805,11 +2890,148 @@ function scrollToPhase(idx, btn){
         const dist = Math.abs(headerCells[2+i].getBoundingClientRect().left - stickyRight);
         if(dist < bestDist){ bestDist = dist; bestIdx = i; }
       }
-      document.querySelectorAll("#phaseJump .phase-chip").forEach((c,i)=>c.classList.toggle("active", i===bestIdx));
+      document.querySelectorAll("#phaseJump .phase-chip:not(.phase-chip-all)").forEach((c,i)=>c.classList.toggle("active", i===bestIdx));
       ticking = false;
     });
   }, {passive:true});
 })();
+
+/* ---------- Mobil-Modus: Akkordeon-Panels, Ergebnis-Leiste, Einzelphasen-Tabelle ----------
+   Alles hier ist rein additiv und greift nur unter 760px Breite (body.is-mobile); Desktop-
+   Verhalten bleibt unverändert. Ziel: Eingaben und Kernergebnis ohne langes Scrollen. */
+const MOB_PANEL_KEY = "weideplanerV3_mobPanels";
+const mobMedia = window.matchMedia("(max-width:760px)");
+function isMobile(){ return mobMedia.matches; }
+let lastKoppel = null;     // {besatz, groesse, anzahl} aus renderKoppelTable
+let lastFeedResult = null; // Ergebnis von computeFeedResult für die aktive Konfiguration
+let mobPhaseIdx = null;    // null = alle Phasen (Scroll-Ansicht), sonst Index der sichtbaren Phase
+
+function initMobilePanels(){
+  let saved = {};
+  try{ saved = JSON.parse(localStorage.getItem(MOB_PANEL_KEY)) || {}; }catch(e){}
+  document.querySelectorAll(".panel[data-mob]").forEach(panel=>{
+    const h2 = panel.querySelector("h2");
+    if(!h2) return;
+    const sum = document.createElement("p");
+    sum.className = "mob-summary";
+    h2.insertAdjacentElement("afterend", sum);
+    const closed = panel.id in saved ? !saved[panel.id] : panel.dataset.mob === "closed";
+    panel.classList.toggle("mob-closed", closed);
+    h2.addEventListener("click", ()=>{
+      if(!isMobile()) return;
+      mobSetPanelOpen(panel, panel.classList.contains("mob-closed"));
+    });
+  });
+}
+
+function mobSetPanelOpen(panel, open){
+  panel.classList.toggle("mob-closed", !open);
+  const state = {};
+  document.querySelectorAll(".panel[data-mob]").forEach(p=>{ state[p.id] = !p.classList.contains("mob-closed"); });
+  try{ localStorage.setItem(MOB_PANEL_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+function mobGotoResult(){
+  const id = currentSystem === "umtrieb" ? "koppelplanungPanel" : "zusammenfassungPanel";
+  const panel = document.getElementById(id);
+  mobSetPanelOpen(panel, true);
+  panel.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function selText(id){
+  const el = document.getElementById(id);
+  return el.options[el.selectedIndex] ? el.options[el.selectedIndex].text : el.value;
+}
+function fmtChf0(n){ return n.toLocaleString("de-CH",{maximumFractionDigits:0}); }
+
+function updateMobSummaries(){
+  const set = (id, html)=>{ const p = document.getElementById(id); const s = p && p.querySelector(".mob-summary"); if(s) s.innerHTML = html; };
+  const tier = document.getElementById("tier").value;
+  const tierzahl = val("C0") || 0;
+  set("panelStandort", `<strong>${selText("hoehe")} m</strong> · ${selText("boden").split(" /")[0]} · ${selText("klima")} · ${selText("veg")} · <strong>${tierzahl} ${tier}</strong>`);
+  set("panelSystem", `<strong>${currentSystem === "umtrieb" ? "Umtriebsweide" : "Kurzrasenweide"}</strong>`);
+  set("panelSzenario", `<strong>${szenario === "duerre" ? "Dürre-Szenario" : "Normaljahr"}</strong> · ${PHASE_COUNT}-Phasen-Modell`);
+  const Bs = Array.from({length:PHASE_COUNT}, (_,i)=>Math.round(val("B"+i))).join(" · ");
+  set("panelTabelle", `Graszuwachs B: <strong>${Bs}</strong> kg TS/ha/Tag`);
+  set("koppelplanungPanel", `Ø <strong>${document.getElementById("avgM").innerText}</strong> ha/Herde/Tag` + (lastKoppel ? ` · Koppel <strong>${lastKoppel.groesse.toFixed(2)} ha</strong> · min. <strong>${lastKoppel.anzahl}</strong> Koppeln` : ""));
+  set("zusammenfassungPanel", `Ø <strong>${document.getElementById("avgI").innerText}</strong> ha/Herde/Tag · <strong>${document.getElementById("avgJ").innerText}</strong> Aren/Tier/Tag`);
+  set("panelFutter", lastFeedResult ? `Einsparung <strong>${fmtChf0(lastFeedResult.savings)} CHF/Jahr</strong> · Weide ${lastFeedResult.pctWeide.toFixed(0)}%` : "–");
+  set("szenarioComparePanel", "Flächenbedarf und Kosten beider Szenarien nebeneinander");
+  set("panelRpm", `${document.getElementById("rpmVal").value} ${selText("rpmFrom")} = <strong>${document.getElementById("rpmResult").innerText}</strong> ${selText("rpmTo")}`);
+  set("panelShare", "Aktuelle Einstellungen als Link weitergeben");
+}
+
+function updateMobBar(){
+  const tiles = document.getElementById("mobBarTiles");
+  if(!tiles) return;
+  const tile = (label, value, hl)=>`<div class="mob-bar-tile${hl?" hl":""}"><span>${label}</span><strong>${value}</strong></div>`;
+  const einsparung = lastFeedResult ? fmtChf0(lastFeedResult.savings) + " <small>CHF/J.</small>" : "–";
+  if(currentSystem === "umtrieb"){
+    tiles.innerHTML =
+      tile("Ø Fläche Herde/Tag", document.getElementById("avgM").innerText + " <small>ha</small>") +
+      tile(lastKoppel ? `Koppel (${lastKoppel.besatz.replace("Stunden","Std.")}) · Anzahl` : "Koppel", lastKoppel ? `${lastKoppel.groesse.toFixed(2)} <small>ha</small> · ${lastKoppel.anzahl}` : "–") +
+      tile("Futterkosten gespart", einsparung, true);
+  } else {
+    tiles.innerHTML =
+      tile("Ø Fläche Herde/Tag", document.getElementById("avgI").innerText + " <small>ha</small>") +
+      tile("Ø Fläche Tier/Tag", document.getElementById("avgJ").innerText + " <small>Aren</small>") +
+      tile("Futterkosten gespart", einsparung, true);
+  }
+}
+
+function updateMobileUi(){
+  document.body.classList.toggle("is-mobile", isMobile());
+  if(!isMobile()) return;
+  updateMobSummaries();
+  updateMobBar();
+}
+
+// Welche Phase läuft gerade? Startdaten (Zeile A) im Jahr der Planung mit dem heutigen Datum vergleichen.
+function currentPhaseIndex(){
+  const starts = Array.from({length:PHASE_COUNT}, (_,i)=>document.getElementById("A"+i).value).map(v=>v ? new Date(v) : null);
+  if(starts.includes(null)) return 0;
+  const today = new Date();
+  const probe = new Date(starts[0].getFullYear(), today.getMonth(), today.getDate());
+  let idx = 0;
+  for(let i=0;i<PHASE_COUNT;i++){ if(probe >= starts[i]) idx = i; }
+  return idx;
+}
+
+function mobSetPhaseView(idx, btn){
+  mobPhaseIdx = idx;
+  applyMobPhaseView();
+  if(idx === null){
+    const scrollBox = document.getElementById("calcTable").closest(".table-scroll");
+    if(scrollBox) scrollBox.scrollLeft = 0;
+  }
+}
+
+function applyMobPhaseView(){
+  const table = document.getElementById("calcTable");
+  if(mobPhaseIdx !== null && mobPhaseIdx >= PHASE_COUNT) mobPhaseIdx = PHASE_COUNT - 1; // 5→4 Phasen
+  const single = isMobile() && mobPhaseIdx !== null;
+  table.classList.toggle("mob-single", single);
+  table.querySelectorAll("thead th, tbody tr[data-phaserow] td").forEach(cell=>{
+    const i = cell.cellIndex - 2;
+    cell.classList.toggle("mob-hide", single && i >= 0 && i !== mobPhaseIdx);
+  });
+  document.querySelectorAll("#phaseJump .phase-chip").forEach((c,i)=>{
+    const isAll = c.classList.contains("phase-chip-all");
+    c.classList.toggle("active", isAll ? mobPhaseIdx === null : (mobPhaseIdx !== null && i === mobPhaseIdx));
+  });
+}
+
+function initMobileUi(){
+  document.body.classList.toggle("is-mobile", isMobile());
+  initMobilePanels();
+  if(isMobile()){ mobPhaseIdx = currentPhaseIndex(); applyMobPhaseView(); }
+  mobMedia.addEventListener("change", ()=>{
+    document.body.classList.toggle("is-mobile", isMobile());
+    if(isMobile() && mobPhaseIdx === null){ mobPhaseIdx = currentPhaseIndex(); }
+    applyMobPhaseView();
+    updateMobileUi();
+  });
+}
 
 /* ---------- Init ---------- */
 renderPhaseColumns();
@@ -2828,6 +3050,8 @@ if(window.location.search){
 }
 onMaxWeidflaecheInput();
 initDescToggle();
+initMobileUi();
+updateMobileUi();
 {
   const calcScrollBox = document.getElementById("calcTable").closest(".table-scroll");
   if(calcScrollBox) calcScrollBox.scrollLeft = 0;
