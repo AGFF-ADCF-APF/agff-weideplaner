@@ -2423,7 +2423,7 @@ function calculate(){
   const Ik_res = document.querySelectorAll(".Ik_res");
   const Jk_res = document.querySelectorAll(".Jk_res");
 
-  const Ms = [];
+  const Ms = [], Flaechen = [];
 
   for(let i=0;i<PHASE_COUNT;i++){
     const B = val("B"+i);
@@ -2457,11 +2457,13 @@ function calculate(){
       P_res[i].innerText = P.toFixed(2);
       Q_res[i].innerText = Math.ceil(Q).toString();
       Ms.push(M);
+      Flaechen.push(M * (I + O)); // = Koppelgrösse × Koppelanzahl (inkl. Koppel in Nutzung)
     } else {
       const Ik = B>0 ? (F*C)/B : 0;
       const Jk = C>0 ? (Ik/C)*100 : 0;
       Ik_res[i].innerText = Ik.toFixed(3);
       Jk_res[i].innerText = Jk.toFixed(2);
+      Flaechen.push(Ik); // Kurzrasen: die Herde nutzt die ganze Fläche dauernd
     }
   }
 
@@ -2484,6 +2486,7 @@ function calculate(){
     document.getElementById("avgJ").innerText = avgJ.toFixed(2);
   }
 
+  lastFlaecheMax = Flaechen.length ? Math.max(...Flaechen) : 0;
   updateFutterkosten();
   renderGrowthCurve();
   saveInputState();
@@ -3012,6 +3015,7 @@ const MOB_PANEL_KEY = "weideplanerV3_mobPanels";
 const mobMedia = window.matchMedia("(max-width:760px)");
 function isMobile(){ return mobMedia.matches; }
 let lastKoppel = null;     // {besatz, groesse, anzahl} aus renderKoppelTable
+let lastFlaecheMax = 0;    // nötige Weidefläche gesamt (ha), Maximum über die Phasen
 let lastFeedResult = null; // Ergebnis von computeFeedResult für die aktive Konfiguration
 let mobPhaseIdx = null;    // null = alle Phasen (Scroll-Ansicht), sonst Index der sichtbaren Phase
 
@@ -3098,6 +3102,8 @@ function renderMobSheet(){
   let html = "";
   if(isUmtrieb){
     html += `<table class="koppel-table">${stripIds(document.querySelector("#koppelplanungPanel .koppel-table").innerHTML)}</table>`;
+  } else {
+    html += `<p class="sheet-line">Ø Flächenbedarf Tier/Tag: <strong>${document.getElementById("avgJ").innerText}</strong> Aren</p>`;
   }
   const costGrid = document.getElementById("costSummaryGrid").cloneNode(true);
   costGrid.querySelectorAll(".cost-highlight").forEach(el=>el.remove());
@@ -3163,12 +3169,12 @@ function updateMobBar(){
   if(currentSystem === "umtrieb"){
     tiles.innerHTML =
       tile("Ø Fläche Herde/Tag", document.getElementById("avgM").innerText + " <small>ha</small>") +
-      tile(lastKoppel ? `Koppel (${lastKoppel.besatz.replace("Stunden","Std.")}) · Anzahl` : "Koppel", lastKoppel ? `${lastKoppel.groesse.toFixed(2)} <small>ha</small> · ${lastKoppel.anzahl}` : "–") +
+      tile("Weidefläche nötig", lastFlaecheMax.toFixed(1) + " <small>ha</small>") +
       tile("Futterkosten gespart", einsparung, true);
   } else {
     tiles.innerHTML =
       tile("Ø Fläche Herde/Tag", document.getElementById("avgI").innerText + " <small>ha</small>") +
-      tile("Ø Fläche Tier/Tag", document.getElementById("avgJ").innerText + " <small>Aren</small>") +
+      tile("Weidefläche nötig", lastFlaecheMax.toFixed(1) + " <small>ha</small>") +
       tile("Futterkosten gespart", einsparung, true);
   }
 }
