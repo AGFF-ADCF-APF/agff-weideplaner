@@ -1,0 +1,33 @@
+# Lokales Testen unter https://agff-weideplaner.localhost über den gemeinsamen
+# Traefik (~/git/dev-traefik-localhost). Reines Static-Hosting: das Repo-
+# Verzeichnis wird direkt in den nginx gemountet, Änderungen an den HTML-
+# Dateien sind ohne Neustart sofort sichtbar (F5 reicht).
+#
+#   docker compose up -d
+#
+# Zusätzlich http://localhost:8791 (nur von diesem Rechner): der In-App-Browser
+# von Claude Code lässt ohne Freigabe nur den Host «localhost» zu, keine
+# *.localhost-Subdomains — darüber laufen die automatisierten Screenshot-Tests.
+services:
+  web:
+    image: nginx:alpine
+    container_name: agff-weideplaner
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8791:80"
+    volumes:
+      - ./:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - webproxy
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=webproxy
+      - traefik.http.routers.agff-weideplaner.rule=Host(`agff-weideplaner.localhost`)
+      - traefik.http.routers.agff-weideplaner.entrypoints=websecure
+      - traefik.http.routers.agff-weideplaner.tls=true
+      - traefik.http.services.agff-weideplaner.loadbalancer.server.port=80
+
+networks:
+  webproxy:
+    external: true

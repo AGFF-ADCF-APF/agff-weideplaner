@@ -25,6 +25,17 @@ zukünftigen Erweiterungen. Bei Bedarf können weitere Module (z. B. eine
 Verknüpfung mit dem Infrastruktur-Rechner) zuerst in v2 erprobt und später
 – falls sinnvoll – auch in v1 zurückportiert werden.
 
+## Lokal testen (https://agff-weideplaner.localhost)
+
+Für Tests mit Browser-Geräteemulation läuft das Repo als statische Seite hinter
+dem gemeinsamen lokalen Traefik (`~/git/dev-traefik-localhost`). Das
+Repo-Verzeichnis ist direkt in den nginx-Container gemountet — Änderungen sind
+ohne Neustart sofort sichtbar.
+
+```bash
+docker compose up -d     # danach: https://agff-weideplaner.localhost/
+```
+
 ## Arbeiten mit diesem Repo
 
 ```bash
