@@ -1620,7 +1620,7 @@ function restoreInputState(){
     if(Object.prototype.hasOwnProperty.call(data, el.id)) el.value = data[el.id];
   });
   syncBaselineFromStandort();
-  onTierChange();
+  onTierChange({keepVerzehr:true});
   if(data._rpm && RPM_UNITS[data._rpm.from] && RPM_UNITS[data._rpm.to]){
     rpmFrom = data._rpm.from; rpmTo = data._rpm.to;
     document.getElementById("rpmVal").value = data._rpm.v;
@@ -1794,7 +1794,7 @@ const ROW_SPECS = {
   A:  {kind:"input", type:"date",   cls:"cell auto",   attrs:'onchange="calculate()"'},
   B:  {kind:"input", type:"number", cls:"cell auto B", attrs:'oninput="onBInput(this)"'},
   C:  {kind:"input", type:"number", cls:"cell C",      attrs:'oninput="calculate()"', scalar:"C"},
-  D:  {kind:"input", type:"number", cls:"cell D",      attrs:'step="0.1" oninput="calculate()"', scalarValue:()=>D_DEFAULT},
+  D:  {kind:"input", type:"number", cls:"cell D auto", attrs:'step="0.1" oninput="calculate()"', scalarValue:()=>tierVerzehrDefault()},
   E:  {kind:"input", type:"number", cls:"cell E",      attrs:'oninput="calculate()"', array:"E"},
   Iu: {kind:"input", type:"number", cls:"cell I_u",    attrs:'oninput="calculate()"', array:"Iu"},
   Hk: {kind:"input", type:"number", cls:"cell H_k",    attrs:'oninput="calculate()"', array:"Hk"},
@@ -1962,14 +1962,17 @@ function onStandortChange(){
   calculate();
 }
 
-function onTierChange(){
+// opts.keepVerzehr: Zeile D unangetastet lassen (Wiederherstellung aus localStorage/URL,
+// wo bereits betriebsspezifische Werte in der Tabelle stehen).
+function onTierChange(opts){
   const name = document.getElementById("tier").value;
   const t = TIER[name];
   document.getElementById("tierRef").innerHTML =
-    "<strong>" + name + "</strong> — Tagesverzehr-Richtwert: " + t.verzehr + " kg TS/Tier/Tag " +
-    "(Ausgangspunkt für Zeile D, betriebsspezifisch anpassen).";
+    "<strong>" + name + "</strong> — Tagesverzehr-Richtwert: " + t.verzehr + " kg TS/Tier/Tag; " +
+    "Zeile D ist mit " + tierVerzehrDefault().toLocaleString("de-CH") + " kg TS/Tier/Tag vorbelegt (betriebsspezifisch anpassbar).";
   document.getElementById("tierNameKoppel").innerText = name;
   updateSeasonalCalvingAvailability();
+  if(!opts || !opts.keepVerzehr) applyTierVerzehr();
   calculate();
 }
 
@@ -2084,17 +2087,27 @@ function applyEAuto(){
 }
 
 /* ---------- Saisonale Abkalbung: Verzehr (Zeile D) auf saisontypische Werte ---------- */
-const D_DEFAULT = 16;
+// Tagesverzehr-Richtwert der gewählten Tierkategorie als Zahl; Bereichsangaben wie
+// "14-18" ergeben den Mittelwert (Milchkühe 16 = bisheriger Festwert).
+function tierVerzehrDefault(){
+  const parts = String(TIER[document.getElementById("tier").value].verzehr).split("-").map(Number);
+  return parts.reduce((a,b)=>a+b,0)/parts.length;
+}
+
+// Zeile D dem Richtwert der Tierkategorie folgen lassen. Bei aktiver saisonaler Abkalbung
+// gelten stattdessen deren Saisonwerte, die nicht überschrieben werden.
+function applyTierVerzehr(){
+  if(document.getElementById("seasonalCalvingToggle").checked) return;
+  const d = tierVerzehrDefault();
+  for(let i=0;i<PHASE_COUNT;i++){ document.getElementById("D"+i).value = d; }
+}
 
 function onSeasonalCalvingToggle(){
   const active = document.getElementById("seasonalCalvingToggle").checked;
-  for(let i=0;i<PHASE_COUNT;i++){
-    document.getElementById("D"+i).classList.toggle("auto", active);
-  }
   if(active){
     applySeasonalCalving();
   } else {
-    for(let i=0;i<PHASE_COUNT;i++){ document.getElementById("D"+i).value = D_DEFAULT; }
+    applyTierVerzehr();
   }
   calculate();
 }
@@ -2388,7 +2401,15 @@ function loadStandardCurve(){
   activePhaseSet.duerreRedIds.forEach((id,i)=>{
     document.getElementById(id).value = activePhaseSet.duerreDefaults[i];
   });
-  applyDuerre();
+  // Im Normaljahr die Standardwerte selbst anzeigen — applyDuerre() würde hier die
+  // (nur fürs Dürre-Szenario gedachten) Reduktionsprozente auf Zeile B anwenden.
+  if(szenario === "duerre"){
+    applyDuerre();
+  } else {
+    for(let i=0;i<PHASE_COUNT;i++){ document.getElementById("B"+i).value = Math.round(B_baseline[i]); }
+    updateRuhezeitFromGrowth();
+    calculate();
+  }
 }
 
 /* ---------- System-Umschaltung ---------- */
