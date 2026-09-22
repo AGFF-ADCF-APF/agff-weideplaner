@@ -710,6 +710,7 @@
 
   /* Standard-Tierzahl übernehmen */
   .apply-row{display:flex;gap:6px;flex-wrap:wrap;}
+  .apply-hint{font-size:.72rem;color:var(--gold);margin:4px 0 0;line-height:1.3;}
   .apply-row input{flex:0 0 70px;}
   .apply-btn{
     flex:1 1 140px;
@@ -988,9 +989,10 @@
       <div class="field">
         <label for="stdTierzahl">Standard-Tierzahl</label>
         <div class="apply-row">
-          <input type="number" id="stdTierzahl" value="40" min="0" step="1">
-          <button type="button" class="apply-btn" onclick="applyStdTierzahl()">In Zeile C übernehmen</button>
+          <input type="number" id="stdTierzahl" value="40" min="0" step="1" oninput="onStdTierzahlInput()">
+          <button type="button" class="apply-btn hidden" id="applyTierzahlBtn" onclick="applyStdTierzahl()">In Zeile C übernehmen</button>
         </div>
+        <p class="apply-hint hidden" id="tierzahlHint">Tierzahl in Zeile C je Phase unterschiedlich — der Knopf setzt alle Phasen auf diesen Wert.</p>
       </div>
     </div>
     <div class="ref-box" id="tierRef"></div>
@@ -2038,6 +2040,29 @@ function renderKoppelTable(Ms, avgM){
   } : null;
 }
 
+// Solange die Tierzahl über alle Phasen gleich ist (Originalzustand), schlägt das Feld
+// direkt durch. Sind die Phasen bewusst unterschiedlich besetzt, bleibt das Feld wirkungslos
+// und erst der eingeblendete Knopf überschreibt Zeile C.
+function phaseTierzahlUniform(){
+  const first = document.getElementById("C0").value;
+  for(let i=1;i<PHASE_COUNT;i++){
+    if(document.getElementById("C"+i).value !== first) return false;
+  }
+  return true;
+}
+
+function onStdTierzahlInput(){
+  const raw = document.getElementById("stdTierzahl").value.trim();
+  if(raw !== "" && parseFloat(raw) >= 0 && phaseTierzahlUniform()) applyStdTierzahl();
+  else updateTierzahlHint();
+}
+
+function updateTierzahlHint(){
+  const uniform = phaseTierzahlUniform();
+  document.getElementById("applyTierzahlBtn").classList.toggle("hidden", uniform);
+  document.getElementById("tierzahlHint").classList.toggle("hidden", uniform);
+}
+
 function applyStdTierzahl(){
   const n = document.getElementById("stdTierzahl").value;
   for(let i=0;i<PHASE_COUNT;i++){
@@ -2507,6 +2532,7 @@ function calculate(){
   }
 
   lastFlaecheMax = Flaechen.length ? Math.max(...Flaechen) : 0;
+  updateTierzahlHint();
   updateFutterkosten();
   renderGrowthCurve();
   saveInputState();
