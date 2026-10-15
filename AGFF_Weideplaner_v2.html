@@ -2079,10 +2079,14 @@ function calcRpm(){
 }
 
 /* ---------- Fusszeile ---------- */
+// Letztes Änderungsdatum der Datei, nicht das heutige Datum: document.lastModified kommt
+// aus dem Last-Modified-Header des Servers (bzw. der Datei-Zeit bei file://). Fehlt der
+// Header, liefern Browser die aktuelle Zeit — dann bleibt der im HTML stehende Fallback.
 function updateStandDatum(){
   const el = document.getElementById("standDatum");
   if(!el) return;
-  const d = new Date();
+  const d = new Date(document.lastModified);
+  if(isNaN(d.getTime())) return;
   const dd = String(d.getDate()).padStart(2,"0");
   const mm = String(d.getMonth()+1).padStart(2,"0");
   el.textContent = `${dd}.${mm}.${d.getFullYear()}`;
