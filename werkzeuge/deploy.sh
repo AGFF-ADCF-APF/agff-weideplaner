@@ -11,7 +11,11 @@
 #
 # Aufruf: werkzeuge/deploy.sh [--trocken]
 set -euo pipefail
-export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh
+# SSH-Agent: auf dem Laptop im GNOME-Schluesselbund, auf dem Heimserver der normale
+# Agent der Sitzung. Einen bereits gesetzten Agenten nie ueberschreiben.
+if [ ! -S "${SSH_AUTH_SOCK:-}" ] && [ -S "/run/user/$(id -u)/keyring/ssh" ]; then
+  export SSH_AUTH_SOCK="/run/user/$(id -u)/keyring/ssh"
+fi
 ZIEL=ssh-w01573d0@w01573d0.kasserver.com
 ORDNER=/www/htdocs/w01573d0/apps/weideplaner/public
 SICHERUNGEN=/www/htdocs/w01573d0/apps/weideplaner-sicherungen

@@ -39,6 +39,13 @@ werkzeuge/deploy.sh             # Sicherung, Aufräumen, rsync, Abgleich
 Veröffentlicht werden nur HTML-Dateien und Symbole — README, `docker-compose.yml` und
 `nginx.conf` der lokalen Testumgebung bleiben im Repo.
 
+### Voraussetzung für den Deploy
+
+Ein SSH-Zugang zum KAS-Server als `ssh-w01573d0`. Auf dem Laptop liegt der Schlüssel im
+GNOME-Schlüsselbund, auf dem Heimserver braucht `dev` einen eigenen Schlüssel; das Skript
+nutzt den Agenten der laufenden Sitzung und setzt den Schlüsselbund-Pfad nur, wenn kein
+Agent gesetzt ist.
+
 ## Lokal testen (https://agff-weideplaner.localhost)
 
 Für Tests mit Browser-Geräteemulation läuft das Repo als statische Seite hinter
