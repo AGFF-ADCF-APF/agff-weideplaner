@@ -25,6 +25,20 @@ zukünftigen Erweiterungen. Bei Bedarf können weitere Module (z. B. eine
 Verknüpfung mit dem Infrastruktur-Rechner) zuerst in v2 erprobt und später
 – falls sinnvoll – auch in v1 zurückportiert werden.
 
+## Live: https://app.graswachstum.ch/weideplaner/
+
+Die Werkzeuge liegen auf dem KAS-Server (all-inkl) unter
+`/www/htdocs/w01573d0/apps/weideplaner/public`; die öffentliche Adresse hängt über den
+Symlink `app.graswachstum.ch/weideplaner` daran (gleiches Muster wie die übrigen Apps).
+
+```bash
+werkzeuge/deploy.sh --trocken   # zeigt nur, was sich ändern würde
+werkzeuge/deploy.sh             # Sicherung, Aufräumen, rsync, Abgleich
+```
+
+Veröffentlicht werden nur HTML-Dateien und Symbole — README, `docker-compose.yml` und
+`nginx.conf` der lokalen Testumgebung bleiben im Repo.
+
 ## Lokal testen (https://agff-weideplaner.localhost)
 
 Für Tests mit Browser-Geräteemulation läuft das Repo als statische Seite hinter
