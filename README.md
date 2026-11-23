@@ -41,20 +41,19 @@ Veröffentlicht werden nur HTML-Dateien und Symbole — README, `docker-compose.
 
 ### Voraussetzung für den Deploy
 
-Ein SSH-Zugang zum KAS-Server als `ssh-w01573d0`. Auf dem Laptop liegt der Schlüssel im
-GNOME-Schlüsselbund, auf dem Heimserver braucht `dev` einen eigenen Schlüssel; das Skript
-nutzt den Agenten der laufenden Sitzung und setzt den Schlüsselbund-Pfad nur, wenn kein
-Agent gesetzt ist.
+Ein SSH-Zugang zum KAS-Server als `ssh-w01573d0`. Auf dem Heimserver nutzt `dev` den
+vorhandenen KAS-Schlüssel aus `~/.ssh/config` (gleicher Weg wie die übrigen Deploys); auf dem
+Laptop liegt der Schlüssel im GNOME-Schlüsselbund. Das Skript nutzt den Agenten der laufenden
+Sitzung und setzt den Schlüsselbund-Pfad nur, wenn kein Agent gesetzt ist.
 
-## Lokal testen (https://agff-weideplaner.localhost)
+## Lokal testen (http://localhost:8089)
 
-Für Tests mit Browser-Geräteemulation läuft das Repo als statische Seite hinter
-dem gemeinsamen lokalen Traefik (`~/git/dev-traefik-localhost`). Das
-Repo-Verzeichnis ist direkt in den nginx-Container gemountet — Änderungen sind
-ohne Neustart sofort sichtbar.
+Auf dem Heimserver läuft das Repo als statische Seite in einem nginx-Container, nur lokal
+(`127.0.0.1:8089`, nicht über Traefik). Das Repo-Verzeichnis ist direkt in den Container
+gemountet — Änderungen sind ohne Neustart sofort sichtbar.
 
 ```bash
-docker compose up -d     # danach: https://agff-weideplaner.localhost/
+docker compose up -d     # danach: http://localhost:8089/
 ```
 
 ## Arbeiten mit diesem Repo
