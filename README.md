@@ -36,7 +36,12 @@ werkzeuge/deploy.sh --trocken   # zeigt nur, was sich ändern würde
 werkzeuge/deploy.sh             # Sicherung, Aufräumen, rsync, Abgleich
 ```
 
-Veröffentlicht werden nur HTML-Dateien und Symbole — README, `docker-compose.yml` und
+Die Startadresse `/weideplaner/` öffnet direkt den Weideplaner v3 (`.htaccess` mit
+`DirectoryIndex`, lokal gleich in `nginx.conf`); die Übersicht aller Rechner bleibt
+`index.html` und ist aus v3 verlinkt. Die Adresse `/weideplaner/` stabil lassen: der QR-Code
+auf graswachstum.ch/werkzeuge zeigt dorthin.
+
+Veröffentlicht werden nur HTML-Dateien, Symbole und die `.htaccess` — README, `docker-compose.yml` und
 `nginx.conf` der lokalen Testumgebung bleiben im Repo.
 
 ### Voraussetzung für den Deploy

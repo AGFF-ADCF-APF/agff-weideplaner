@@ -30,7 +30,8 @@ SICHERUNGEN=$W/apps/weideplaner-sicherungen
 
 # Positivliste: nur diese Dateien gehoeren ins Web. --delete raeumt den Server-Ordner
 # entsprechend auf; ausgeschlossene Dateien dort werden dabei nicht angetastet.
-NUR=(--include='*.html' --include='*.png' --include='*.ico' --include='*.svg' --exclude='*')
+# .htaccess macht v3 zur Startseite des Ordners (DirectoryIndex).
+NUR=(--include='/.htaccess' --include='*.html' --include='*.png' --include='*.ico' --include='*.svg' --exclude='*')
 # Rechte gehoeren in jeden Aufruf: sonst meldet der Abgleich fuer jede Datei einen
 # Rechteunterschied (lokal 664, auf dem Server 644).
 RECHTE=(--chmod=D755,F644)

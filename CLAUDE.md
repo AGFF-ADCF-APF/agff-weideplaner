@@ -4,6 +4,8 @@ Weideplaner der AGFF und weitere Rechner zur Weideplanung: eigenständige HTML-D
 Live https://app.graswachstum.ch/weideplaner/ (all-inkl, seit 23.11.2026), eingebettet in graswachstum.ch/werkzeuge/weideplaner
 (Grav-Seite mit iframe, Vorlage `werkzeug`; die Seite führt live, nicht in git). Alte Dateiadressen auf graswachstum.ch leiten per
 `.htaccess` hierher um (agff-familie `ebe0b3b`).
+Startadresse `/weideplaner/` ist der Weideplaner v3 (`.htaccess`, `DirectoryIndex`), die Übersicht bleibt `index.html`; die
+Adresse stabil lassen (QR-Code auf graswachstum.ch/werkzeuge).
 Kein Grav-Projekt; die Regeln aus `~/git/CLAUDE.md` zu Datenschutz, Deploy, Pushes und Commits gelten trotzdem.
 Das Repo ist **öffentlich** (`.push-erlaubt`: oeffentlich *): keine Zugangsdaten, Personen- oder Betriebsdaten.
 
