@@ -1,13 +1,17 @@
 #!/bin/bash
 # Deploy des Weideplaners nach KAS -> https://app.graswachstum.ch/weideplaner/
 #
-# Ziel ist /www/htdocs/w01573d0/apps/weideplaner/public; die oeffentliche Adresse haengt
+# Ziel ist <Konto>/apps/weideplaner/public; die oeffentliche Adresse haengt
 # ueber den Symlink app.graswachstum.ch/weideplaner -> ../apps/weideplaner/public daran
 # (gleiches Muster wie herbar). Veroeffentlicht werden nur die Web-Dateien: HTML und
 # Symbole. README, Docker- und nginx-Konfiguration der lokalen Testumgebung bleiben hier.
 #
 # Ablauf: Sicherung des Server-Ordners -> alte Sicherungen aufraeumen (neueste behalten,
 # von den aelteren je Kalenderwoche eine) -> rsync -> Abgleich (Pruefsummen, ohne Aenderung).
+#
+# SSH-Ziel (Benutzer@Server des Hosting-Kontos) steht nicht im Repo (oeffentlich), sondern in
+# werkzeuge/deploy-ziel.lokal (eine Zeile ssh-<konto>@<server>, in .gitignore) oder in der
+# Umgebungsvariable WEIDEPLANER_SSH_ZIEL. <Konto> = /www/htdocs/<Kontoname>.
 #
 # Aufruf: werkzeuge/deploy.sh [--trocken]
 set -euo pipefail
@@ -16,10 +20,13 @@ set -euo pipefail
 if [ ! -S "${SSH_AUTH_SOCK:-}" ] && [ -S "/run/user/$(id -u)/keyring/ssh" ]; then
   export SSH_AUTH_SOCK="/run/user/$(id -u)/keyring/ssh"
 fi
-ZIEL=ssh-w01573d0@w01573d0.kasserver.com
-ORDNER=/www/htdocs/w01573d0/apps/weideplaner/public
-SICHERUNGEN=/www/htdocs/w01573d0/apps/weideplaner-sicherungen
 cd "$(dirname "$0")/.."
+ZIEL=${WEIDEPLANER_SSH_ZIEL:-$(head -n1 werkzeuge/deploy-ziel.lokal 2>/dev/null || true)}
+[[ "$ZIEL" =~ ^ssh-([a-z0-9]+)@[a-z0-9.-]+$ ]] \
+  || { echo "SSH-Ziel fehlt: werkzeuge/deploy-ziel.lokal (ssh-<konto>@<server>) oder WEIDEPLANER_SSH_ZIEL"; exit 1; }
+W=/www/htdocs/${BASH_REMATCH[1]}
+ORDNER=$W/apps/weideplaner/public
+SICHERUNGEN=$W/apps/weideplaner-sicherungen
 
 # Positivliste: nur diese Dateien gehoeren ins Web. --delete raeumt den Server-Ordner
 # entsprechend auf; ausgeschlossene Dateien dort werden dabei nicht angetastet.

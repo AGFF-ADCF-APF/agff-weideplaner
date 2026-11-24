@@ -28,7 +28,7 @@ Verknüpfung mit dem Infrastruktur-Rechner) zuerst in v2 erprobt und später
 ## Live: https://app.graswachstum.ch/weideplaner/
 
 Die Werkzeuge liegen auf dem KAS-Server (all-inkl) unter
-`/www/htdocs/w01573d0/apps/weideplaner/public`; die öffentliche Adresse hängt über den
+`<Konto>/apps/weideplaner/public`; die öffentliche Adresse hängt über den
 Symlink `app.graswachstum.ch/weideplaner` daran (gleiches Muster wie die übrigen Apps).
 
 ```bash
@@ -41,7 +41,9 @@ Veröffentlicht werden nur HTML-Dateien und Symbole — README, `docker-compose.
 
 ### Voraussetzung für den Deploy
 
-Ein SSH-Zugang zum KAS-Server als `ssh-w01573d0`. Auf dem Heimserver nutzt `dev` den
+Ein SSH-Zugang zum KAS-Server. Das SSH-Ziel (`ssh-<konto>@<server>`) steht nicht im
+öffentlichen Repo, sondern in `werkzeuge/deploy-ziel.lokal` (eine Zeile, in `.gitignore`)
+oder in der Umgebungsvariable `WEIDEPLANER_SSH_ZIEL`. Auf dem Heimserver nutzt `dev` den
 vorhandenen KAS-Schlüssel aus `~/.ssh/config` (gleicher Weg wie die übrigen Deploys); auf dem
 Laptop liegt der Schlüssel im GNOME-Schlüsselbund. Das Skript nutzt den Agenten der laufenden
 Sitzung und setzt den Schlüsselbund-Pfad nur, wenn kein Agent gesetzt ist.
